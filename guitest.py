@@ -11,8 +11,8 @@ def connect_to_database():
     try:
         conn = psycopg2.connect(
             dbname="photon",       # Database name
-            user="student",  # Your PostgreSQL username
-            password="student",  # Your PostgreSQL password
+            user="student",  # PostgreSQL username
+            password="student",  # PostgreSQL password
             host="localhost",      # Hostname
             port="5432"            # Default PostgreSQL port
         )
