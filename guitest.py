@@ -5,7 +5,7 @@ from PIL import Image, ImageTk
 import socket
 import sys
 import os
-
+# DId this update?????
 # Connect to the PostgreSQL database
 def connect_to_database():
     try:
@@ -14,7 +14,7 @@ def connect_to_database():
             user="student",  # PostgreSQL username
             password="student",  # PostgreSQL password
             host="localhost",      # Hostname
-            port="5432"            # Default PostgreSQL port
+            port="5432"            # Default PostgreSQL port.
         )
         return conn
     except Exception as e:
