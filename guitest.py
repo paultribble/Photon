@@ -25,11 +25,10 @@ def connect_to_database():
 def generate_unique_id(cursor):
     while True:
         new_id = random.randint(1, 999999)
-        cursor.execute("SELECT id FROM players WHERE id = %s", (new_id,))
+        cursor.execute("SELECT id FROM player WHERE id = %s", (new_id,))
         if cursor.fetchone() is None:
             return new_id
 
-# Create splash screen
 def show_splash_screen(root, splash_duration=3000):
     splash = tk.Toplevel()
     splash.overrideredirect(True)
@@ -61,7 +60,6 @@ def show_splash_screen(root, splash_duration=3000):
     
     root.after(splash_duration, splash.destroy)  # Close splash after the duration
 
-# Handle player data
 def player_entry_screen(root, conn):
     cursor = conn.cursor()
 
@@ -80,13 +78,12 @@ def player_entry_screen(root, conn):
         team1_label.config(text=team1_name.get(), background=get_team_color(team1_name.get()))
         team2_label.config(text=team2_name.get(), background=get_team_color(team2_name.get()))
 
-    # Bind variables to update function
     team1_name.trace_add("write", update_team_names_and_colors)
     team2_name.trace_add("write", update_team_names_and_colors)
 
     def query_player_data(player_id):
         try:
-            cursor.execute("SELECT codename FROM players WHERE id = %s", (player_id,))
+            cursor.execute("SELECT codename FROM player WHERE id = %s", (player_id,))
             result = cursor.fetchone()
             return result[0] if result else None
         except Exception as e:
@@ -95,10 +92,21 @@ def player_entry_screen(root, conn):
 
     def save_player_data(player_id, nickname):
         try:
-            cursor.execute(
-                "INSERT INTO players (id, codename) VALUES (%s, %s) ON CONFLICT (id) DO UPDATE SET codename = EXCLUDED.codename",
-                (player_id, nickname)
-            )
+            cursor = conn.cursor()
+            # Check if the player already exists
+            cursor.execute("SELECT id FROM player WHERE id = %s", (player_id,))
+            if cursor.fetchone() is None:
+                # Player does not exist, insert new record
+                cursor.execute(
+                    "INSERT INTO player (id, codename) VALUES (%s, %s)",
+                    (player_id, nickname)
+                )
+            else:
+                # Player exists, update existing record
+                cursor.execute(
+                    "UPDATE player SET codename = %s WHERE id = %s",
+                    (nickname, player_id)
+                )
             conn.commit()
         except Exception as e:
             print(f"Error saving player data: {e}")
@@ -110,9 +118,10 @@ def player_entry_screen(root, conn):
         if player_id:
             existing_nickname = query_player_data(player_id)
             if existing_nickname:
-                nickname_entries[team_number][row].delete(0, tk.END)
-                nickname_entries[team_number][row].insert(0, existing_nickname)
+                # Display existing nickname if found
+                nickname_entries[team_number][row].set(existing_nickname)
             elif nickname:
+                # Save new player data
                 save_player_data(player_id, nickname)
             else:
                 nickname_entries[team_number][row].set("Enter a nickname")
@@ -120,6 +129,11 @@ def player_entry_screen(root, conn):
     def start_game():
         print("Starting game...")
         # You can add logic to switch to the play action screen here
+
+    def generate_id_for_team(team_number):
+        unique_id = generate_unique_id(cursor)
+        player_id_entries[team_number][0].delete(0, tk.END)
+        player_id_entries[team_number][0].insert(0, unique_id)
 
     def open_manage_players(conn):
         manage_players_window = tk.Toplevel()
@@ -133,7 +147,7 @@ def player_entry_screen(root, conn):
 
         def load_players():
             cursor = conn.cursor()
-            cursor.execute("SELECT id, codename FROM players")
+            cursor.execute("SELECT id, codename FROM player")
             for row in cursor.fetchall():
                 tree.insert("", tk.END, values=row)
 
@@ -144,12 +158,21 @@ def player_entry_screen(root, conn):
 
     def add_new_player_popup(conn):
         def save_new_player():
+            player_id = id_entry.get()
             nickname = nickname_entry.get()
             if nickname:
                 try:
                     cursor = conn.cursor()
-                    player_id = generate_unique_id(cursor)
-                    cursor.execute("INSERT INTO players (id, codename) VALUES (%s, %s) ON CONFLICT (id) DO UPDATE SET codename = EXCLUDED.codename", (player_id, nickname))
+                    # Generate unique ID
+                    if player_id:
+                        player_id = int(player_id)
+                    else:
+                        player_id = generate_unique_id(cursor)
+                    # Save new player data
+                    cursor.execute(
+                        "INSERT INTO player (id, codename) VALUES (%s, %s) ON CONFLICT (id) DO UPDATE SET codename = EXCLUDED.codename",
+                        (player_id, nickname)
+                    )
                     conn.commit()
                     new_player_popup.destroy()
                 except Exception as e:
@@ -157,6 +180,10 @@ def player_entry_screen(root, conn):
 
         new_player_popup = tk.Toplevel()
         new_player_popup.title("Add New Player")
+
+        tk.Label(new_player_popup, text="Player ID (Leave empty for auto-generate):").pack(padx=10, pady=5)
+        id_entry = tk.Entry(new_player_popup)
+        id_entry.pack(padx=10, pady=5)
 
         tk.Label(new_player_popup, text="Nickname:").pack(padx=10, pady=5)
         nickname_entry = tk.Entry(new_player_popup)
@@ -196,37 +223,21 @@ def player_entry_screen(root, conn):
         player_id_entries[1].append(player_id_entry2)
         nickname_entries[1].append(nickname_entry2)
 
-    ttk.Button(root, text="Submit Player 1", command=lambda: handle_entry(0, 0)).grid(row=16, column=0, padx=10, pady=5)
-    ttk.Button(root, text="Submit Player 2", command=lambda: handle_entry(1, 0)).grid(row=16, column=1, padx=10, pady=5)
+    submit_button = tk.Button(root, text="Submit", command=lambda: [handle_entry(0, i) for i in range(15)] + [handle_entry(1, i) for i in range(15)])
+    submit_button.grid(row=1, column=0, padx=5, pady=5)
 
-    ttk.Button(root, text="Add New Players", command=lambda: open_manage_players(conn)).grid(row=17, column=0, columnspan=2, padx=10, pady=5)
+    start_game_button = tk.Button(root, text="Start Game", command=start_game)
+    start_game_button.grid(row=1, column=1, padx=5, pady=5)
 
-    ttk.Button(root, text="Start Game", command=start_game).grid(row=18, column=0, columnspan=2, padx=10, pady=10)
+    manage_players_button = tk.Button(root, text="Manage Players", command=lambda: open_manage_players(conn))
+    manage_players_button.grid(row=2, column=0, columnspan=2, pady=5)
 
-    # Configure styles
-    style = ttk.Style()
-    style.configure("Team.TFrame", background="lightgrey")
-    style.configure("Team.TLabel", background="lightgrey")
-
-# Main function
 def main():
-    root = tk.Tk()
-    root.withdraw()  # Hide the main window during the splash screen
-    
     conn = connect_to_database()
-    
-    show_splash_screen(root)  # Show splash screen
-    
-    root.after(3100, lambda: [root.deiconify(), player_entry_screen(root, conn)])  # Show player entry screen after splash
-
-    root.title("Laser Tag Player Entry")
-    root.geometry("1200x800")  # Initial size of the main window
-    root.minsize(600, 400)  # Set a minimum size
-    root.maxsize(1920, 1080)  # Set a maximum size (optional)
-
-    # Bind the "q" key to quit the program
-    root.bind("q", lambda event: root.destroy())
-
+    root = tk.Tk()
+    root.title("Laser Tag Player Entry System")
+    show_splash_screen(root)
+    root.after(3000, lambda: player_entry_screen(root, conn))
     root.mainloop()
 
 if __name__ == "__main__":
