@@ -68,11 +68,11 @@ def player_entry_screen(root):
     team2_name.trace_add("write", lambda *args: update_team_labels())
 
     # Setup the entry form for two teams
-    ttk.Label(root, text="Team 1 Name:").grid(row=0, column=0, padx=10, pady=5)
+    ttk.Label(root, text="Team 1 Name:").grid(row=0, column=0, padx=10, pady=5, sticky="e")
     team1_name_entry = ttk.Entry(root, textvariable=team1_name)
     team1_name_entry.grid(row=0, column=1, padx=10, pady=5)
 
-    ttk.Label(root, text="Team 2 Name:").grid(row=0, column=2, padx=10, pady=5)
+    ttk.Label(root, text="Team 2 Name:").grid(row=0, column=2, padx=10, pady=5, sticky="e")
     team2_name_entry = ttk.Entry(root, textvariable=team2_name)
     team2_name_entry.grid(row=0, column=3, padx=10, pady=5)
 
@@ -84,18 +84,18 @@ def player_entry_screen(root):
 
     # Add entries for 15 team members per team
     for i in range(15):
-        ttk.Label(root, text=f"Team 1 Member {i+1} ID:").grid(row=2+i, column=0, padx=10, pady=5)
+        ttk.Label(root, text=f"Player ID:").grid(row=2+i, column=0, padx=10, pady=5)
         ttk.Entry(root).grid(row=2+i, column=1, padx=10, pady=5)
 
-        ttk.Label(root, text=f"Team 1 Member {i+1} Nickname:").grid(row=2+i, column=2, padx=10, pady=5)
+        ttk.Label(root, text=f"Nickname:").grid(row=2+i, column=2, padx=10, pady=5)
         ttk.Entry(root).grid(row=2+i, column=3, padx=10, pady=5)
 
     for i in range(15):
-        ttk.Label(root, text=f"Team 2 Member {i+1} ID:").grid(row=17+i, column=2, padx=10, pady=5)
-        ttk.Entry(root).grid(row=17+i, column=3, padx=10, pady=5)
+        ttk.Label(root, text=f"Player ID:").grid(row=2+i, column=4, padx=10, pady=5)
+        ttk.Entry(root).grid(row=2+i, column=5, padx=10, pady=5)
 
-        ttk.Label(root, text=f"Team 2 Member {i+1} Nickname:").grid(row=17+i, column=4, padx=10, pady=5)
-        ttk.Entry(root).grid(row=17+i, column=5, padx=10, pady=5)
+        ttk.Label(root, text=f"Nickname:").grid(row=2+i, column=6, padx=10, pady=5)
+        ttk.Entry(root).grid(row=2+i, column=7, padx=10, pady=5)
 
     # To move to the next screen (example for the start button)
     def start_game():
@@ -125,3 +125,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
