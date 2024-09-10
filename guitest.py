@@ -1,25 +1,12 @@
-import psycopg2
 import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk
 import socket
 import sys
 import os
-#test
-# Connect to the PostgreSQL database
-def connect_to_database():
-    try:
-        conn = psycopg2.connect(
-            dbname="photon",       # Database name
-            user="student",  # Your PostgreSQL username
-            password="student",  # Your PostgreSQL password
-            host="localhost",      # Hostname
-            port="5432"            # Default PostgreSQL port
-        )
-        return conn
-    except Exception as e:
-        print(f"Error connecting to the database: {e}")
-        sys.exit(1)
+
+# Mock database using a dictionary
+players_data = {}
 
 # Create splash screen
 def show_splash_screen(root, splash_duration=3000):
@@ -54,9 +41,7 @@ def show_splash_screen(root, splash_duration=3000):
     root.after(splash_duration, splash.destroy)  # Close splash after the duration
 
 # Handle player data
-def player_entry_screen(root, conn):
-    cursor = conn.cursor()
-
+def player_entry_screen(root):
     # Team variables
     team1_name = tk.StringVar(value="Blue Team")
     team1_color = tk.StringVar(value="blue")
@@ -76,23 +61,11 @@ def player_entry_screen(root, conn):
     team2_color.trace_add("write", update_team_names_and_colors)
 
     def query_player_data(player_id):
-        try:
-            cursor.execute("SELECT codename FROM players WHERE id = %s", (player_id,))
-            result = cursor.fetchone()
-            return result[0] if result else None
-        except Exception as e:
-            print(f"Error querying player data: {e}")
-            return None
+        return players_data.get(player_id)
 
     def save_player_data(player_id, nickname):
-        try:
-            cursor.execute(
-                "INSERT INTO players (id, codename) VALUES (%s, %s) ON CONFLICT (id) DO UPDATE SET codename = EXCLUDED.codename",
-                (player_id, nickname)
-            )
-            conn.commit()
-        except Exception as e:
-            print(f"Error saving player data: {e}")
+        players_data[player_id] = nickname
+        print(f"Player ID={player_id}, Nickname={nickname} saved.")
 
     def handle_entry(event=None):
         player_id = player_id_entry.get()
@@ -140,36 +113,42 @@ def player_entry_screen(root, conn):
     team2_label = ttk.Label(root, text=team2_name.get(), foreground=team2_color.get())
     team2_label.grid(row=2, column=2, columnspan=2, pady=10)
 
-    ttk.Label(root, text="Player ID:").grid(row=4, column=0, padx=10, pady=5)
+    # Create 15 player slots for each team
+    for i in range(15):
+        ttk.Label(root, text=f"Team 1 Player {i+1}:").grid(row=3+i, column=0, padx=10, pady=5)
+        ttk.Entry(root, textvariable=tk.StringVar()).grid(row=3+i, column=1, padx=10, pady=5)
+        
+        ttk.Label(root, text=f"Team 2 Player {i+1}:").grid(row=3+i, column=2, padx=10, pady=5)
+        ttk.Entry(root, textvariable=tk.StringVar()).grid(row=3+i, column=3, padx=10, pady=5)
+
+    ttk.Label(root, text="Player ID:").grid(row=18, column=0, padx=10, pady=5)
     player_id_entry = ttk.Entry(root)
-    player_id_entry.grid(row=4, column=1, padx=10, pady=5)
+    player_id_entry.grid(row=18, column=1, padx=10, pady=5)
     player_id_entry.bind("<Return>", handle_entry)
 
     nickname_var = tk.StringVar()
-    ttk.Label(root, text="Nickname:").grid(row=5, column=0, padx=10, pady=5)
+    ttk.Label(root, text="Nickname:").grid(row=19, column=0, padx=10, pady=5)
     nickname_entry = ttk.Entry(root, textvariable=nickname_var)
-    nickname_entry.grid(row=5, column=1, padx=10, pady=5)
+    nickname_entry.grid(row=19, column=1, padx=10, pady=5)
     nickname_entry.bind("<Return>", handle_entry)
 
-    ttk.Button(root, text="Submit", command=handle_entry).grid(row=6, column=1, padx=10, pady=5)
+    ttk.Button(root, text="Submit", command=handle_entry).grid(row=20, column=1, padx=10, pady=5)
 
     # To move to the next screen (example for the start button)
     def start_game():
         print("Starting game...")
         # You can add logic to switch to the play action screen here
 
-    ttk.Button(root, text="Start Game", command=start_game).grid(row=7, column=1, padx=10, pady=10)
+    ttk.Button(root, text="Start Game", command=start_game).grid(row=21, column=1, padx=10, pady=10)
 
 # Main function
 def main():
     root = tk.Tk()
     root.withdraw()  # Hide the main window during the splash screen
     
-    conn = connect_to_database()
-    
     show_splash_screen(root)  # Show splash screen
     
-    root.after(3100, lambda: [root.deiconify(), player_entry_screen(root, conn)])  # Show player entry screen after splash
+    root.after(3100, lambda: [root.deiconify(), player_entry_screen(root)])  # Show player entry screen after splash
 
     root.title("Laser Tag Player Entry")
     root.geometry("1200x800")  # Initial size of the main window
