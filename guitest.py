@@ -84,6 +84,15 @@ def player_entry_screen(root, conn):
     team1_name.trace_add("write", update_team_names_and_colors)
     team2_name.trace_add("write", update_team_names_and_colors)
 
+    def query_player_data(player_id):
+        try:
+            cursor.execute("SELECT codename FROM players WHERE id = %s", (player_id,))
+            result = cursor.fetchone()
+            return result[0] if result else None
+        except Exception as e:
+            print(f"Error querying player data: {e}")
+            return None
+
     def save_player_data(player_id, nickname):
         try:
             cursor.execute(
@@ -95,12 +104,18 @@ def player_entry_screen(root, conn):
             print(f"Error saving player data: {e}")
 
     def handle_entry(team_number, row):
+        player_id = player_id_entries[team_number][row].get()
         nickname = nickname_entries[team_number][row].get()
 
-        if nickname:
-            player_id = generate_unique_id(cursor)
-            save_player_data(player_id, nickname)
-            print(f"Player added: ID = {player_id}, Nickname = {nickname}")
+        if player_id:
+            existing_nickname = query_player_data(player_id)
+            if existing_nickname:
+                nickname_entries[team_number][row].delete(0, tk.END)
+                nickname_entries[team_number][row].insert(0, existing_nickname)
+            elif nickname:
+                save_player_data(player_id, nickname)
+            else:
+                nickname_entries[team_number][row].set("Enter a nickname")
 
     def start_game():
         print("Starting game...")
@@ -155,27 +170,36 @@ def player_entry_screen(root, conn):
     team2_frame = ttk.Frame(root, padding=10, style="Team.TFrame")
     team2_frame.grid(row=0, column=1, padx=10, pady=5, sticky="nsew")
 
-    team1_label = ttk.Label(team1_frame, text="Player Nickname", background=get_team_color(team1_name.get()), font=('Helvetica', 10, 'bold'))
+    team1_label = ttk.Label(team1_frame, text="Player ID", background=get_team_color(team1_name.get()), font=('Helvetica', 10, 'bold'))
     team1_label.grid(row=0, column=0, padx=5, pady=2)
+    ttk.Label(team1_frame, text="Nickname", background=get_team_color(team1_name.get()), font=('Helvetica', 10, 'bold')).grid(row=0, column=1, padx=5, pady=2)
     
-    team2_label = ttk.Label(team2_frame, text="Player Nickname", background=get_team_color(team2_name.get()), font=('Helvetica', 10, 'bold'))
+    team2_label = ttk.Label(team2_frame, text="Player ID", background=get_team_color(team2_name.get()), font=('Helvetica', 10, 'bold'))
     team2_label.grid(row=0, column=0, padx=5, pady=2)
+    ttk.Label(team2_frame, text="Nickname", background=get_team_color(team2_name.get()), font=('Helvetica', 10, 'bold')).grid(row=0, column=1, padx=5, pady=2)
 
+    player_id_entries = [[], []]
     nickname_entries = [[], []]
 
     for i in range(15):
+        player_id_entry1 = ttk.Entry(team1_frame)
+        player_id_entry1.grid(row=i+1, column=0, padx=5, pady=2)
         nickname_entry1 = ttk.Entry(team1_frame)
-        nickname_entry1.grid(row=i+1, column=0, padx=5, pady=2)
+        nickname_entry1.grid(row=i+1, column=1, padx=5, pady=2)
+        player_id_entries[0].append(player_id_entry1)
         nickname_entries[0].append(nickname_entry1)
 
+        player_id_entry2 = ttk.Entry(team2_frame)
+        player_id_entry2.grid(row=i+1, column=0, padx=5, pady=2)
         nickname_entry2 = ttk.Entry(team2_frame)
-        nickname_entry2.grid(row=i+1, column=0, padx=5, pady=2)
+        nickname_entry2.grid(row=i+1, column=1, padx=5, pady=2)
+        player_id_entries[1].append(player_id_entry2)
         nickname_entries[1].append(nickname_entry2)
 
     ttk.Button(root, text="Submit Player 1", command=lambda: handle_entry(0, 0)).grid(row=16, column=0, padx=10, pady=5)
     ttk.Button(root, text="Submit Player 2", command=lambda: handle_entry(1, 0)).grid(row=16, column=1, padx=10, pady=5)
 
-    ttk.Button(root, text="Manage Players", command=lambda: open_manage_players(conn)).grid(row=17, column=0, columnspan=2, padx=10, pady=5)
+    ttk.Button(root, text="Add New Players", command=lambda: open_manage_players(conn)).grid(row=17, column=0, columnspan=2, padx=10, pady=5)
 
     ttk.Button(root, text="Start Game", command=start_game).grid(row=18, column=0, columnspan=2, padx=10, pady=10)
 
@@ -207,4 +231,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
