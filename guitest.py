@@ -5,16 +5,16 @@ from PIL import Image, ImageTk
 import socket
 import sys
 import os
-# DId this update?????
+
 # Connect to the PostgreSQL database
 def connect_to_database():
     try:
         conn = psycopg2.connect(
             dbname="photon",       # Database name
-            user="student",  # PostgreSQL username
-            password="student",  # PostgreSQL password
+            user="student",  # Your PostgreSQL username
+            password="student",  # Your PostgreSQL password
             host="localhost",      # Hostname
-            port="5432"            # Default PostgreSQL port.
+            port="5432"            # Default PostgreSQL port
         )
         return conn
     except Exception as e:
@@ -56,18 +56,43 @@ def show_splash_screen(root, splash_duration=3000):
 # Handle player data
 def player_entry_screen(root, conn):
     cursor = conn.cursor()
-    
+
+    # Team variables
+    team1_name = tk.StringVar(value="Blue Team")
+    team1_color = tk.StringVar(value="blue")
+    team2_name = tk.StringVar(value="Red Team")
+    team2_color = tk.StringVar(value="red")
+
+    def update_team_names_and_colors(*args):
+        # Update Team 1
+        team1_label.config(text=team1_name.get(), foreground=team1_color.get())
+        # Update Team 2
+        team2_label.config(text=team2_name.get(), foreground=team2_color.get())
+
+    # Bind variables to update function
+    team1_name.trace_add("write", update_team_names_and_colors)
+    team1_color.trace_add("write", update_team_names_and_colors)
+    team2_name.trace_add("write", update_team_names_and_colors)
+    team2_color.trace_add("write", update_team_names_and_colors)
+
     def query_player_data(player_id):
-        cursor.execute("SELECT codename FROM players WHERE id = %s", (player_id,))
-        result = cursor.fetchone()
-        return result[0] if result else None
+        try:
+            cursor.execute("SELECT codename FROM players WHERE id = %s", (player_id,))
+            result = cursor.fetchone()
+            return result[0] if result else None
+        except Exception as e:
+            print(f"Error querying player data: {e}")
+            return None
 
     def save_player_data(player_id, nickname):
-        cursor.execute(
-            "INSERT INTO players (id, codename) VALUES (%s, %s) ON CONFLICT (id) DO UPDATE SET codename = EXCLUDED.codename",
-            (player_id, nickname)
-        )
-        conn.commit()
+        try:
+            cursor.execute(
+                "INSERT INTO players (id, codename) VALUES (%s, %s) ON CONFLICT (id) DO UPDATE SET codename = EXCLUDED.codename",
+                (player_id, nickname)
+            )
+            conn.commit()
+        except Exception as e:
+            print(f"Error saving player data: {e}")
 
     def handle_entry(event=None):
         player_id = player_id_entry.get()
@@ -83,30 +108,57 @@ def player_entry_screen(root, conn):
                 nickname_var.set("Enter a nickname")
 
     def broadcast_equipment_id(equipment_id):
-        udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        udp_socket.sendto(str(equipment_id).encode(), ("<broadcast>", 7500))
-        udp_socket.close()
+        try:
+            udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+            udp_socket.sendto(str(equipment_id).encode(), ("<broadcast>", 7500))
+        except Exception as e:
+            print(f"Error broadcasting equipment ID: {e}")
+        finally:
+            udp_socket.close()
 
-    # Setup the entry form
-    ttk.Label(root, text="Player ID:").grid(row=0, column=0, padx=10, pady=5)
+    # Setup the entry form for two teams
+    ttk.Label(root, text="Team 1 Name:").grid(row=0, column=0, padx=10, pady=5)
+    team1_name_entry = ttk.Entry(root, textvariable=team1_name)
+    team1_name_entry.grid(row=0, column=1, padx=10, pady=5)
+
+    ttk.Label(root, text="Team 1 Color:").grid(row=1, column=0, padx=10, pady=5)
+    team1_color_entry = ttk.Entry(root, textvariable=team1_color)
+    team1_color_entry.grid(row=1, column=1, padx=10, pady=5)
+
+    ttk.Label(root, text="Team 2 Name:").grid(row=0, column=2, padx=10, pady=5)
+    team2_name_entry = ttk.Entry(root, textvariable=team2_name)
+    team2_name_entry.grid(row=0, column=3, padx=10, pady=5)
+
+    ttk.Label(root, text="Team 2 Color:").grid(row=1, column=2, padx=10, pady=5)
+    team2_color_entry = ttk.Entry(root, textvariable=team2_color)
+    team2_color_entry.grid(row=1, column=3, padx=10, pady=5)
+
+    team1_label = ttk.Label(root, text=team1_name.get(), foreground=team1_color.get())
+    team1_label.grid(row=2, column=0, columnspan=2, pady=10)
+    
+    team2_label = ttk.Label(root, text=team2_name.get(), foreground=team2_color.get())
+    team2_label.grid(row=2, column=2, columnspan=2, pady=10)
+
+    ttk.Label(root, text="Player ID:").grid(row=4, column=0, padx=10, pady=5)
     player_id_entry = ttk.Entry(root)
-    player_id_entry.grid(row=0, column=1, padx=10, pady=5)
+    player_id_entry.grid(row=4, column=1, padx=10, pady=5)
     player_id_entry.bind("<Return>", handle_entry)
 
     nickname_var = tk.StringVar()
-    ttk.Label(root, text="Nickname:").grid(row=1, column=0, padx=10, pady=5)
+    ttk.Label(root, text="Nickname:").grid(row=5, column=0, padx=10, pady=5)
     nickname_entry = ttk.Entry(root, textvariable=nickname_var)
-    nickname_entry.grid(row=1, column=1, padx=10, pady=5)
+    nickname_entry.grid(row=5, column=1, padx=10, pady=5)
     nickname_entry.bind("<Return>", handle_entry)
 
-    ttk.Button(root, text="Submit", command=handle_entry).grid(row=2, column=1, padx=10, pady=5)
+    ttk.Button(root, text="Submit", command=handle_entry).grid(row=6, column=1, padx=10, pady=5)
 
     # To move to the next screen (example for the start button)
     def start_game():
         print("Starting game...")
         # You can add logic to switch to the play action screen here
 
-    ttk.Button(root, text="Start Game", command=start_game).grid(row=3, column=1, padx=10, pady=10)
+    ttk.Button(root, text="Start Game", command=start_game).grid(row=7, column=1, padx=10, pady=10)
 
 # Main function
 def main():
@@ -125,7 +177,7 @@ def main():
     root.maxsize(1920, 1080)  # Set a maximum size (optional)
 
     # Bind the "q" key to quit the program
-    root.bind("q", lambda event: sys.exit())
+    root.bind("q", lambda event: root.destroy())
 
     root.mainloop()
 
