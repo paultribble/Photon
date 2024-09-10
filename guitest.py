@@ -1,7 +1,6 @@
 import psycopg2
 import tkinter as tk
 from tkinter import ttk
-from tkinter import simpledialog
 from PIL import Image, ImageTk
 import socket
 import sys
@@ -29,59 +28,6 @@ def generate_unique_id(cursor):
         cursor.execute("SELECT id FROM players WHERE id = %s", (new_id,))
         if cursor.fetchone() is None:
             return new_id
-
-def add_new_player_popup(conn):
-    cursor = conn.cursor()
-
-    def save_new_player():
-        player_nickname = nickname_entry.get()
-        if player_nickname:
-            unique_id = generate_unique_id(cursor)
-            cursor.execute(
-                "INSERT INTO players (id, codename) VALUES (%s, %s)",
-                (unique_id, player_nickname)
-            )
-            conn.commit()
-            print(f"New player added: ID={unique_id}, Nickname={player_nickname}")
-            new_player_window.destroy()
-        else:
-            print("Nickname cannot be empty!")
-
-    new_player_window = tk.Toplevel()
-    new_player_window.title("Add New Player")
-
-    tk.Label(new_player_window, text="Nickname:").pack(pady=5)
-    nickname_entry = tk.Entry(new_player_window)
-    nickname_entry.pack(pady=5)
-
-    tk.Button(new_player_window, text="Save", command=save_new_player).pack(pady=5)
-    tk.Button(new_player_window, text="Cancel", command=new_player_window.destroy).pack(pady=5)
-
-def generate_id_for_team(team_number):
-    # Placeholder function for generating IDs
-    # Implement logic as needed
-    print(f"Generating IDs for Team {team_number + 1}")
-
-def open_manage_players():
-    manage_players_window = tk.Toplevel()
-    manage_players_window.title("Manage Players")
-
-    columns = ("ID", "Nickname")
-    tree = ttk.Treeview(manage_players_window, columns=columns, show="headings")
-    tree.heading("ID", text="Player ID")
-    tree.heading("Nickname", text="Nickname")
-    tree.pack(fill=tk.BOTH, expand=True)
-
-    def load_players():
-        cursor = conn.cursor()
-        cursor.execute("SELECT id, codename FROM players")
-        for row in cursor.fetchall():
-            tree.insert("", tk.END, values=row)
-
-    load_players()
-
-    tk.Button(manage_players_window, text="Add New Player", command=lambda: add_new_player_popup(conn)).pack(pady=5)
-    tk.Button(manage_players_window, text="Close", command=manage_players_window.destroy).pack(pady=5)
 
 # Create splash screen
 def show_splash_screen(root, splash_duration=3000):
@@ -174,6 +120,58 @@ def player_entry_screen(root, conn):
         print("Starting game...")
         # You can add logic to switch to the play action screen here
 
+    def generate_id_for_team(team_number):
+        unique_id = generate_unique_id(cursor)
+        player_id_entries[team_number][0].delete(0, tk.END)
+        player_id_entries[team_number][0].insert(0, unique_id)
+
+    def open_manage_players(conn):
+        manage_players_window = tk.Toplevel()
+        manage_players_window.title("Manage Players")
+
+        columns = ("ID", "Nickname")
+        tree = ttk.Treeview(manage_players_window, columns=columns, show="headings")
+        tree.heading("ID", text="Player ID")
+        tree.heading("Nickname", text="Nickname")
+        tree.pack(fill=tk.BOTH, expand=True)
+
+        def load_players():
+            cursor = conn.cursor()
+            cursor.execute("SELECT id, codename FROM players")
+            for row in cursor.fetchall():
+                tree.insert("", tk.END, values=row)
+
+        load_players()
+
+        tk.Button(manage_players_window, text="Add New Player", command=lambda: add_new_player_popup(conn)).pack(pady=5)
+        tk.Button(manage_players_window, text="Close", command=manage_players_window.destroy).pack(pady=5)
+
+    def add_new_player_popup(conn):
+        def save_new_player():
+            player_id = id_entry.get()
+            nickname = nickname_entry.get()
+            if player_id and nickname:
+                try:
+                    cursor = conn.cursor()
+                    cursor.execute("INSERT INTO players (id, codename) VALUES (%s, %s) ON CONFLICT (id) DO UPDATE SET codename = EXCLUDED.codename", (player_id, nickname))
+                    conn.commit()
+                    new_player_popup.destroy()
+                except Exception as e:
+                    print(f"Error saving new player: {e}")
+
+        new_player_popup = tk.Toplevel()
+        new_player_popup.title("Add New Player")
+
+        tk.Label(new_player_popup, text="Player ID:").pack(padx=10, pady=5)
+        id_entry = tk.Entry(new_player_popup)
+        id_entry.pack(padx=10, pady=5)
+
+        tk.Label(new_player_popup, text="Nickname:").pack(padx=10, pady=5)
+        nickname_entry = tk.Entry(new_player_popup)
+        nickname_entry.pack(padx=10, pady=5)
+
+        tk.Button(new_player_popup, text="Save", command=save_new_player).pack(pady=10)
+
     # Setup the entry form for two teams
     team1_frame = ttk.Frame(root, padding=10, style="Team.TFrame")
     team1_frame.grid(row=0, column=0, padx=10, pady=5, sticky="nsew")
@@ -212,7 +210,7 @@ def player_entry_screen(root, conn):
     ttk.Button(root, text="Submit Player 1", command=lambda: handle_entry(0, 0)).grid(row=17, column=0, padx=10, pady=5)
     ttk.Button(root, text="Submit Player 2", command=lambda: handle_entry(1, 0)).grid(row=17, column=1, padx=10, pady=5)
 
-    ttk.Button(root, text="Manage Players", command=open_manage_players).grid(row=18, column=0, columnspan=2, padx=10, pady=5)
+    ttk.Button(root, text="Manage Players", command=lambda: open_manage_players(conn)).grid(row=18, column=0, columnspan=2, padx=10, pady=5)
 
     ttk.Button(root, text="Start Game", command=start_game).grid(row=19, column=0, columnspan=2, padx=10, pady=10)
 
@@ -244,4 +242,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
