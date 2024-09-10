@@ -68,8 +68,16 @@ def player_entry_screen(root, conn):
     def save_player_data(player_id, nickname):
         try:
             cursor.execute(
-                "INSERT INTO players (id, codename) VALUES (%s, %s) ON CONFLICT (id) DO UPDATE SET codename = EXCLUDED.codename",
+                "INSERT INTO player (id, codename) VALUES (%s, %s)",
                 (player_id, nickname)
+            )
+            conn.commit()
+        except psycopg2.IntegrityError:
+            # Handle the conflict by updating the existing record
+            conn.rollback()  # Rollback the failed insert operation
+            cursor.execute(
+                "UPDATE player SET codename = %s WHERE id = %s",
+                (nickname, player_id)
             )
             conn.commit()
         except Exception as e:
