@@ -69,11 +69,16 @@ def player_entry_screen(root, conn):
     team1_name = tk.StringVar(value="Blue Team")
     team2_name = tk.StringVar(value="Red Team")
 
+    def get_team_color(team_name):
+        color_map = {
+            "Blue Team": "lightblue",
+            "Red Team": "lightcoral"
+        }
+        return color_map.get(team_name, "white")
+
     def update_team_names_and_colors(*args):
-        # Update Team 1
-        team1_label.config(text=team1_name.get(), foreground="blue")
-        # Update Team 2
-        team2_label.config(text=team2_name.get(), foreground="red")
+        team1_label.config(text=team1_name.get(), background=get_team_color(team1_name.get()))
+        team2_label.config(text=team2_name.get(), background=get_team_color(team2_name.get()))
 
     # Bind variables to update function
     team1_name.trace_add("write", update_team_names_and_colors)
@@ -132,27 +137,27 @@ def player_entry_screen(root, conn):
     team2_frame = ttk.Frame(root, padding=10, style="Team.TFrame")
     team2_frame.grid(row=0, column=1, padx=10, pady=5, sticky="nsew")
 
-    for i in range(15):
-        ttk.Label(team1_frame, text="Player ID:").grid(row=i, column=0, padx=5, pady=2, sticky="w")
-        ttk.Label(team1_frame, text="Nickname:").grid(row=i, column=1, padx=5, pady=2, sticky="w")
-        ttk.Label(team2_frame, text="Player ID:").grid(row=i, column=0, padx=5, pady=2, sticky="w")
-        ttk.Label(team2_frame, text="Nickname:").grid(row=i, column=1, padx=5, pady=2, sticky="w")
+    ttk.Label(team1_frame, text="Player ID", background=get_team_color(team1_name.get()), font=('Helvetica', 10, 'bold')).grid(row=0, column=0, padx=5, pady=2)
+    ttk.Label(team1_frame, text="Nickname", background=get_team_color(team1_name.get()), font=('Helvetica', 10, 'bold')).grid(row=0, column=1, padx=5, pady=2)
+    
+    ttk.Label(team2_frame, text="Player ID", background=get_team_color(team2_name.get()), font=('Helvetica', 10, 'bold')).grid(row=0, column=0, padx=5, pady=2)
+    ttk.Label(team2_frame, text="Nickname", background=get_team_color(team2_name.get()), font=('Helvetica', 10, 'bold')).grid(row=0, column=1, padx=5, pady=2)
 
     player_id_entries = [[], []]
     nickname_entries = [[], []]
 
     for i in range(15):
         player_id_entry1 = ttk.Entry(team1_frame)
-        player_id_entry1.grid(row=i, column=0, padx=5, pady=2)
+        player_id_entry1.grid(row=i+1, column=0, padx=5, pady=2)
         nickname_entry1 = ttk.Entry(team1_frame)
-        nickname_entry1.grid(row=i, column=1, padx=5, pady=2)
+        nickname_entry1.grid(row=i+1, column=1, padx=5, pady=2)
         player_id_entries[0].append(player_id_entry1)
         nickname_entries[0].append(nickname_entry1)
 
         player_id_entry2 = ttk.Entry(team2_frame)
-        player_id_entry2.grid(row=i, column=0, padx=5, pady=2)
+        player_id_entry2.grid(row=i+1, column=0, padx=5, pady=2)
         nickname_entry2 = ttk.Entry(team2_frame)
-        nickname_entry2.grid(row=i, column=1, padx=5, pady=2)
+        nickname_entry2.grid(row=i+1, column=1, padx=5, pady=2)
         player_id_entries[1].append(player_id_entry2)
         nickname_entries[1].append(nickname_entry2)
 
@@ -197,3 +202,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
