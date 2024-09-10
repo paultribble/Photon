@@ -31,6 +31,8 @@ def generate_unique_id(cursor):
             return new_id
 
 def add_new_player_popup(conn):
+    cursor = conn.cursor()
+
     def save_new_player():
         player_nickname = nickname_entry.get()
         if player_nickname:
@@ -54,6 +56,32 @@ def add_new_player_popup(conn):
 
     tk.Button(new_player_window, text="Save", command=save_new_player).pack(pady=5)
     tk.Button(new_player_window, text="Cancel", command=new_player_window.destroy).pack(pady=5)
+
+def generate_id_for_team(team_number):
+    # Placeholder function for generating IDs
+    # Implement logic as needed
+    print(f"Generating IDs for Team {team_number + 1}")
+
+def open_manage_players():
+    manage_players_window = tk.Toplevel()
+    manage_players_window.title("Manage Players")
+
+    columns = ("ID", "Nickname")
+    tree = ttk.Treeview(manage_players_window, columns=columns, show="headings")
+    tree.heading("ID", text="Player ID")
+    tree.heading("Nickname", text="Nickname")
+    tree.pack(fill=tk.BOTH, expand=True)
+
+    def load_players():
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, codename FROM players")
+        for row in cursor.fetchall():
+            tree.insert("", tk.END, values=row)
+
+    load_players()
+
+    tk.Button(manage_players_window, text="Add New Player", command=lambda: add_new_player_popup(conn)).pack(pady=5)
+    tk.Button(manage_players_window, text="Close", command=manage_players_window.destroy).pack(pady=5)
 
 # Create splash screen
 def show_splash_screen(root, splash_duration=3000):
@@ -146,26 +174,6 @@ def player_entry_screen(root, conn):
         print("Starting game...")
         # You can add logic to switch to the play action screen here
 
-    def open_manage_players():
-        manage_players_window = tk.Toplevel()
-        manage_players_window.title("Manage Players")
-
-        columns = ("ID", "Nickname")
-        tree = ttk.Treeview(manage_players_window, columns=columns, show="headings")
-        tree.heading("ID", text="Player ID")
-        tree.heading("Nickname", text="Nickname")
-        tree.pack(fill=tk.BOTH, expand=True)
-
-        def load_players():
-            cursor.execute("SELECT id, codename FROM players")
-            for row in cursor.fetchall():
-                tree.insert("", tk.END, values=row)
-
-        load_players()
-
-        tk.Button(manage_players_window, text="Add New Player", command=lambda: add_new_player_popup(conn)).pack(pady=5)
-        tk.Button(manage_players_window, text="Close", command=manage_players_window.destroy).pack(pady=5)
-
     # Setup the entry form for two teams
     team1_frame = ttk.Frame(root, padding=10, style="Team.TFrame")
     team1_frame.grid(row=0, column=0, padx=10, pady=5, sticky="nsew")
@@ -204,7 +212,6 @@ def player_entry_screen(root, conn):
     ttk.Button(root, text="Submit Player 1", command=lambda: handle_entry(0, 0)).grid(row=17, column=0, padx=10, pady=5)
     ttk.Button(root, text="Submit Player 2", command=lambda: handle_entry(1, 0)).grid(row=17, column=1, padx=10, pady=5)
 
-    # Add Manage Players button
     ttk.Button(root, text="Manage Players", command=open_manage_players).grid(row=18, column=0, columnspan=2, padx=10, pady=5)
 
     ttk.Button(root, text="Start Game", command=start_game).grid(row=19, column=0, columnspan=2, padx=10, pady=10)
@@ -237,3 +244,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
