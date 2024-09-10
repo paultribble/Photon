@@ -62,6 +62,9 @@ def player_entry_screen(root):
         # Update Team 2
         team2_color = get_team_color(team2_name.get())
         team2_label.config(text=team2_name.get(), background=team2_color)
+        # Update column backgrounds
+        for col in range(2):
+            columns[col].config(background=team1_color if col == 0 else team2_color)
 
     # Bind variables to update function
     team1_name.trace_add("write", lambda *args: update_team_labels())
@@ -86,27 +89,29 @@ def player_entry_screen(root):
     team2_label = ttk.Label(main_frame, text=team2_name.get(), background=get_team_color(team2_name.get()), font=('Helvetica', 16, 'bold'))
     team2_label.grid(row=1, column=2, columnspan=2, pady=10, sticky="ew")
 
-    # Add entries for 15 team members per team
+    # Headers for Player ID and Nickname
+    ttk.Label(main_frame, text="Player ID", background="lightgray", font=('Helvetica', 12, 'bold')).grid(row=2, column=0, padx=10, pady=5, sticky="ew")
+    ttk.Label(main_frame, text="Nickname", background="lightgray", font=('Helvetica', 12, 'bold')).grid(row=2, column=1, padx=10, pady=5, sticky="ew")
+
+    ttk.Label(main_frame, text="Player ID", background="lightgray", font=('Helvetica', 12, 'bold')).grid(row=2, column=2, padx=10, pady=5, sticky="ew")
+    ttk.Label(main_frame, text="Nickname", background="lightgray", font=('Helvetica', 12, 'bold')).grid(row=2, column=3, padx=10, pady=5, sticky="ew")
+
+    columns = [tk.Frame(main_frame, bg=get_team_color(team1_name.get())), tk.Frame(main_frame, bg=get_team_color(team2_name.get()))]
+    columns[0].grid(row=3, column=0, columnspan=2, sticky="nsew")
+    columns[1].grid(row=3, column=2, columnspan=2, sticky="nsew")
+
     for i in range(15):
-        ttk.Label(main_frame, text=f"Player ID:", background="lightgray").grid(row=2+i, column=0, padx=10, pady=5, sticky="e")
-        ttk.Entry(main_frame).grid(row=2+i, column=1, padx=10, pady=5)
-
-        ttk.Label(main_frame, text=f"Nickname:", background="lightgray").grid(row=2+i, column=2, padx=10, pady=5, sticky="e")
-        ttk.Entry(main_frame).grid(row=2+i, column=3, padx=10, pady=5)
-
-    for i in range(15):
-        ttk.Label(main_frame, text=f"Player ID:", background="lightgray").grid(row=2+i, column=4, padx=10, pady=5, sticky="e")
-        ttk.Entry(main_frame).grid(row=2+i, column=5, padx=10, pady=5)
-
-        ttk.Label(main_frame, text=f"Nickname:", background="lightgray").grid(row=2+i, column=6, padx=10, pady=5, sticky="e")
-        ttk.Entry(main_frame).grid(row=2+i, column=7, padx=10, pady=5)
+        ttk.Entry(columns[0]).grid(row=i, column=0, padx=5, pady=2)
+        ttk.Entry(columns[0]).grid(row=i, column=1, padx=5, pady=2)
+        ttk.Entry(columns[1]).grid(row=i, column=2, padx=5, pady=2)
+        ttk.Entry(columns[1]).grid(row=i, column=3, padx=5, pady=2)
 
     # To move to the next screen (example for the start button)
     def start_game():
         print("Starting game...")
         # You can add logic to switch to the play action screen here
 
-    ttk.Button(main_frame, text="Start Game", command=start_game).grid(row=32, column=3, padx=10, pady=10)
+    ttk.Button(main_frame, text="Start Game", command=start_game).grid(row=33, column=3, padx=10, pady=10)
 
 # Main function
 def main():
@@ -129,3 +134,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
