@@ -40,15 +40,15 @@ def show_splash_screen(root, splash_duration=3000):
 def get_team_color(team_name):
     # Determine the team color based on the first word in the team name
     color_mapping = {
-        "Blue": "blue",
-        "Red": "red",
-        "Green": "green",
-        "Yellow": "yellow",
-        "Orange": "orange",
-        "Purple": "purple"
+        "Blue": "lightblue",
+        "Red": "lightcoral",
+        "Green": "lightgreen",
+        "Yellow": "lightyellow",
+        "Orange": "lightorange",
+        "Purple": "lightpurple"
     }
     first_word = team_name.split()[0]
-    return color_mapping.get(first_word, "black")  # Default to black if not found
+    return color_mapping.get(first_word, "lightgray")  # Default to lightgray if not found
 
 def player_entry_screen(root):
     # Team variables
@@ -58,51 +58,55 @@ def player_entry_screen(root):
     def update_team_labels():
         # Update Team 1
         team1_color = get_team_color(team1_name.get())
-        team1_label.config(text=team1_name.get(), foreground=team1_color)
+        team1_label.config(text=team1_name.get(), background=team1_color)
         # Update Team 2
         team2_color = get_team_color(team2_name.get())
-        team2_label.config(text=team2_name.get(), foreground=team2_color)
+        team2_label.config(text=team2_name.get(), background=team2_color)
 
     # Bind variables to update function
     team1_name.trace_add("write", lambda *args: update_team_labels())
     team2_name.trace_add("write", lambda *args: update_team_labels())
 
-    # Setup the entry form for two teams
-    ttk.Label(root, text="Team 1 Name:").grid(row=0, column=0, padx=10, pady=5, sticky="e")
-    team1_name_entry = ttk.Entry(root, textvariable=team1_name)
+    # Main frame
+    main_frame = tk.Frame(root, bg="lightgray")
+    main_frame.pack(fill=tk.BOTH, expand=True)
+
+    # Team 1 UI
+    ttk.Label(main_frame, text="Team 1 Name:", background="lightgray").grid(row=0, column=0, padx=10, pady=5, sticky="e")
+    team1_name_entry = ttk.Entry(main_frame, textvariable=team1_name)
     team1_name_entry.grid(row=0, column=1, padx=10, pady=5)
 
-    ttk.Label(root, text="Team 2 Name:").grid(row=0, column=2, padx=10, pady=5, sticky="e")
-    team2_name_entry = ttk.Entry(root, textvariable=team2_name)
+    ttk.Label(main_frame, text="Team 2 Name:", background="lightgray").grid(row=0, column=2, padx=10, pady=5, sticky="e")
+    team2_name_entry = ttk.Entry(main_frame, textvariable=team2_name)
     team2_name_entry.grid(row=0, column=3, padx=10, pady=5)
 
-    team1_label = ttk.Label(root, text=team1_name.get(), foreground=get_team_color(team1_name.get()))
-    team1_label.grid(row=1, column=0, columnspan=2, pady=10)
+    team1_label = ttk.Label(main_frame, text=team1_name.get(), background=get_team_color(team1_name.get()), font=('Helvetica', 16, 'bold'))
+    team1_label.grid(row=1, column=0, columnspan=2, pady=10, sticky="ew")
 
-    team2_label = ttk.Label(root, text=team2_name.get(), foreground=get_team_color(team2_name.get()))
-    team2_label.grid(row=1, column=2, columnspan=2, pady=10)
+    team2_label = ttk.Label(main_frame, text=team2_name.get(), background=get_team_color(team2_name.get()), font=('Helvetica', 16, 'bold'))
+    team2_label.grid(row=1, column=2, columnspan=2, pady=10, sticky="ew")
 
     # Add entries for 15 team members per team
     for i in range(15):
-        ttk.Label(root, text=f"Player ID:").grid(row=2+i, column=0, padx=10, pady=5)
-        ttk.Entry(root).grid(row=2+i, column=1, padx=10, pady=5)
+        ttk.Label(main_frame, text=f"Player ID:", background="lightgray").grid(row=2+i, column=0, padx=10, pady=5, sticky="e")
+        ttk.Entry(main_frame).grid(row=2+i, column=1, padx=10, pady=5)
 
-        ttk.Label(root, text=f"Nickname:").grid(row=2+i, column=2, padx=10, pady=5)
-        ttk.Entry(root).grid(row=2+i, column=3, padx=10, pady=5)
+        ttk.Label(main_frame, text=f"Nickname:", background="lightgray").grid(row=2+i, column=2, padx=10, pady=5, sticky="e")
+        ttk.Entry(main_frame).grid(row=2+i, column=3, padx=10, pady=5)
 
     for i in range(15):
-        ttk.Label(root, text=f"Player ID:").grid(row=2+i, column=4, padx=10, pady=5)
-        ttk.Entry(root).grid(row=2+i, column=5, padx=10, pady=5)
+        ttk.Label(main_frame, text=f"Player ID:", background="lightgray").grid(row=2+i, column=4, padx=10, pady=5, sticky="e")
+        ttk.Entry(main_frame).grid(row=2+i, column=5, padx=10, pady=5)
 
-        ttk.Label(root, text=f"Nickname:").grid(row=2+i, column=6, padx=10, pady=5)
-        ttk.Entry(root).grid(row=2+i, column=7, padx=10, pady=5)
+        ttk.Label(main_frame, text=f"Nickname:", background="lightgray").grid(row=2+i, column=6, padx=10, pady=5, sticky="e")
+        ttk.Entry(main_frame).grid(row=2+i, column=7, padx=10, pady=5)
 
     # To move to the next screen (example for the start button)
     def start_game():
         print("Starting game...")
         # You can add logic to switch to the play action screen here
 
-    ttk.Button(root, text="Start Game", command=start_game).grid(row=32, column=3, padx=10, pady=10)
+    ttk.Button(main_frame, text="Start Game", command=start_game).grid(row=32, column=3, padx=10, pady=10)
 
 # Main function
 def main():
@@ -125,4 +129,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
