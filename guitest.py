@@ -93,84 +93,45 @@ def player_entry_screen(root, conn):
             print(f"Error querying player data: {e}")
             return None
 
-    def save_player_data(player_id, nickname):
+    def save_player_data(nickname):
+        player_id = generate_unique_id(cursor)
         try:
             cursor.execute(
-                "INSERT INTO players (id, codename) VALUES (%s, %s) ON CONFLICT (id) DO UPDATE SET codename = EXCLUDED.codename",
+                "INSERT INTO players (id, codename) VALUES (%s, %s)",
                 (player_id, nickname)
             )
             conn.commit()
+            return player_id
         except Exception as e:
             print(f"Error saving player data: {e}")
+            return None
 
     def handle_entry(team_number, row):
-        player_id = player_id_entries[team_number][row].get()
         nickname = nickname_entries[team_number][row].get()
 
-        if player_id:
-            existing_nickname = query_player_data(player_id)
-            if existing_nickname:
-                nickname_entries[team_number][row].set(existing_nickname)
-            elif nickname:
-                save_player_data(player_id, nickname)
+        if nickname:
+            new_player_id = save_player_data(nickname)
+            if new_player_id:
+                print(f"New player added with ID: {new_player_id}")
             else:
-                nickname_entries[team_number][row].set("Enter a nickname")
+                print("Error adding new player.")
+        else:
+            print("Please enter a nickname.")
 
-    def start_game():
-        print("Starting game...")
-        # You can add logic to switch to the play action screen here
+    def broadcast_equipment_id(equipment_id):
+        try:
+            udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+            udp_socket.sendto(str(equipment_id).encode(), ("<broadcast>", 7500))
+        except Exception as e:
+            print(f"Error broadcasting equipment ID: {e}")
+        finally:
+            udp_socket.close()
 
     def generate_id_for_team(team_number):
         unique_id = generate_unique_id(cursor)
         player_id_entries[team_number][0].delete(0, tk.END)
         player_id_entries[team_number][0].insert(0, unique_id)
-
-    def open_manage_players(conn):
-        manage_players_window = tk.Toplevel()
-        manage_players_window.title("Manage Players")
-
-        columns = ("ID", "Nickname")
-        tree = ttk.Treeview(manage_players_window, columns=columns, show="headings")
-        tree.heading("ID", text="Player ID")
-        tree.heading("Nickname", text="Nickname")
-        tree.pack(fill=tk.BOTH, expand=True)
-
-        def load_players():
-            cursor = conn.cursor()
-            cursor.execute("SELECT id, codename FROM players")
-            for row in cursor.fetchall():
-                tree.insert("", tk.END, values=row)
-
-        load_players()
-
-        tk.Button(manage_players_window, text="Add New Player", command=lambda: add_new_player_popup(conn)).pack(pady=5)
-        tk.Button(manage_players_window, text="Close", command=manage_players_window.destroy).pack(pady=5)
-
-    def add_new_player_popup(conn):
-        def save_new_player():
-            player_id = id_entry.get()
-            nickname = nickname_entry.get()
-            if player_id and nickname:
-                try:
-                    cursor = conn.cursor()
-                    cursor.execute("INSERT INTO players (id, codename) VALUES (%s, %s) ON CONFLICT (id) DO UPDATE SET codename = EXCLUDED.codename", (player_id, nickname))
-                    conn.commit()
-                    new_player_popup.destroy()
-                except Exception as e:
-                    print(f"Error saving new player: {e}")
-
-        new_player_popup = tk.Toplevel()
-        new_player_popup.title("Add New Player")
-
-        tk.Label(new_player_popup, text="Player ID:").pack(padx=10, pady=5)
-        id_entry = tk.Entry(new_player_popup)
-        id_entry.pack(padx=10, pady=5)
-
-        tk.Label(new_player_popup, text="Nickname:").pack(padx=10, pady=5)
-        nickname_entry = tk.Entry(new_player_popup)
-        nickname_entry.pack(padx=10, pady=5)
-
-        tk.Button(new_player_popup, text="Save", command=save_new_player).pack(pady=10)
 
     # Setup the entry form for two teams
     team1_frame = ttk.Frame(root, padding=10, style="Team.TFrame")
@@ -178,41 +139,30 @@ def player_entry_screen(root, conn):
     team2_frame = ttk.Frame(root, padding=10, style="Team.TFrame")
     team2_frame.grid(row=0, column=1, padx=10, pady=5, sticky="nsew")
 
-    team1_label = ttk.Label(team1_frame, text="Player ID", background=get_team_color(team1_name.get()), font=('Helvetica', 10, 'bold'))
-    team1_label.grid(row=0, column=0, padx=5, pady=2)
-    ttk.Label(team1_frame, text="Nickname", background=get_team_color(team1_name.get()), font=('Helvetica', 10, 'bold')).grid(row=0, column=1, padx=5, pady=2)
-    
-    team2_label = ttk.Label(team2_frame, text="Player ID", background=get_team_color(team2_name.get()), font=('Helvetica', 10, 'bold'))
-    team2_label.grid(row=0, column=0, padx=5, pady=2)
-    ttk.Label(team2_frame, text="Nickname", background=get_team_color(team2_name.get()), font=('Helvetica', 10, 'bold')).grid(row=0, column=1, padx=5, pady=2)
+    ttk.Label(team1_frame, text="Nickname", background=get_team_color(team1_name.get()), font=('Helvetica', 10, 'bold')).grid(row=0, column=0, padx=5, pady=2)
+    ttk.Label(team2_frame, text="Nickname", background=get_team_color(team2_name.get()), font=('Helvetica', 10, 'bold')).grid(row=0, column=0, padx=5, pady=2)
 
     player_id_entries = [[], []]
     nickname_entries = [[], []]
 
     for i in range(15):
-        player_id_entry1 = ttk.Entry(team1_frame)
-        player_id_entry1.grid(row=i+1, column=0, padx=5, pady=2)
         nickname_entry1 = ttk.Entry(team1_frame)
-        nickname_entry1.grid(row=i+1, column=1, padx=5, pady=2)
-        player_id_entries[0].append(player_id_entry1)
+        nickname_entry1.grid(row=i+1, column=0, padx=5, pady=2)
         nickname_entries[0].append(nickname_entry1)
 
-        player_id_entry2 = ttk.Entry(team2_frame)
-        player_id_entry2.grid(row=i+1, column=0, padx=5, pady=2)
         nickname_entry2 = ttk.Entry(team2_frame)
-        nickname_entry2.grid(row=i+1, column=1, padx=5, pady=2)
-        player_id_entries[1].append(player_id_entry2)
+        nickname_entry2.grid(row=i+1, column=0, padx=5, pady=2)
         nickname_entries[1].append(nickname_entry2)
 
-    ttk.Button(root, text="Generate ID for Team 1", command=lambda: generate_id_for_team(0)).grid(row=16, column=0, padx=10, pady=5)
-    ttk.Button(root, text="Generate ID for Team 2", command=lambda: generate_id_for_team(1)).grid(row=16, column=1, padx=10, pady=5)
+    ttk.Button(root, text="Submit Player 1", command=lambda: handle_entry(0, 0)).grid(row=16, column=0, padx=10, pady=5)
+    ttk.Button(root, text="Submit Player 2", command=lambda: handle_entry(1, 0)).grid(row=16, column=1, padx=10, pady=5)
 
-    ttk.Button(root, text="Submit Player 1", command=lambda: handle_entry(0, 0)).grid(row=17, column=0, padx=10, pady=5)
-    ttk.Button(root, text="Submit Player 2", command=lambda: handle_entry(1, 0)).grid(row=17, column=1, padx=10, pady=5)
+    # To move to the next screen (example for the start button)
+    def start_game():
+        print("Starting game...")
+        # You can add logic to switch to the play action screen here
 
-    ttk.Button(root, text="Manage Players", command=lambda: open_manage_players(conn)).grid(row=18, column=0, columnspan=2, padx=10, pady=5)
-
-    ttk.Button(root, text="Start Game", command=start_game).grid(row=19, column=0, columnspan=2, padx=10, pady=10)
+    ttk.Button(root, text="Start Game", command=start_game).grid(row=17, column=0, columnspan=2, padx=10, pady=10)
 
     # Configure styles
     style = ttk.Style()
@@ -242,3 +192,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
