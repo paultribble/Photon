@@ -5,7 +5,8 @@
 
 Python
 
-psycopg2
+pip install psycopg2-binary
+
 
 
 Test Test Test
