@@ -1,7 +1,8 @@
+import psycopg2
 import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk
-import psycopg2
+import socket
 import sys
 import os
 
@@ -10,8 +11,8 @@ def connect_to_database():
     try:
         conn = psycopg2.connect(
             dbname="photon",       # Database name
-            user="student",        # Your PostgreSQL username
-            password="student",    # Your PostgreSQL password
+            user="student",        # PostgreSQL username
+            password="student",    # PostgreSQL password
             host="localhost",      # Hostname
             port="5432"            # Default PostgreSQL port
         )
@@ -25,7 +26,7 @@ def show_splash_screen(root, splash_duration=3000):
     splash = tk.Toplevel()
     splash.overrideredirect(True)
     splash.geometry("1200x800")  # Size of the splash screen
-
+    
     def resize_image(event):
         splash_width = event.width
         splash_height = event.height
@@ -45,20 +46,20 @@ def show_splash_screen(root, splash_duration=3000):
     script_dir = os.path.dirname(os.path.abspath(__file__))
     logo_path = os.path.join(script_dir, "Images", "logo.jpg")
     image = Image.open(logo_path)
-
+    
     label = tk.Label(splash)
     label.pack(expand=True, fill=tk.BOTH)
     splash.bind("<Configure>", resize_image)
-
+    
     root.after(splash_duration, splash.destroy)  # Close splash after the duration
 
-# Player entry screen
+# Handle player data
 def player_entry_screen(root, conn):
     cursor = conn.cursor()
 
     def query_player_data(player_id):
         try:
-            cursor.execute("SELECT codename FROM players WHERE id = %s", (player_id,))
+            cursor.execute("SELECT codename FROM player WHERE id = %s", (player_id,))
             result = cursor.fetchone()
             return result[0] if result else None
         except Exception as e:
@@ -68,16 +69,8 @@ def player_entry_screen(root, conn):
     def save_player_data(player_id, nickname):
         try:
             cursor.execute(
-                "INSERT INTO player (id, codename) VALUES (%s, %s)",
+                "INSERT INTO player (id, codename) VALUES (%s, %s) ON CONFLICT (id) DO UPDATE SET codename = EXCLUDED.codename",
                 (player_id, nickname)
-            )
-            conn.commit()
-        except psycopg2.IntegrityError:
-            # Handle the conflict by updating the existing record
-            conn.rollback()  # Rollback the failed insert operation
-            cursor.execute(
-                "UPDATE player SET codename = %s WHERE id = %s",
-                (nickname, player_id)
             )
             conn.commit()
         except Exception as e:
@@ -90,53 +83,62 @@ def player_entry_screen(root, conn):
         if player_id:
             existing_nickname = query_player_data(player_id)
             if existing_nickname:
-                nickname_var.set(existing_nickname)
+                nickname_var.set(f"Account already exists: {existing_nickname}")
             elif nickname:
                 save_player_data(player_id, nickname)
+                nickname_var.set(f"Player added: {nickname}")
             else:
                 nickname_var.set("Enter a nickname")
 
-    # Main frame
-    main_frame = tk.Frame(root, bg="lightgray")
-    main_frame.pack(fill=tk.BOTH, expand=True)
+    def broadcast_equipment_id(equipment_id):
+        try:
+            udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+            udp_socket.sendto(str(equipment_id).encode(), ("<broadcast>", 7500))
+        except Exception as e:
+            print(f"Error broadcasting equipment ID: {e}")
+        finally:
+            udp_socket.close()
 
-    # Player ID and Nickname entry fields
-    ttk.Label(main_frame, text="Player ID:", background="lightgray").grid(row=0, column=0, padx=10, pady=5, sticky="e")
-    player_id_entry = ttk.Entry(main_frame)
+    # Setup the entry form
+    ttk.Label(root, text="Player ID:").grid(row=0, column=0, padx=10, pady=5)
+    player_id_entry = ttk.Entry(root)
     player_id_entry.grid(row=0, column=1, padx=10, pady=5)
-    
-    ttk.Label(main_frame, text="Nickname:", background="lightgray").grid(row=1, column=0, padx=10, pady=5, sticky="e")
-    nickname_var = tk.StringVar()
-    nickname_entry = ttk.Entry(main_frame, textvariable=nickname_var)
-    nickname_entry.grid(row=1, column=1, padx=10, pady=5)
+    player_id_entry.bind("<Return>", handle_entry)
 
-    ttk.Button(main_frame, text="Submit", command=handle_entry).grid(row=2, column=1, padx=10, pady=5)
+    nickname_var = tk.StringVar()
+    ttk.Label(root, text="Nickname:").grid(row=1, column=0, padx=10, pady=5)
+    nickname_entry = ttk.Entry(root, textvariable=nickname_var)
+    nickname_entry.grid(row=1, column=1, padx=10, pady=5)
+    nickname_entry.bind("<Return>", handle_entry)
+
+    ttk.Button(root, text="Submit", command=handle_entry).grid(row=2, column=1, padx=10, pady=5)
 
     # To move to the next screen (example for the start button)
     def start_game():
         print("Starting game...")
         # You can add logic to switch to the play action screen here
 
-    ttk.Button(main_frame, text="Start Game", command=start_game).grid(row=3, column=1, padx=10, pady=10)
+    ttk.Button(root, text="Start Game", command=start_game).grid(row=3, column=1, padx=10, pady=10)
 
 # Main function
 def main():
     root = tk.Tk()
     root.withdraw()  # Hide the main window during the splash screen
-
-    show_splash_screen(root)  # Show splash screen
-
-    # Database connection
+    
     conn = connect_to_database()
-
+    
+    show_splash_screen(root)  # Show splash screen
+    
     root.after(3100, lambda: [root.deiconify(), player_entry_screen(root, conn)])  # Show player entry screen after splash
 
     root.title("Laser Tag Player Entry")
-    root.geometry("400x300")  # Adjust size as needed
-    root.minsize(300, 200)  # Set a minimum size
+    root.geometry("1200x800")  # Initial size of the main window
+    root.minsize(600, 400)  # Set a minimum size
+    root.maxsize(1920, 1080)  # Set a maximum size (optional)
 
     # Bind the "q" key to quit the program
-    root.bind("q", lambda event: [conn.close(), root.destroy()])
+    root.bind("q", lambda event: root.destroy())
 
     root.mainloop()
 
