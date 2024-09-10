@@ -5,7 +5,7 @@ from PIL import Image, ImageTk
 import socket
 import sys
 import os
-
+#test
 # Connect to the PostgreSQL database
 def connect_to_database():
     try:
