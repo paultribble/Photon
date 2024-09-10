@@ -61,8 +61,11 @@ def player_entry_screen(root, conn):
         try:
             cursor.execute("SELECT codename FROM player WHERE id = %s", (player_id,))
             result = cursor.fetchone()
-            return result[0] if result else None
+            if result:
+                return result[0]
+            return None
         except Exception as e:
+            conn.rollback()  # Rollback transaction if error occurs
             print(f"Error querying player data: {e}")
             return None
 
@@ -74,6 +77,7 @@ def player_entry_screen(root, conn):
             )
             conn.commit()
         except Exception as e:
+            conn.rollback()  # Rollback transaction if error occurs
             print(f"Error saving player data: {e}")
 
     def handle_entry(event=None):
