@@ -81,8 +81,8 @@ def player_entry_screen(root, conn):
         team2_color = get_team_color(team2_name.get())
         team2_label.config(text=team2_name.get(), background=team2_color)
         # Update column backgrounds
-        columns[0].config(background=team1_color)
-        columns[1].config(background=team2_color)
+        columns[0].config(bg=team1_color)
+        columns[1].config(bg=team2_color)
 
     # Bind variables to update function
     team1_name.trace_add("write", lambda *args: update_team_labels())
@@ -163,30 +163,32 @@ def player_entry_screen(root, conn):
     for i in range(15):
         ttk.Entry(columns[0]).grid(row=i, column=0, padx=5, pady=2)
         ttk.Entry(columns[0]).grid(row=i, column=1, padx=5, pady=2)
-        ttk.Entry(columns[1]).grid(row=i, column=2, padx=5, pady=2)
-        ttk.Entry(columns[1]).grid(row=i, column=3, padx=5, pady=2)
+        ttk.Entry(columns[1]).grid(row=i, column=0, padx=5, pady=2)
+        ttk.Entry(columns[1]).grid(row=i, column=1, padx=5, pady=2)
 
     ttk.Label(columns[0], text="Player ID", background=get_team_color(team1_name.get()), font=('Helvetica', 10, 'bold')).grid(row=-1, column=0, padx=5, pady=2)
     ttk.Label(columns[0], text="Nickname", background=get_team_color(team1_name.get()), font=('Helvetica', 10, 'bold')).grid(row=-1, column=1, padx=5, pady=2)
-    
-    ttk.Label(columns[1], text="Player ID", background=get_team_color(team2_name.get()), font=('Helvetica', 10, 'bold')).grid(row=-1, column=2, padx=5, pady=2)
-    ttk.Label(columns[1], text="Nickname", background=get_team_color(team2_name.get()), font=('Helvetica', 10, 'bold')).grid(row=-1, column=3, padx=5, pady=2)
+
+    ttk.Label(columns[1], text="Player ID", background=get_team_color(team2_name.get()), font=('Helvetica', 10, 'bold')).grid(row=-1, column=0, padx=5, pady=2)
+    ttk.Label(columns[1], text="Nickname", background=get_team_color(team2_name.get()), font=('Helvetica', 10, 'bold')).grid(row=-1, column=1, padx=5, pady=2)
 
     # Player ID and Nickname entry fields
+    ttk.Label(main_frame, text="Player ID:", background="lightgray").grid(row=4, column=0, padx=10, pady=5, sticky="e")
     player_id_entry = ttk.Entry(main_frame)
-    player_id_entry.grid(row=4, column=0, padx=10, pady=5)
+    player_id_entry.grid(row=4, column=1, padx=10, pady=5)
+    
+    ttk.Label(main_frame, text="Nickname:", background="lightgray").grid(row=5, column=0, padx=10, pady=5, sticky="e")
     nickname_var = tk.StringVar()
     nickname_entry = ttk.Entry(main_frame, textvariable=nickname_var)
-    nickname_entry.grid(row=4, column=1, padx=10, pady=5)
+    nickname_entry.grid(row=5, column=1, padx=10, pady=5)
     
-    ttk.Button(main_frame, text="Submit", command=handle_entry).grid(row=4, column=2, padx=10, pady=5)
+    ttk.Button(main_frame, text="Submit", command=handle_entry).grid(row=6, column=1, padx=10, pady=5)
 
-    # To move to the next screen (example for the start button)
     def start_game():
         print("Starting game...")
         # You can add logic to switch to the play action screen here
 
-    ttk.Button(main_frame, text="Start Game", command=start_game).grid(row=33, column=3, padx=10, pady=10)
+    ttk.Button(main_frame, text="Start Game", command=start_game).grid(row=7, column=1, padx=10, pady=10)
 
 # Main function
 def main():
@@ -197,7 +199,7 @@ def main():
 
     # Database connection
     conn = connect_to_database()
-    
+
     root.after(3100, lambda: [root.deiconify(), player_entry_screen(root, conn)])  # Show player entry screen after splash
 
     root.title("Laser Tag Player Entry")
