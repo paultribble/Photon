@@ -33,15 +33,15 @@ def save_new_player(nickname):
     try:
         cursor = conn.cursor()
         player_id = generate_unique_id(cursor)
-        # First, try inserting the new player
-        cursor.execute("INSERT INTO player (id, codename) VALUES (%s, %s)", (player_id, nickname))
-        conn.commit()
-    except psycopg2.IntegrityError:
-        # Handle the case where the ID might already exist
-        conn.rollback()
-        print(f"Player ID {player_id} already exists. Trying again...")
-        save_new_player(nickname)  # Recursive call to retry with a new ID
+        try:
+            cursor.execute("INSERT INTO player (id, codename) VALUES (%s, %s)", (player_id, nickname))
+            conn.commit()
+        except psycopg2.IntegrityError:
+            conn.rollback()  # Rollback if there is a conflict
+            print(f"Player ID {player_id} already exists. Trying again...")
+            save_new_player(nickname)  # Retry with a new ID
     except Exception as e:
+        conn.rollback()
         print(f"Error saving new player: {e}")
 
 # Create splash screen
@@ -115,12 +115,15 @@ def player_entry_screen(root, conn):
         if player_id:
             existing_nickname = query_player_data(player_id)
             if existing_nickname:
-                nickname_entries[team_number][row].set(existing_nickname)
+                nickname_entries[team_number][row].delete(0, tk.END)
+                nickname_entries[team_number][row].insert(0, existing_nickname)
             elif nickname:
                 save_new_player(nickname)
-                nickname_entries[team_number][row].set(nickname)
+                nickname_entries[team_number][row].delete(0, tk.END)
+                nickname_entries[team_number][row].insert(0, nickname)
             else:
-                nickname_entries[team_number][row].set("Enter a nickname")
+                nickname_entries[team_number][row].delete(0, tk.END)
+                nickname_entries[team_number][row].insert(0, "Enter a nickname")
 
     def start_game():
         print("Starting game...")
@@ -142,69 +145,43 @@ def player_entry_screen(root, conn):
         tree.pack(fill=tk.BOTH, expand=True)
 
         def load_players():
-            cursor = conn.cursor()
-            cursor.execute("SELECT id, codename FROM player")
-            for row in cursor.fetchall():
-                tree.insert("", tk.END, values=row)
+            try:
+                cursor.execute("SELECT id, codename FROM player")
+                for row in cursor.fetchall():
+                    tree.insert("", tk.END, values=row)
+            except Exception as e:
+                print(f"Error loading players: {e}")
 
         load_players()
 
-        tk.Button(manage_players_window, text="Add New Player", command=lambda: add_new_player_popup(conn)).pack(pady=5)
-        tk.Button(manage_players_window, text="Close", command=manage_players_window.destroy).pack(pady=5)
+    player_id_entries = [[None for _ in range(15)] for _ in range(2)]
+    nickname_entries = [[None for _ in range(15)] for _ in range(2)]
 
-    def add_new_player_popup(conn):
-        def save_new_player_action():
-            nickname = nickname_entry.get()
-            if nickname:
-                save_new_player(nickname)
-                new_player_popup.destroy()
-
-        new_player_popup = tk.Toplevel()
-        new_player_popup.title("Add New Player")
-
-        tk.Label(new_player_popup, text="Nickname:").pack(padx=10, pady=5)
-        nickname_entry = tk.Entry(new_player_popup)
-        nickname_entry.pack(padx=10, pady=5)
-
-        tk.Button(new_player_popup, text="Save", command=save_new_player_action).pack(pady=10)
-
-    # Setup the entry form for two teams
-    team1_frame = ttk.Frame(root, padding=10, style="Team.TFrame")
-    team1_frame.grid(row=0, column=0, padx=10, pady=5, sticky="nsew")
-    team2_frame = ttk.Frame(root, padding=10, style="Team.TFrame")
-    team2_frame.grid(row=0, column=1, padx=10, pady=5, sticky="nsew")
-
-    team1_label = ttk.Label(team1_frame, text="Player ID", background=get_team_color(team1_name.get()), font=('Helvetica', 10, 'bold'))
-    team1_label.grid(row=0, column=0, padx=5, pady=2)
-    ttk.Label(team1_frame, text="Nickname", background=get_team_color(team1_name.get()), font=('Helvetica', 10, 'bold')).grid(row=0, column=1, padx=5, pady=2)
-    
-    team2_label = ttk.Label(team2_frame, text="Player ID", background=get_team_color(team2_name.get()), font=('Helvetica', 10, 'bold'))
-    team2_label.grid(row=0, column=0, padx=5, pady=2)
-    ttk.Label(team2_frame, text="Nickname", background=get_team_color(team2_name.get()), font=('Helvetica', 10, 'bold')).grid(row=0, column=1, padx=5, pady=2)
-
-    player_id_entries = [[], []]
-    nickname_entries = [[], []]
-
+    # Team 1
+    tk.Label(root, textvariable=team1_name, font=("Arial", 16), background=get_team_color(team1_name.get())).grid(row=0, column=0, columnspan=2, pady=10)
     for i in range(15):
-        player_id_entry1 = ttk.Entry(team1_frame)
-        player_id_entry1.grid(row=i+1, column=0, padx=5, pady=2)
-        nickname_entry1 = ttk.Entry(team1_frame)
-        nickname_entry1.grid(row=i+1, column=1, padx=5, pady=2)
-        player_id_entries[0].append(player_id_entry1)
-        nickname_entries[0].append(nickname_entry1)
+        tk.Label(root, text=f"Player {i+1} ID").grid(row=i+1, column=0)
+        player_id_entries[0][i] = tk.Entry(root)
+        player_id_entries[0][i].grid(row=i+1, column=1)
+        tk.Label(root, text=f"Player {i+1} Nickname").grid(row=i+1, column=2)
+        nickname_entries[0][i] = tk.Entry(root)
+        nickname_entries[0][i].grid(row=i+1, column=3)
 
-        player_id_entry2 = ttk.Entry(team2_frame)
-        player_id_entry2.grid(row=i+1, column=0, padx=5, pady=2)
-        nickname_entry2 = ttk.Entry(team2_frame)
-        nickname_entry2.grid(row=i+1, column=1, padx=5, pady=2)
-        player_id_entries[1].append(player_id_entry2)
-        nickname_entries[1].append(nickname_entry2)
-
-    ttk.Button(root, text="Generate ID for Team 1", command=lambda: generate_id_for_team(0)).grid(row=16, column=0, padx=10, pady=5)
-    ttk.Button(root, text="Generate ID for Team 2", command=lambda: generate_id_for_team(1)).grid(row=16, column=1, padx=10, pady=5)
+    # Team 2
+    tk.Label(root, textvariable=team2_name, font=("Arial", 16), background=get_team_color(team2_name.get())).grid(row=0, column=4, columnspan=2, pady=10)
+    for i in range(15):
+        tk.Label(root, text=f"Player {i+1} ID").grid(row=i+1, column=4)
+        player_id_entries[1][i] = tk.Entry(root)
+        player_id_entries[1][i].grid(row=i+1, column=5)
+        tk.Label(root, text=f"Player {i+1} Nickname").grid(row=i+1, column=6)
+        nickname_entries[1][i] = tk.Entry(root)
+        nickname_entries[1][i].grid(row=i+1, column=7)
 
     ttk.Button(root, text="Submit Player 1", command=lambda: handle_entry(0, 0)).grid(row=17, column=0, padx=10, pady=5)
     ttk.Button(root, text="Submit Player 2", command=lambda: handle_entry(1, 0)).grid(row=17, column=1, padx=10, pady=5)
+
+    ttk.Button(root, text="Generate ID for Team 1", command=lambda: generate_id_for_team(0)).grid(row=16, column=0, padx=10, pady=5)
+    ttk.Button(root, text="Generate ID for Team 2", command=lambda: generate_id_for_team(1)).grid(row=16, column=1, padx=10, pady=5)
 
     ttk.Button(root, text="Start Game", command=start_game).grid(row=18, column=0, columnspan=2, pady=10)
     ttk.Button(root, text="Manage Players", command=lambda: open_manage_players(conn)).grid(row=19, column=0, columnspan=2, pady=10)
