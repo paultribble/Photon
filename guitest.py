@@ -17,8 +17,20 @@ def connect_to_database():
         )
         return conn
     except Exception as e:
-        print(f"Error connecting to the database: {e}")
+        print(f"Error connecting to PostgreSQL database: {e}")
         sys.exit(1)
+
+# Function to list all players
+def list_all_players(conn):
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT id, codename FROM players")
+        players = cursor.fetchall()
+        print("List of Players:")
+        for player in players:
+            print(f"ID: {player[0]}, Codename: {player[1]}")
+    except Exception as e:
+        print(f"Error retrieving players: {e}")
 
 # Create splash screen
 def show_splash_screen(root, splash_duration=3000):
@@ -68,15 +80,14 @@ def player_entry_screen(root, conn):
     def save_player_data(player_id, nickname):
         try:
             cursor.execute(
-                "INSERT INTO player (id, codename) VALUES (%s, %s)",
+                "INSERT INTO players (id, codename) VALUES (%s, %s)",
                 (player_id, nickname)
             )
             conn.commit()
         except psycopg2.IntegrityError:
-            # Handle the conflict by updating the existing record
-            conn.rollback()  # Rollback the failed insert operation
+            conn.rollback()
             cursor.execute(
-                "UPDATE player SET codename = %s WHERE id = %s",
+                "UPDATE players SET codename = %s WHERE id = %s",
                 (nickname, player_id)
             )
             conn.commit()
@@ -128,6 +139,9 @@ def main():
 
     # Database connection
     conn = connect_to_database()
+
+    # List all players after establishing connection
+    list_all_players(conn)
 
     root.after(3100, lambda: [root.deiconify(), player_entry_screen(root, conn)])  # Show player entry screen after splash
 
