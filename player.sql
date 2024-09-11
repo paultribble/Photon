@@ -1,11 +1,11 @@
 
 --Create table
-CREATE TABLE player (
+CREATE TABLE players (
   id INT,
   codename VARCHAR(30)
 );
 
 --Place first record into table
-INSERT INTO player (id, codename)
+INSERT INTO players (id, codename)
 VALUES (1, 'Opus');
 
