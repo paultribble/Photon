@@ -29,6 +29,16 @@ def load_image(filename):
     image_path = os.path.join(script_dir, "Images", filename)
     return pygame.image.load(image_path)
 
+# Resize image to fit modestly in the center of the screen
+def resize_image(image, max_width, max_height):
+    img_width, img_height = image.get_size()
+    width_ratio = max_width / img_width
+    height_ratio = max_height / img_height
+    min_ratio = min(width_ratio, height_ratio)
+    new_width = int(img_width * min_ratio)
+    new_height = int(img_height * min_ratio)
+    return pygame.transform.scale(image, (new_width, new_height))
+
 # Database connection function
 def connect_to_database():
     try:
@@ -124,8 +134,9 @@ def show_splash_screen():
     running = True
     laser_positions = []
 
-    # Load logo image
+    # Load and resize logo image
     logo_image = load_image("logo.jpg")
+    logo_image = resize_image(logo_image, screen_width, screen_height)
     logo_rect = logo_image.get_rect(center=(screen_width // 2, screen_height // 2))
 
     for _ in range(10):  # Create 10 random lasers
