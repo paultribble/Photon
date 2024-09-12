@@ -95,40 +95,54 @@ def player_entry_screen(root, conn):
             print(f"Error saving player data: {e}")
 
     def handle_entry(event=None):
-        player_id = player_id_entry.get()
-        nickname = nickname_entry.get()
-
-        if player_id:
-            existing_nickname = query_player_data(player_id)
-            if existing_nickname:
-                nickname_var.set(existing_nickname)
-            elif nickname:
-                save_player_data(player_id, nickname)
-            else:
-                nickname_var.set("Enter a nickname")
+        # Logic to handle data entry will be modified to accommodate both teams
+        pass  # We will update this function later
 
     # Main frame
     main_frame = tk.Frame(root, bg="lightgray")
     main_frame.pack(fill=tk.BOTH, expand=True)
 
-    # Player ID and Nickname entry fields
-    ttk.Label(main_frame, text="Player ID:", background="lightgray").grid(row=0, column=0, padx=10, pady=5, sticky="e")
-    player_id_entry = ttk.Entry(main_frame)
-    player_id_entry.grid(row=0, column=1, padx=10, pady=5)
-    
-    ttk.Label(main_frame, text="Nickname:", background="lightgray").grid(row=1, column=0, padx=10, pady=5, sticky="e")
-    nickname_var = tk.StringVar()
-    nickname_entry = ttk.Entry(main_frame, textvariable=nickname_var)
-    nickname_entry.grid(row=1, column=1, padx=10, pady=5)
+    # Team Name Entries
+    team1_name_var = tk.StringVar(value="Blue Team")
+    team2_name_var = tk.StringVar(value="Red Team")
 
-    ttk.Button(main_frame, text="Submit", command=handle_entry).grid(row=2, column=1, padx=10, pady=5)
+    ttk.Entry(main_frame, textvariable=team1_name_var, font=('Arial', 14, 'bold')).grid(row=0, column=1, pady=5)
+    ttk.Entry(main_frame, textvariable=team2_name_var, font=('Arial', 14, 'bold')).grid(row=0, column=5, pady=5)
 
-    # To move to the next screen (example for the start button)
+    # Labels for Player Numbers and Entry Fields
+    for i in range(15):
+        player_num = i + 1
+        ttk.Label(main_frame, text=f"{player_num}.", background="lightgray").grid(row=player_num+1, column=0, padx=10, pady=5, sticky="e")
+        ttk.Label(main_frame, text=f"{player_num}.", background="lightgray").grid(row=player_num+1, column=6, padx=10, pady=5, sticky="w")
+
+        # Blue Team Entries
+        player_id_entry_blue = ttk.Entry(main_frame)
+        player_id_entry_blue.grid(row=player_num+1, column=1, padx=10, pady=5)
+        
+        nickname_var_blue = tk.StringVar()
+        nickname_entry_blue = ttk.Entry(main_frame, textvariable=nickname_var_blue)
+        nickname_entry_blue.grid(row=player_num+1, column=2, padx=10, pady=5)
+        
+        # Red Team Entries
+        player_id_entry_red = ttk.Entry(main_frame)
+        player_id_entry_red.grid(row=player_num+1, column=5, padx=10, pady=5)
+        
+        nickname_var_red = tk.StringVar()
+        nickname_entry_red = ttk.Entry(main_frame, textvariable=nickname_var_red)
+        nickname_entry_red.grid(row=player_num+1, column=4, padx=10, pady=5)
+
+    # Submit Buttons for Each Team
+    ttk.Button(main_frame, text="Submit Blue Team", command=handle_entry).grid(row=17, column=1, columnspan=2, pady=10)
+    ttk.Button(main_frame, text="Submit Red Team", command=handle_entry).grid(row=17, column=4, columnspan=2, pady=10)
+
+    # Start Game Button
     def start_game():
         print("Starting game...")
         # You can add logic to switch to the play action screen here
 
-    ttk.Button(main_frame, text="Start Game", command=start_game).grid(row=3, column=1, padx=10, pady=10)
+    ttk.Button(main_frame, text="Start Game", command=start_game).grid(row=18, column=2, columnspan=3, pady=20)
+
+    # You may need to further develop handle_entry logic to handle the team-specific entries
 
 # Main function
 def main():
@@ -146,8 +160,8 @@ def main():
     root.after(3100, lambda: [root.deiconify(), player_entry_screen(root, conn)])  # Show player entry screen after splash
 
     root.title("Laser Tag Player Entry")
-    root.geometry("400x300")  # Adjust size as needed
-    root.minsize(300, 200)  # Set a minimum size
+    root.geometry("800x600")  # Adjust size as needed
+    root.minsize(800, 600)  # Set a minimum size
 
     # Bind the "q" key to quit the program
     root.bind("q", lambda event: [conn.close(), root.destroy()])
