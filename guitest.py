@@ -1,191 +1,216 @@
-import tkinter as tk
-from tkinter import ttk
-from PIL import Image, ImageTk
+import pygame
 import psycopg2
 import sys
+import random
 import os
 
-# Connect to the PostgreSQL database
+# Initialize Pygame
+pygame.init()
+
+# Set up display
+screen_width = 1200
+screen_height = 800
+screen = pygame.display.set_mode((screen_width, screen_height))
+pygame.display.set_caption("Laser Tag Player Entry")
+
+# Colors
+white = (255, 255, 255)
+black = (0, 0, 0)
+gray = (200, 200, 200)
+blue = (0, 0, 255)
+red = (255, 0, 0)
+
+# Fonts
+font = pygame.font.Font(None, 36)
+
+# Load logo image
+def load_image(filename):
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    image_path = os.path.join(script_dir, "Images", filename)
+    return pygame.image.load(image_path)
+
+# Database connection function
 def connect_to_database():
     try:
         conn = psycopg2.connect(
-            dbname="photon",       # Database name
-            user="student",        # Your PostgreSQL username
-            password="student",    # Your PostgreSQL password
-            host="localhost",      # Hostname
-            port="5432"            # Default PostgreSQL port
+            dbname="photon",
+            user="student",
+            password="student",
+            host="localhost",
+            port="5432"
         )
         return conn
     except Exception as e:
         print(f"Error connecting to PostgreSQL database: {e}")
         sys.exit(1)
 
-# Function to list all players
-def list_all_players(conn):
+# TextBox class for player input
+class TextBox:
+    def __init__(self, x, y, w, h, text=''):
+        self.rect = pygame.Rect(x, y, w, h)
+        self.color = gray
+        self.text = text
+        self.font = pygame.font.Font(None, 36)
+        self.txt_surface = self.font.render(text, True, black)
+        self.active = False
+
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            # Check if the user clicked on the input box
+            if self.rect.collidepoint(event.pos):
+                self.active = not self.active
+            else:
+                self.active = False
+            self.color = blue if self.active else gray
+
+        if event.type == pygame.KEYDOWN:
+            if self.active:
+                if event.key == pygame.K_RETURN:
+                    print(self.text)
+                    self.text = ''
+                elif event.key == pygame.K_BACKSPACE:
+                    self.text = self.text[:-1]
+                else:
+                    self.text += event.unicode
+                self.txt_surface = self.font.render(self.text, True, black)
+
+    def draw(self, screen):
+        # Render the text
+        screen.blit(self.txt_surface, (self.rect.x + 5, self.rect.y + 5))
+        pygame.draw.rect(screen, self.color, self.rect, 2)
+
+# Button class for handling button clicks
+class Button:
+    def __init__(self, x, y, w, h, text, callback):
+        self.rect = pygame.Rect(x, y, w, h)
+        self.color = gray
+        self.text = text
+        self.font = pygame.font.Font(None, 36)
+        self.txt_surface = self.font.render(text, True, black)
+        self.callback = callback
+
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if self.rect.collidepoint(event.pos):
+                self.callback()
+
+    def draw(self, screen):
+        pygame.draw.rect(screen, self.color, self.rect)
+        screen.blit(self.txt_surface, (self.rect.x + (self.rect.w - self.txt_surface.get_width()) // 2,
+                                       self.rect.y + (self.rect.h - self.txt_surface.get_height()) // 2))
+
+# Function to save player data to the database
+def save_player_data(player_id, nickname, conn):
     cursor = conn.cursor()
     try:
-        cursor.execute("SELECT id, codename FROM players")
-        players = cursor.fetchall()
-        print("List of Players:")
-        for player in players:
-            print(f"ID: {player[0]}, Codename: {player[1]}")
+        cursor.execute(
+            "INSERT INTO players (id, codename) VALUES (%s, %s)",
+            (player_id, nickname)
+        )
+        conn.commit()
+    except psycopg2.IntegrityError:
+        conn.rollback()
+        cursor.execute(
+            "UPDATE players SET codename = %s WHERE id = %s",
+            (nickname, player_id)
+        )
+        conn.commit()
     except Exception as e:
-        print(f"Error retrieving players: {e}")
+        print(f"Error saving player data: {e}")
 
-# Create splash screen
-def show_splash_screen(root, splash_duration=3000):
-    splash = tk.Toplevel()
-    splash.overrideredirect(True)
-    splash.geometry("1200x800")  # Size of the splash screen
+# Splash screen with a simple laser animation
+def show_splash_screen():
+    clock = pygame.time.Clock()
+    running = True
+    laser_positions = []
 
-    def resize_image(event):
-        splash_width = event.width
-        splash_height = event.height
-        image_ratio = image.width / image.height
-        splash_ratio = splash_width / splash_height
-        if image_ratio > splash_ratio:
-            new_width = splash_width
-            new_height = int(splash_width / image_ratio)
-        else:
-            new_height = splash_height
-            new_width = int(splash_height * image_ratio)
-        resized_image = image.resize((new_width, new_height), Image.LANCZOS)
-        logo = ImageTk.PhotoImage(resized_image)
-        label.config(image=logo)
-        label.image = logo
+    # Load logo image
+    logo_image = load_image("logo.jpg")
+    logo_rect = logo_image.get_rect(center=(screen_width // 2, screen_height // 2))
 
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    logo_path = os.path.join(script_dir, "Images", "logo.jpg")
-    image = Image.open(logo_path)
+    for _ in range(10):  # Create 10 random lasers
+        start_pos = (random.randint(0, screen_width), random.randint(0, screen_height))
+        end_pos = (random.randint(0, screen_width), random.randint(0, screen_height))
+        laser_positions.append((start_pos, end_pos))
 
-    label = tk.Label(splash)
-    label.pack(expand=True, fill=tk.BOTH)
-    splash.bind("<Configure>", resize_image)
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+                pygame.quit()
+                sys.exit()
 
-    root.after(splash_duration, splash.destroy)  # Close splash after the duration
+        screen.fill(black)
 
-# Player entry screen
-def player_entry_screen(root, conn):
-    cursor = conn.cursor()
+        # Draw the laser animations
+        for start_pos, end_pos in laser_positions:
+            pygame.draw.line(screen, red, start_pos, end_pos, 2)
 
-    def query_player_data(player_id):
-        try:
-            cursor.execute("SELECT codename FROM players WHERE id = %s", (player_id,))
-            result = cursor.fetchone()
-            return result[0] if result else None
-        except Exception as e:
-            print(f"Error querying player data: {e}")
-            return None
+        # Draw the logo image
+        screen.blit(logo_image, logo_rect)
 
-    def save_player_data(player_id, nickname):
-        try:
-            cursor.execute(
-                "INSERT INTO players (id, codename) VALUES (%s, %s)",
-                (player_id, nickname)
-            )
-            conn.commit()
-        except psycopg2.IntegrityError:
-            conn.rollback()
-            cursor.execute(
-                "UPDATE players SET codename = %s WHERE id = %s",
-                (nickname, player_id)
-            )
-            conn.commit()
-        except Exception as e:
-            print(f"Error saving player data: {e}")
+        pygame.display.flip()
+        clock.tick(30)
 
-    def handle_entry(event=None):
-        # Logic to handle data entry will be modified to accommodate both teams
-        pass  # We will update this function later
+        pygame.time.delay(3000)  # Display splash screen for 3 seconds
+        running = False
 
-    # Main frame
-    main_frame = tk.Frame(root, bg="lightgray")
-    main_frame.pack(fill=tk.BOTH, expand=True)
+# Player entry screen with two team columns
+def player_entry_screen(conn):
+    # Define positions for input boxes and buttons
+    team1_boxes = [TextBox(100, 150 + i * 40, 200, 30) for i in range(15)]
+    team2_boxes = [TextBox(700, 150 + i * 40, 200, 30) for i in range(15)]
 
-    # Team Name Entries with Labels
-    team1_name_var = tk.StringVar(value="Blue Team")
-    team2_name_var = tk.StringVar(value="Red Team")
+    def submit_team1():
+        for i, box in enumerate(team1_boxes):
+            save_player_data(i + 1, box.text, conn)
 
-    ttk.Label(main_frame, text="Team 1:", background="lightgray", font=('Arial', 12)).grid(row=0, column=0, padx=10, pady=5, sticky="e")
-    ttk.Entry(main_frame, textvariable=team1_name_var, font=('Arial', 14, 'bold')).grid(row=0, column=1, pady=5, columnspan=2)
+    def submit_team2():
+        for i, box in enumerate(team2_boxes):
+            save_player_data(i + 16, box.text, conn)
 
-    ttk.Label(main_frame, text="Team 2:", background="lightgray", font=('Arial', 12)).grid(row=0, column=4, padx=10, pady=5, sticky="e")
-    ttk.Entry(main_frame, textvariable=team2_name_var, font=('Arial', 14, 'bold')).grid(row=0, column=5, pady=5, columnspan=2)
+    team1_button = Button(100, 700, 200, 50, "Submit Team 1", submit_team1)
+    team2_button = Button(700, 700, 200, 50, "Submit Team 2", submit_team2)
 
-    # Labels for Player ID and Codename Fields
-    ttk.Label(main_frame, text="Player ID", background="lightgray").grid(row=1, column=1, padx=10, pady=5)
-    ttk.Label(main_frame, text="Codename", background="lightgray").grid(row=1, column=2, padx=10, pady=5)
-    ttk.Label(main_frame, text="Player ID", background="lightgray").grid(row=1, column=5, padx=10, pady=5)
-    ttk.Label(main_frame, text="Codename", background="lightgray").grid(row=1, column=4, padx=10, pady=5)
+    clock = pygame.time.Clock()
 
-    # Labels for Player Numbers and Entry Fields
-    for i in range(15):
-        player_num = i + 1
-        ttk.Label(main_frame, text=f"{player_num}.", background="lightgray").grid(row=player_num+2, column=0, padx=10, pady=5, sticky="e")
-        ttk.Label(main_frame, text=f"{player_num}.", background="lightgray").grid(row=player_num+2, column=6, padx=10, pady=5, sticky="w")
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+                pygame.quit()
+                sys.exit()
+            for box in team1_boxes + team2_boxes:
+                box.handle_event(event)
+            team1_button.handle_event(event)
+            team2_button.handle_event(event)
 
-        # Blue Team Entries
-        player_id_entry_blue = ttk.Entry(main_frame)
-        player_id_entry_blue.grid(row=player_num+2, column=1, padx=10, pady=5)
-        
-        nickname_var_blue = tk.StringVar()
-        nickname_entry_blue = ttk.Entry(main_frame, textvariable=nickname_var_blue)
-        nickname_entry_blue.grid(row=player_num+2, column=2, padx=10, pady=5)
-        
-        # Red Team Entries
-        player_id_entry_red = ttk.Entry(main_frame)
-        player_id_entry_red.grid(row=player_num+2, column=5, padx=10, pady=5)
-        
-        nickname_var_red = tk.StringVar()
-        nickname_entry_red = ttk.Entry(main_frame, textvariable=nickname_var_red)
-        nickname_entry_red.grid(row=player_num+2, column=4, padx=10, pady=5)
+        screen.fill(white)
 
-    # Submit Buttons for Each Team
-    submit_button_blue = ttk.Button(main_frame, text=f"Submit {team1_name_var.get()}", command=handle_entry)
-    submit_button_blue.grid(row=18, column=1, columnspan=2, pady=10)
+        # Draw labels
+        screen.blit(font.render("Team 1", True, black), (100, 100))
+        screen.blit(font.render("ID", True, black), (150, 120))
+        screen.blit(font.render("Codename", True, black), (250, 120))
+        screen.blit(font.render("Team 2", True, black), (700, 100))
+        screen.blit(font.render("ID", True, black), (750, 120))
+        screen.blit(font.render("Codename", True, black), (850, 120))
 
-    submit_button_red = ttk.Button(main_frame, text=f"Submit {team2_name_var.get()}", command=handle_entry)
-    submit_button_red.grid(row=18, column=4, columnspan=2, pady=10)
+        for i, box in enumerate(team1_boxes):
+            box.draw(screen)
+        for i, box in enumerate(team2_boxes):
+            box.draw(screen)
 
-    # Function to update the submit buttons dynamically based on team names
-    def update_submit_buttons(*args):
-        submit_button_blue.config(text=f"Submit {team1_name_var.get()}")
-        submit_button_red.config(text=f"Submit {team2_name_var.get()}")
+        team1_button.draw(screen)
+        team2_button.draw(screen)
 
-    team1_name_var.trace("w", update_submit_buttons)
-    team2_name_var.trace("w", update_submit_buttons)
+        pygame.display.flip()
+        clock.tick(30)
 
-    # Start Game Button
-    def start_game():
-        print("Starting game...")
-        # You can add logic to switch to the play action screen here
-
-    ttk.Button(main_frame, text="Start Game", command=start_game).grid(row=19, column=2, columnspan=3, pady=20)
-
-# Main function
 def main():
-    root = tk.Tk()
-    root.withdraw()  # Hide the main window during the splash screen
-
-    show_splash_screen(root)  # Show splash screen
-
-    # Database connection
+    show_splash_screen()
     conn = connect_to_database()
-
-    # List all players after establishing connection
-    list_all_players(conn)
-
-    root.after(3100, lambda: [root.deiconify(), player_entry_screen(root, conn)])  # Show player entry screen after splash
-
-    root.title("Laser Tag Player Entry")
-    root.geometry("800x600")  # Adjust size as needed
-    root.minsize(800, 600)  # Set a minimum size
-
-    # Bind the "q" key to quit the program
-    root.bind("q", lambda event: [conn.close(), root.destroy()])
-
-    root.mainloop()
+    player_entry_screen(conn)
 
 if __name__ == "__main__":
     main()
-
