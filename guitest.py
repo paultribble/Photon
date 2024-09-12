@@ -102,47 +102,65 @@ def player_entry_screen(root, conn):
     main_frame = tk.Frame(root, bg="lightgray")
     main_frame.pack(fill=tk.BOTH, expand=True)
 
-    # Team Name Entries
+    # Team Name Entries with Labels
     team1_name_var = tk.StringVar(value="Blue Team")
     team2_name_var = tk.StringVar(value="Red Team")
 
-    ttk.Entry(main_frame, textvariable=team1_name_var, font=('Arial', 14, 'bold')).grid(row=0, column=1, pady=5)
-    ttk.Entry(main_frame, textvariable=team2_name_var, font=('Arial', 14, 'bold')).grid(row=0, column=5, pady=5)
+    ttk.Label(main_frame, text="Team 1:", background="lightgray", font=('Arial', 12)).grid(row=0, column=0, padx=10, pady=5, sticky="e")
+    ttk.Entry(main_frame, textvariable=team1_name_var, font=('Arial', 14, 'bold')).grid(row=0, column=1, pady=5, columnspan=2)
+
+    ttk.Label(main_frame, text="Team 2:", background="lightgray", font=('Arial', 12)).grid(row=0, column=4, padx=10, pady=5, sticky="e")
+    ttk.Entry(main_frame, textvariable=team2_name_var, font=('Arial', 14, 'bold')).grid(row=0, column=5, pady=5, columnspan=2)
+
+    # Labels for Player ID and Codename Fields
+    ttk.Label(main_frame, text="Player ID", background="lightgray").grid(row=1, column=1, padx=10, pady=5)
+    ttk.Label(main_frame, text="Codename", background="lightgray").grid(row=1, column=2, padx=10, pady=5)
+    ttk.Label(main_frame, text="Player ID", background="lightgray").grid(row=1, column=5, padx=10, pady=5)
+    ttk.Label(main_frame, text="Codename", background="lightgray").grid(row=1, column=4, padx=10, pady=5)
 
     # Labels for Player Numbers and Entry Fields
     for i in range(15):
         player_num = i + 1
-        ttk.Label(main_frame, text=f"{player_num}.", background="lightgray").grid(row=player_num+1, column=0, padx=10, pady=5, sticky="e")
-        ttk.Label(main_frame, text=f"{player_num}.", background="lightgray").grid(row=player_num+1, column=6, padx=10, pady=5, sticky="w")
+        ttk.Label(main_frame, text=f"{player_num}.", background="lightgray").grid(row=player_num+2, column=0, padx=10, pady=5, sticky="e")
+        ttk.Label(main_frame, text=f"{player_num}.", background="lightgray").grid(row=player_num+2, column=6, padx=10, pady=5, sticky="w")
 
         # Blue Team Entries
         player_id_entry_blue = ttk.Entry(main_frame)
-        player_id_entry_blue.grid(row=player_num+1, column=1, padx=10, pady=5)
+        player_id_entry_blue.grid(row=player_num+2, column=1, padx=10, pady=5)
         
         nickname_var_blue = tk.StringVar()
         nickname_entry_blue = ttk.Entry(main_frame, textvariable=nickname_var_blue)
-        nickname_entry_blue.grid(row=player_num+1, column=2, padx=10, pady=5)
+        nickname_entry_blue.grid(row=player_num+2, column=2, padx=10, pady=5)
         
         # Red Team Entries
         player_id_entry_red = ttk.Entry(main_frame)
-        player_id_entry_red.grid(row=player_num+1, column=5, padx=10, pady=5)
+        player_id_entry_red.grid(row=player_num+2, column=5, padx=10, pady=5)
         
         nickname_var_red = tk.StringVar()
         nickname_entry_red = ttk.Entry(main_frame, textvariable=nickname_var_red)
-        nickname_entry_red.grid(row=player_num+1, column=4, padx=10, pady=5)
+        nickname_entry_red.grid(row=player_num+2, column=4, padx=10, pady=5)
 
     # Submit Buttons for Each Team
-    ttk.Button(main_frame, text="Submit Blue Team", command=handle_entry).grid(row=17, column=1, columnspan=2, pady=10)
-    ttk.Button(main_frame, text="Submit Red Team", command=handle_entry).grid(row=17, column=4, columnspan=2, pady=10)
+    submit_button_blue = ttk.Button(main_frame, text=f"Submit {team1_name_var.get()}", command=handle_entry)
+    submit_button_blue.grid(row=18, column=1, columnspan=2, pady=10)
+
+    submit_button_red = ttk.Button(main_frame, text=f"Submit {team2_name_var.get()}", command=handle_entry)
+    submit_button_red.grid(row=18, column=4, columnspan=2, pady=10)
+
+    # Function to update the submit buttons dynamically based on team names
+    def update_submit_buttons(*args):
+        submit_button_blue.config(text=f"Submit {team1_name_var.get()}")
+        submit_button_red.config(text=f"Submit {team2_name_var.get()}")
+
+    team1_name_var.trace("w", update_submit_buttons)
+    team2_name_var.trace("w", update_submit_buttons)
 
     # Start Game Button
     def start_game():
         print("Starting game...")
         # You can add logic to switch to the play action screen here
 
-    ttk.Button(main_frame, text="Start Game", command=start_game).grid(row=18, column=2, columnspan=3, pady=20)
-
-    # You may need to further develop handle_entry logic to handle the team-specific entries
+    ttk.Button(main_frame, text="Start Game", command=start_game).grid(row=19, column=2, columnspan=3, pady=20)
 
 # Main function
 def main():
@@ -170,3 +188,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
