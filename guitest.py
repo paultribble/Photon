@@ -280,8 +280,6 @@ def show_splash_screen():
         running = False
 
 
-
-
 # Main loop
 def main():
     conn = connect_to_database()
