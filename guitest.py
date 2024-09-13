@@ -19,6 +19,25 @@ black = (0, 0, 0)
 gray = (200, 200, 200)
 blue = (0, 0, 255)
 red = (255, 0, 0)
+green = (0, 255, 0)
+yellow = (255, 255, 0)
+cyan = (0, 255, 255)
+magenta = (255, 0, 255)
+orange = (255, 165, 0)
+
+# Dropdown menu colors
+dropdown_colors = {
+    "White": white,
+    "Black": black,
+    "Gray": gray,
+    "Blue": blue,
+    "Red": red,
+    "Green": green,
+    "Yellow": yellow,
+    "Cyan": cyan,
+    "Magenta": magenta,
+    "Orange": orange
+}
 
 # Fonts
 font = pygame.font.Font(None, 36)
@@ -41,6 +60,37 @@ class Button:
         pygame.draw.rect(screen, self.color, self.rect)
         screen.blit(self.txt_surface, (self.rect.x + (self.rect.w - self.txt_surface.get_width()) // 2,
                                        self.rect.y + (self.rect.h - self.txt_surface.get_height()) // 2))
+
+# Load logo image
+def load_image(filename):
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    image_path = os.path.join(script_dir, "Images", filename)
+    return pygame.image.load(image_path)
+
+# Resize image to fit modestly in the center of the screen
+def resize_image(image, max_width, max_height):
+    img_width, img_height = image.get_size()
+    width_ratio = max_width / img_width
+    height_ratio = max_height / img_height
+    min_ratio = min(width_ratio, height_ratio)
+    new_width = int(img_width * min_ratio)
+    new_height = int(img_height * min_ratio)
+    return pygame.transform.scale(image, (new_width, new_height))
+
+# Database connection function
+def connect_to_database():
+    try:
+        conn = psycopg2.connect(
+            dbname="photon",
+            user="student",
+            password="student",
+            host="localhost",
+            port="5432"
+        )
+        return conn
+    except Exception as e:
+        print(f"Error connecting to PostgreSQL database: {e}")
+        sys.exit(1)
 
 # TextBox class for player input
 class TextBox:
@@ -78,20 +128,39 @@ class TextBox:
         screen.blit(self.txt_surface, (self.rect.x + 5, self.rect.y + 5))
         pygame.draw.rect(screen, self.color, self.rect, 2)
 
-# Database connection function
-def connect_to_database():
-    try:
-        conn = psycopg2.connect(
-            dbname="photon",
-            user="student",
-            password="student",
-            host="localhost",
-            port="5432"
-        )
-        return conn
-    except Exception as e:
-        print(f"Error connecting to PostgreSQL database: {e}")
-        sys.exit(1)
+# Dropdown menu class
+class DropdownMenu:
+    def __init__(self, x, y, w, h, options):
+        self.rect = pygame.Rect(x, y, w, h)
+        self.color = gray
+        self.options = options
+        self.selected_option = list(options.keys())[0]
+        self.font = pygame.font.Font(None, 36)
+        self.txt_surface = self.font.render(self.selected_option, True, black)
+        self.dropdown_open = False
+        self.option_rects = []
+
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if self.rect.collidepoint(event.pos):
+                self.dropdown_open = not self.dropdown_open
+                if self.dropdown_open:
+                    self.option_rects = [pygame.Rect(self.rect.x, self.rect.y + (i + 1) * 40, self.rect.w, 40) for i in range(len(self.options))]
+            elif self.dropdown_open:
+                for i, rect in enumerate(self.option_rects):
+                    if rect.collidepoint(event.pos):
+                        self.selected_option = list(self.options.keys())[i]
+                        self.txt_surface = self.font.render(self.selected_option, True, black)
+                        self.dropdown_open = False
+                        break
+
+    def draw(self, screen):
+        pygame.draw.rect(screen, self.color, self.rect)
+        screen.blit(self.txt_surface, (self.rect.x + 5, self.rect.y + 5))
+        if self.dropdown_open:
+            for i, rect in enumerate(self.option_rects):
+                pygame.draw.rect(screen, gray, rect)
+                screen.blit(self.font.render(list(self.options.keys())[i], True, black), (rect.x + 5, rect.y + 5))
 
 # Fetch codename from database based on ID
 def fetch_codename_from_db(player_id, conn):
@@ -113,52 +182,37 @@ def add_new_player(conn, codename):
             conn.commit()
             return new_id
 
-# New Player Pop-Up Menu
+# New Player Menu
 def show_new_player_menu(conn):
     running = True
-    popup_width, popup_height = 400, 300
-    popup_x = (screen_width - popup_width) // 2
-    popup_y = (screen_height - popup_height) // 2
-
-    new_codename_box = TextBox(popup_x + 50, popup_y + 50, 300, 40)
-    new_player_id = None  # Store the generated player ID
+    new_codename_box = TextBox(500, 400, 200, 40)
 
     def save_new_player():
-        nonlocal new_player_id
         codename = new_codename_box.text
         if codename:
-            new_player_id = add_new_player(conn, codename)
-            print(f"New player added with ID: {new_player_id} and Codename: {codename}")
+            new_id = add_new_player(conn, codename)
+            result_text = f"New player added with ID: {new_id} and Codename: {codename}"
+            print(result_text)
+            new_codename_box.text = result_text
+            new_codename_box.txt_surface = font.render(result_text, True, black)
 
-    def close_menu():
-        nonlocal running
-        running = False
-
-    new_player_button = Button(popup_x + 100, popup_y + 150, 200, 50, "Add New Player", save_new_player)
-    close_button = Button(popup_x + popup_width - 30, popup_y, 30, 30, "X", close_menu)
-
+    new_player_button = Button(500, 500, 200, 50, "Add New Player", save_new_player)
+    close_button = Button(650, 350, 50, 50, "X", lambda: setattr(new_player_menu, 'running', False))
     clock = pygame.time.Clock()
 
-    while running:
+    new_player_menu = type('Menu', (object,), {'running': running})()  # Use dynamic attribute
+
+    while new_player_menu.running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                running = False
                 pygame.quit()
                 sys.exit()
             new_codename_box.handle_event(event)
             new_player_button.handle_event(event)
             close_button.handle_event(event)
 
-        # Draw pop-up
-        pygame.draw.rect(screen, white, (popup_x, popup_y, popup_width, popup_height))
-        pygame.draw.rect(screen, black, (popup_x, popup_y, popup_width, popup_height), 2)
-
-        screen.blit(font.render("Enter New Codename:", True, black), (popup_x + 50, popup_y + 10))
-
-        # Draw the generated player ID if it exists
-        if new_player_id is not None:
-            screen.blit(font.render(f"New Player ID: {new_player_id}", True, black), (popup_x + 50, popup_y + 200))
-
+        screen.fill(white)
+        screen.blit(font.render("Enter New Codename:", True, black), (500, 350))
         new_codename_box.draw(screen)
         new_player_button.draw(screen)
         close_button.draw(screen)
@@ -184,8 +238,19 @@ def player_entry_screen(conn):
                 team2_codename_boxes[i].text = codename
                 team2_codename_boxes[i].txt_surface = font.render(codename, True, black)
 
-    team_submit_button = Button(500, 700, 200, 50, "Submit", submit_team)
-    add_new_player_button = Button(500, 750, 200, 50, "Add New Player", lambda: show_new_player_menu(conn))
+    def color_change_callback():
+        nonlocal team1_color, team2_color
+        team1_color = dropdown_menu_team1.selected_option
+        team2_color = dropdown_menu_team2.selected_option
+
+    team1_color = "White"
+    team2_color = "White"
+    
+    dropdown_menu_team1 = DropdownMenu(100, 650, 200, 40, dropdown_colors)
+    dropdown_menu_team2 = DropdownMenu(700, 650, 200, 40, dropdown_colors)
+    
+    team_submit_button = Button(500, 750, 200, 50, "Submit", submit_team)
+    add_new_player_button = Button(500, 810, 200, 50, "Add New Player", lambda: show_new_player_menu(conn))
     clock = pygame.time.Clock()
 
     running = True
@@ -199,8 +264,15 @@ def player_entry_screen(conn):
                 box.handle_event(event)
             team_submit_button.handle_event(event)
             add_new_player_button.handle_event(event)
-
+            dropdown_menu_team1.handle_event(event)
+            dropdown_menu_team2.handle_event(event)
+        
         screen.fill(white)
+
+        # Draw team backgrounds
+        pygame.draw.rect(screen, dropdown_colors[team1_color], pygame.Rect(100, 140, 600, 680))
+        pygame.draw.rect(screen, dropdown_colors[team2_color], pygame.Rect(700, 140, 600, 680))
+        
         screen.blit(font.render("Team 1", True, black), (100, 100))
         screen.blit(font.render("ID", True, black), (150, 120))
         screen.blit(font.render("Codename", True, black), (250, 120))
@@ -214,16 +286,15 @@ def player_entry_screen(conn):
             team2_id_boxes[i].draw(screen)
             team2_codename_boxes[i].draw(screen)
 
+        # Draw dropdown menus
+        dropdown_menu_team1.draw(screen)
+        dropdown_menu_team2.draw(screen)
+        
         team_submit_button.draw(screen)
         add_new_player_button.draw(screen)
+
         pygame.display.flip()
         clock.tick(30)
-
-def load_image(filename):
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    image_path = os.path.join(script_dir, "Images", filename)
-    return pygame.image.load(image_path)
-
 
 def show_splash_screen():
     clock = pygame.time.Clock()
@@ -252,7 +323,7 @@ def show_splash_screen():
     logo_rect = logo_with_border.get_rect(center=(screen_width // 2, screen_height // 2))
 
     # Generate 10 random lasers
-    for _ in range(20):
+    for _ in range(10):
         start_pos = (random.randint(0, screen_width), random.randint(0, screen_height))
         end_pos = (random.randint(0, screen_width), random.randint(0, screen_height))
         laser_positions.append((start_pos, end_pos))
@@ -279,11 +350,10 @@ def show_splash_screen():
         pygame.time.delay(3000)  # Display splash screen for 3 seconds
         running = False
 
-
-# Main loop
 def main():
+    show_splash_screen()
     conn = connect_to_database()
     player_entry_screen(conn)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
