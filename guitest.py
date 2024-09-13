@@ -203,10 +203,27 @@ def show_splash_screen():
 
     # Load and resize logo image
     logo_image = load_image("logo.jpg")
-    logo_image = resize_image(logo_image, screen_width, screen_height)
-    logo_rect = logo_image.get_rect(center=(screen_width // 2, screen_height // 2))
+    
+    # Resize the logo to be 60% of the screen size (adjust the percentage as needed)
+    logo_width = int(screen_width * 0.6)
+    logo_height = int(screen_height * 0.6)
+    logo_image = pygame.transform.scale(logo_image, (logo_width, logo_height))
+    
+    # Create a new surface for the border
+    border_thickness = 10  # Adjust the border thickness as needed
+    logo_with_border = pygame.Surface((logo_width + 2 * border_thickness, logo_height + 2 * border_thickness))
+    
+    # Fill the new surface with white for the border
+    logo_with_border.fill(white)
+    
+    # Blit the logo onto the white surface, centered inside the border
+    logo_with_border.blit(logo_image, (border_thickness, border_thickness))
+    
+    # Get the rectangle of the bordered image and center it
+    logo_rect = logo_with_border.get_rect(center=(screen_width // 2, screen_height // 2))
 
-    for _ in range(10):  # Create 10 random lasers
+    # Generate 10 random lasers
+    for _ in range(10):
         start_pos = (random.randint(0, screen_width), random.randint(0, screen_height))
         end_pos = (random.randint(0, screen_width), random.randint(0, screen_height))
         laser_positions.append((start_pos, end_pos))
@@ -224,14 +241,15 @@ def show_splash_screen():
         for start_pos, end_pos in laser_positions:
             pygame.draw.line(screen, red, start_pos, end_pos, 2)
 
-        # Draw the logo image
-        screen.blit(logo_image, logo_rect)
+        # Draw the logo with the white border
+        screen.blit(logo_with_border, logo_rect)
 
         pygame.display.flip()
         clock.tick(30)
 
         pygame.time.delay(3000)  # Display splash screen for 3 seconds
         running = False
+
 
 
 
