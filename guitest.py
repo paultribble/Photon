@@ -42,39 +42,6 @@ class Button:
         screen.blit(self.txt_surface, (self.rect.x + (self.rect.w - self.txt_surface.get_width()) // 2,
                                        self.rect.y + (self.rect.h - self.txt_surface.get_height()) // 2))
 
-
-
-# Load logo image
-def load_image(filename):
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    image_path = os.path.join(script_dir, "Images", filename)
-    return pygame.image.load(image_path)
-
-# Resize image to fit modestly in the center of the screen
-def resize_image(image, max_width, max_height):
-    img_width, img_height = image.get_size()
-    width_ratio = max_width / img_width
-    height_ratio = max_height / img_height
-    min_ratio = min(width_ratio, height_ratio)
-    new_width = int(img_width * min_ratio)
-    new_height = int(img_height * min_ratio)
-    return pygame.transform.scale(image, (new_width, new_height))
-
-# Database connection function
-def connect_to_database():
-    try:
-        conn = psycopg2.connect(
-            dbname="photon",
-            user="student",
-            password="student",
-            host="localhost",
-            port="5432"
-        )
-        return conn
-    except Exception as e:
-        print(f"Error connecting to PostgreSQL database: {e}")
-        sys.exit(1)
-
 # TextBox class for player input
 class TextBox:
     def __init__(self, x, y, w, h, text='', readonly=False):
@@ -111,6 +78,21 @@ class TextBox:
         screen.blit(self.txt_surface, (self.rect.x + 5, self.rect.y + 5))
         pygame.draw.rect(screen, self.color, self.rect, 2)
 
+# Database connection function
+def connect_to_database():
+    try:
+        conn = psycopg2.connect(
+            dbname="photon",
+            user="student",
+            password="student",
+            host="localhost",
+            port="5432"
+        )
+        return conn
+    except Exception as e:
+        print(f"Error connecting to PostgreSQL database: {e}")
+        sys.exit(1)
+
 # Fetch codename from database based on ID
 def fetch_codename_from_db(player_id, conn):
     cursor = conn.cursor()
@@ -131,19 +113,30 @@ def add_new_player(conn, codename):
             conn.commit()
             return new_id
 
-# New Player Menu
+# New Player Pop-Up Menu
 def show_new_player_menu(conn):
     running = True
-    new_codename_box = TextBox(500, 400, 200, 40)
+    popup_width, popup_height = 400, 300
+    popup_x = (screen_width - popup_width) // 2
+    popup_y = (screen_height - popup_height) // 2
+
+    new_codename_box = TextBox(popup_x + 50, popup_y + 50, 300, 40)
+    new_player_id = None  # Store the generated player ID
 
     def save_new_player():
+        nonlocal new_player_id
         codename = new_codename_box.text
         if codename:
-            new_id = add_new_player(conn, codename)
-            print(f"New player added with ID: {new_id} and Codename: {codename}")
+            new_player_id = add_new_player(conn, codename)
+            print(f"New player added with ID: {new_player_id} and Codename: {codename}")
+
+    def close_menu():
+        nonlocal running
         running = False
 
-    new_player_button = Button(500, 500, 200, 50, "Add New Player", save_new_player)
+    new_player_button = Button(popup_x + 100, popup_y + 150, 200, 50, "Add New Player", save_new_player)
+    close_button = Button(popup_x + popup_width - 30, popup_y, 30, 30, "X", close_menu)
+
     clock = pygame.time.Clock()
 
     while running:
@@ -154,11 +147,21 @@ def show_new_player_menu(conn):
                 sys.exit()
             new_codename_box.handle_event(event)
             new_player_button.handle_event(event)
+            close_button.handle_event(event)
 
-        screen.fill(white)
-        screen.blit(font.render("Enter New Codename:", True, black), (500, 350))
+        # Draw pop-up
+        pygame.draw.rect(screen, white, (popup_x, popup_y, popup_width, popup_height))
+        pygame.draw.rect(screen, black, (popup_x, popup_y, popup_width, popup_height), 2)
+
+        screen.blit(font.render("Enter New Codename:", True, black), (popup_x + 50, popup_y + 10))
+
+        # Draw the generated player ID if it exists
+        if new_player_id is not None:
+            screen.blit(font.render(f"New Player ID: {new_player_id}", True, black), (popup_x + 50, popup_y + 200))
+
         new_codename_box.draw(screen)
         new_player_button.draw(screen)
+        close_button.draw(screen)
         pygame.display.flip()
         clock.tick(30)
 
@@ -213,71 +216,13 @@ def player_entry_screen(conn):
 
         team_submit_button.draw(screen)
         add_new_player_button.draw(screen)
-
         pygame.display.flip()
         clock.tick(30)
 
-def show_splash_screen():
-    clock = pygame.time.Clock()
-    running = True
-    laser_positions = []
-
-    # Load and resize logo image
-    logo_image = load_image("logo.jpg")
-    
-    # Resize the logo to be 60% of the screen size (adjust the percentage as needed)
-    logo_width = int(screen_width * 0.6)
-    logo_height = int(screen_height * 0.6)
-    logo_image = pygame.transform.scale(logo_image, (logo_width, logo_height))
-    
-    # Create a new surface for the border
-    border_thickness = 10  # Adjust the border thickness as needed
-    logo_with_border = pygame.Surface((logo_width + 2 * border_thickness, logo_height + 2 * border_thickness))
-    
-    # Fill the new surface with white for the border
-    logo_with_border.fill(white)
-    
-    # Blit the logo onto the white surface, centered inside the border
-    logo_with_border.blit(logo_image, (border_thickness, border_thickness))
-    
-    # Get the rectangle of the bordered image and center it
-    logo_rect = logo_with_border.get_rect(center=(screen_width // 2, screen_height // 2))
-
-    # Generate 10 random lasers
-    for _ in range(10):
-        start_pos = (random.randint(0, screen_width), random.randint(0, screen_height))
-        end_pos = (random.randint(0, screen_width), random.randint(0, screen_height))
-        laser_positions.append((start_pos, end_pos))
-
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-                pygame.quit()
-                sys.exit()
-
-        screen.fill(black)
-
-        # Draw the laser animations
-        for start_pos, end_pos in laser_positions:
-            pygame.draw.line(screen, red, start_pos, end_pos, 2)
-
-        # Draw the logo with the white border
-        screen.blit(logo_with_border, logo_rect)
-
-        pygame.display.flip()
-        clock.tick(30)
-
-        pygame.time.delay(3000)  # Display splash screen for 3 seconds
-        running = False
-
-
-
-
+# Main loop
 def main():
-    show_splash_screen()
     conn = connect_to_database()
     player_entry_screen(conn)
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
