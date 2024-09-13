@@ -219,6 +219,69 @@ def player_entry_screen(conn):
         pygame.display.flip()
         clock.tick(30)
 
+def load_image(filename):
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    image_path = os.path.join(script_dir, "Images", filename)
+    return pygame.image.load(image_path)
+
+
+def show_splash_screen():
+    clock = pygame.time.Clock()
+    running = True
+    laser_positions = []
+
+    # Load and resize logo image
+    logo_image = load_image("logo.jpg")
+    
+    # Resize the logo to be 60% of the screen size (adjust the percentage as needed)
+    logo_width = int(screen_width * 0.6)
+    logo_height = int(screen_height * 0.6)
+    logo_image = pygame.transform.scale(logo_image, (logo_width, logo_height))
+    
+    # Create a new surface for the border
+    border_thickness = 10  # Adjust the border thickness as needed
+    logo_with_border = pygame.Surface((logo_width + 2 * border_thickness, logo_height + 2 * border_thickness))
+    
+    # Fill the new surface with white for the border
+    logo_with_border.fill(white)
+    
+    # Blit the logo onto the white surface, centered inside the border
+    logo_with_border.blit(logo_image, (border_thickness, border_thickness))
+    
+    # Get the rectangle of the bordered image and center it
+    logo_rect = logo_with_border.get_rect(center=(screen_width // 2, screen_height // 2))
+
+    # Generate 10 random lasers
+    for _ in range(20):
+        start_pos = (random.randint(0, screen_width), random.randint(0, screen_height))
+        end_pos = (random.randint(0, screen_width), random.randint(0, screen_height))
+        laser_positions.append((start_pos, end_pos))
+
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+                pygame.quit()
+                sys.exit()
+
+        screen.fill(black)
+
+        # Draw the laser animations
+        for start_pos, end_pos in laser_positions:
+            pygame.draw.line(screen, red, start_pos, end_pos, 2)
+
+        # Draw the logo with the white border
+        screen.blit(logo_with_border, logo_rect)
+
+        pygame.display.flip()
+        clock.tick(30)
+
+        pygame.time.delay(3000)  # Display splash screen for 3 seconds
+        running = False
+
+
+
+
 # Main loop
 def main():
     conn = connect_to_database()
