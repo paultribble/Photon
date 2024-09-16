@@ -35,7 +35,7 @@ dropdown_colors = {
     "Yellow": yellow,
     "Orange": orange,
     "Pink": pink,
-    "navy": navy
+    "Navy": navy
 }
 
 # Fonts
@@ -302,8 +302,8 @@ def player_entry_screen(conn):
         team2_border_color = team2_text_color
 
         # Draw team backgrounds with selected colors
-        pygame.draw.rect(screen, team1_rgb, pygame.Rect(90, 140, 325, 600))
-        pygame.draw.rect(screen, team2_rgb, pygame.Rect(690, 140, 325, 600))
+        pygame.draw.rect(screen, team1_rgb, pygame.Rect(90, 140, 325, 610))
+        pygame.draw.rect(screen, team2_rgb, pygame.Rect(690, 140, 325, 610))
 
         # Draw text boxes for both teams with contrasting borders
         for i in range(15):
