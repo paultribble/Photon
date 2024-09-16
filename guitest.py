@@ -323,7 +323,7 @@ def show_splash_screen():
     logo_rect = logo_with_border.get_rect(center=(screen_width // 2, screen_height // 2))
 
     # Generate 10 random lasers
-    for _ in range(10):
+    for _ in range(30):
         start_pos = (random.randint(0, screen_width), random.randint(0, screen_height))
         end_pos = (random.randint(0, screen_width), random.randint(0, screen_height))
         laser_positions.append((start_pos, end_pos))
