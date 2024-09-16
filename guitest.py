@@ -302,8 +302,8 @@ def player_entry_screen(conn):
         team2_border_color = team2_text_color
 
         # Draw team backgrounds with selected colors
-        pygame.draw.rect(screen, team1_rgb, pygame.Rect(100, 140, 325, 600))
-        pygame.draw.rect(screen, team2_rgb, pygame.Rect(700, 140, 325, 600))
+        pygame.draw.rect(screen, team1_rgb, pygame.Rect(90, 140, 325, 600))
+        pygame.draw.rect(screen, team2_rgb, pygame.Rect(690, 140, 325, 600))
 
         # Draw text boxes for both teams with contrasting borders
         for i in range(15):
@@ -314,11 +314,11 @@ def player_entry_screen(conn):
 
         # Render team labels and input fields with contrasting text color
         screen.blit(font.render("Team 1", True, black), (200, 90))
-        screen.blit(font.render("ID", True, team1_text_color), (150, 120))
-        screen.blit(font.render("Codename", True, team1_text_color), (250, 120))
+        screen.blit(font.render("ID", True, black), (150, 120))
+        screen.blit(font.render("Codename", True, black), (250, 120))
         screen.blit(font.render("Team 2", True, black), (800, 90))
-        screen.blit(font.render("ID", True, team2_text_color), (750, 120))
-        screen.blit(font.render("Codename", True, team2_text_color), (850, 120))
+        screen.blit(font.render("ID", True, black), (750, 120))
+        screen.blit(font.render("Codename", True, black), (850, 120))
         
         # Draw dropdown menus
         dropdown_menu_team1.draw(screen)
