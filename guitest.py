@@ -34,8 +34,7 @@ dropdown_colors = {
     "Red": red,
     "Green": green,
     "Yellow": yellow,
-    "Cyan": cyan,
-    "Magenta": magenta,
+    "Light Blue": cyan,
     "Orange": orange
 }
 
@@ -259,8 +258,8 @@ def player_entry_screen(conn):
     team2_color = "White"
     
     # Dropdown menus for team colors
-    dropdown_menu_team1 = DropdownMenu(100, 90, 100, 40, dropdown_colors)
-    dropdown_menu_team2 = DropdownMenu(700, 90, 100, 40, dropdown_colors)
+    dropdown_menu_team1 = DropdownMenu(100, 90, 95, 36, dropdown_colors)
+    dropdown_menu_team2 = DropdownMenu(700, 90, 95, 36, dropdown_colors)
     
     team_submit_button = Button(500, 750, 200, 50, "Submit", submit_team)
     add_new_player_button = Button(500, 810, 200, 50, "Add New Player", lambda: show_new_player_menu(conn))
