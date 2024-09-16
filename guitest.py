@@ -314,11 +314,11 @@ def player_entry_screen(conn):
 
         # Render team labels and input fields with contrasting text color
         screen.blit(font.render("Team 1", True, black), (200, 90))
-        screen.blit(font.render("ID", True, black), (135, 110))
-        screen.blit(font.render("Codename", True, black), (250, 120))
+        screen.blit(font.render("ID", True, black), (145, 115))
+        screen.blit(font.render("Codename", True, black), (250, 115))
         screen.blit(font.render("Team 2", True, black), (800, 90))
-        screen.blit(font.render("ID", True, black), (735, 110))
-        screen.blit(font.render("Codename", True, black), (850, 120))
+        screen.blit(font.render("ID", True, black), (745, 115))
+        screen.blit(font.render("Codename", True, black), (850, 115))
         
         # Draw dropdown menus
         dropdown_menu_team1.draw(screen)
