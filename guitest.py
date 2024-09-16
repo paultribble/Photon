@@ -103,41 +103,46 @@ def connect_to_database():
         print(f"Error connecting to PostgreSQL database: {e}")
         sys.exit(1)
 
-# TextBox class for player input
 class TextBox:
     def __init__(self, x, y, w, h, text='', readonly=False):
         self.rect = pygame.Rect(x, y, w, h)
-        self.color = gray
+        self.color = pygame.Color('lightskyblue3')
         self.text = text
-        self.font = pygame.font.Font(None, 36)
-        self.txt_surface = self.font.render(text, True, black)
+        self.txt_surface = font.render(text, True, black)
         self.active = False
         self.readonly = readonly
 
     def handle_event(self, event):
-        if not self.readonly:
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if self.rect.collidepoint(event.pos):
-                    self.active = not self.active
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            # If the user clicked on the input box rect.
+            if self.rect.collidepoint(event.pos):
+                # Toggle the active variable.
+                self.active = not self.active
+            else:
+                self.active = False
+            # Change the current color of the input box.
+            self.color = pygame.Color('dodgerblue2') if self.active else pygame.Color('lightskyblue3')
+
+        if event.type == pygame.KEYDOWN and not self.readonly:
+            if self.active:
+                if event.key == pygame.K_RETURN:
+                    print(self.text)
+                    self.text = ''
+                elif event.key == pygame.K_BACKSPACE:
+                    self.text = self.text[:-1]
                 else:
-                    self.active = False
-                self.color = blue if self.active else gray
+                    self.text += event.unicode
+                # Re-render the text.
+                self.txt_surface = font.render(self.text, True, black)
 
-            if event.type == pygame.KEYDOWN:
-                if self.active:
-                    if event.key == pygame.K_RETURN:
-                        print(self.text)
-                        self.text = ''
-                    elif event.key == pygame.K_BACKSPACE:
-                        self.text = self.text[:-1]
-                    else:
-                        self.text += event.unicode
-                    self.txt_surface = self.font.render(self.text, True, black)
+    def draw(self, screen, border_color=None):
+        # Use the provided border_color or default to black if not provided
+        border_color = border_color if border_color is not None else black
 
-    def draw(self, screen):
-        # Render the text
+        # Draw the text.
         screen.blit(self.txt_surface, (self.rect.x + 5, self.rect.y + 5))
-        pygame.draw.rect(screen, self.color, self.rect, 2)
+        # Draw the rect.
+        pygame.draw.rect(screen, border_color, self.rect, 2)  # The '2' means the border thickness.
 
 # Dropdown menu class
 class DropdownMenu:
