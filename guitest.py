@@ -243,11 +243,11 @@ def player_entry_screen(conn):
         team1_color = dropdown_menu_team1.selected_option
         team2_color = dropdown_menu_team2.selected_option
 
-    team1_color = "White"
-    team2_color = "White"
+    team1_color = dropdown_menu_team1.selected_option
+    team2_color = dropdown_menu_team2.selected_option
     
-    dropdown_menu_team1 = DropdownMenu(100, 90, 200, 40, dropdown_colors)
-    dropdown_menu_team2 = DropdownMenu(700, 90, 200, 40, dropdown_colors)
+    dropdown_menu_team1 = DropdownMenu(100, 90, 150, 40, dropdown_colors)
+    dropdown_menu_team2 = DropdownMenu(700, 90, 150, 40, dropdown_colors)
     
     team_submit_button = Button(500, 750, 200, 50, "Submit", submit_team)
     add_new_player_button = Button(500, 810, 200, 50, "Add New Player", lambda: show_new_player_menu(conn))
