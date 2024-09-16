@@ -21,21 +21,21 @@ blue = (0, 0, 255)
 red = (255, 0, 0)
 green = (0, 255, 0)
 yellow = (255, 255, 0)
-cyan = (0, 255, 255)
-magenta = (255, 0, 255)
 orange = (255, 165, 0)
+pink = (255, 0, 255)
+navy = (0, 0, 128)
 
 # Dropdown menu colors
 dropdown_colors = {
     "White": white,
     "Black": black,
-    "Gray": gray,
     "Blue": blue,
     "Red": red,
     "Green": green,
     "Yellow": yellow,
-    "Light Blue": cyan,
-    "Orange": orange
+    "Orange": orange,
+    "Pink": pink,
+    "navy": navy
 }
 
 # Fonts
