@@ -220,6 +220,7 @@ def show_new_player_menu(conn):
         clock.tick(30)
 
 # Player entry screen with two team columns
+# Player entry screen with two team columns
 def player_entry_screen(conn):
     team1_id_boxes = [TextBox(100, 150 + i * 40, 100, 30) for i in range(15)]
     team1_codename_boxes = [TextBox(250, 150 + i * 40, 150, 30, readonly=True) for i in range(15)]
@@ -238,17 +239,13 @@ def player_entry_screen(conn):
                 team2_codename_boxes[i].text = codename
                 team2_codename_boxes[i].txt_surface = font.render(codename, True, black)
 
-    def color_change_callback():
-        nonlocal team1_color, team2_color
-        team1_color = dropdown_menu_team1.selected_option
-        team2_color = dropdown_menu_team2.selected_option
-
+    # Color selected for each team
     team1_color = "White"
     team2_color = "White"
     
-    # Adjust dropdown menu positions
-    dropdown_menu_team1 = DropdownMenu(100, 90, 200, 40, dropdown_colors)  # Positioned right before "Team 1"
-    dropdown_menu_team2 = DropdownMenu(700, 90, 200, 40, dropdown_colors)  # Positioned right before "Team 2"
+    # Dropdown menus for team colors
+    dropdown_menu_team1 = DropdownMenu(100, 650, 100, 40, dropdown_colors)
+    dropdown_menu_team2 = DropdownMenu(700, 650, 100, 40, dropdown_colors)
     
     team_submit_button = Button(500, 750, 200, 50, "Submit", submit_team)
     add_new_player_button = Button(500, 810, 200, 50, "Add New Player", lambda: show_new_player_menu(conn))
@@ -261,35 +258,47 @@ def player_entry_screen(conn):
                 running = False
                 pygame.quit()
                 sys.exit()
+
+            # Handle text box events
             for box in team1_id_boxes + team2_id_boxes:
                 box.handle_event(event)
+            
+            # Handle button events
             team_submit_button.handle_event(event)
             add_new_player_button.handle_event(event)
+            
+            # Handle dropdown menu events
             dropdown_menu_team1.handle_event(event)
             dropdown_menu_team2.handle_event(event)
-        
+            
+            # Update selected team colors
+            team1_color = dropdown_menu_team1.selected_option
+            team2_color = dropdown_menu_team2.selected_option
+
         screen.fill(white)
 
-        # Draw team backgrounds
+        # Draw team backgrounds with selected colors
         pygame.draw.rect(screen, dropdown_colors[team1_color], pygame.Rect(100, 140, 600, 680))
         pygame.draw.rect(screen, dropdown_colors[team2_color], pygame.Rect(700, 140, 600, 680))
-        
-        # Draw team labels and dropdowns
-        dropdown_menu_team1.draw(screen)
-        screen.blit(font.render("Team 1", True, black), (310, 100))  # Adjusted position
+
+        # Render team labels and input fields
+        screen.blit(font.render("Team 1", True, black), (100, 100))
         screen.blit(font.render("ID", True, black), (150, 120))
         screen.blit(font.render("Codename", True, black), (250, 120))
-
-        dropdown_menu_team2.draw(screen)
-        screen.blit(font.render("Team 2", True, black), (900, 100))  # Adjusted position
+        screen.blit(font.render("Team 2", True, black), (700, 100))
         screen.blit(font.render("ID", True, black), (750, 120))
         screen.blit(font.render("Codename", True, black), (850, 120))
 
+        # Draw text boxes for both teams
         for i in range(15):
             team1_id_boxes[i].draw(screen)
             team1_codename_boxes[i].draw(screen)
             team2_id_boxes[i].draw(screen)
             team2_codename_boxes[i].draw(screen)
+
+        # Draw dropdown menus
+        dropdown_menu_team1.draw(screen)
+        dropdown_menu_team2.draw(screen)
 
         # Draw buttons
         team_submit_button.draw(screen)
@@ -297,6 +306,7 @@ def player_entry_screen(conn):
 
         pygame.display.flip()
         clock.tick(30)
+
 
 
 def show_splash_screen():
