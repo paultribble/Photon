@@ -243,8 +243,8 @@ def player_entry_screen(conn):
         team1_color = dropdown_menu_team1.selected_option
         team2_color = dropdown_menu_team2.selected_option
 
-    team1_color = dropdown_menu_team1.selected_option
-    team2_color = dropdown_menu_team2.selected_option
+    team1_color = "White"
+    team2_color = "White"
     
     dropdown_menu_team1 = DropdownMenu(100, 90, 150, 40, dropdown_colors)
     dropdown_menu_team2 = DropdownMenu(700, 90, 150, 40, dropdown_colors)
