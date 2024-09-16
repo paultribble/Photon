@@ -246,8 +246,9 @@ def player_entry_screen(conn):
     team1_color = "White"
     team2_color = "White"
     
-    dropdown_menu_team1 = DropdownMenu(100, 85, 125, 40, dropdown_colors)
-    dropdown_menu_team2 = DropdownMenu(700, 85, 125, 40, dropdown_colors)
+    # Adjust dropdown menu positions
+    dropdown_menu_team1 = DropdownMenu(100, 90, 200, 40, dropdown_colors)  # Positioned right before "Team 1"
+    dropdown_menu_team2 = DropdownMenu(700, 90, 200, 40, dropdown_colors)  # Positioned right before "Team 2"
     
     team_submit_button = Button(500, 750, 200, 50, "Submit", submit_team)
     add_new_player_button = Button(500, 810, 200, 50, "Add New Player", lambda: show_new_player_menu(conn))
@@ -273,10 +274,14 @@ def player_entry_screen(conn):
         pygame.draw.rect(screen, dropdown_colors[team1_color], pygame.Rect(100, 140, 600, 680))
         pygame.draw.rect(screen, dropdown_colors[team2_color], pygame.Rect(700, 140, 600, 680))
         
-        screen.blit(font.render("Team 1", True, black), (100, 100))
+        # Draw team labels and dropdowns
+        dropdown_menu_team1.draw(screen)
+        screen.blit(font.render("Team 1", True, black), (310, 100))  # Adjusted position
         screen.blit(font.render("ID", True, black), (150, 120))
         screen.blit(font.render("Codename", True, black), (250, 120))
-        screen.blit(font.render("Team 2", True, black), (700, 100))
+
+        dropdown_menu_team2.draw(screen)
+        screen.blit(font.render("Team 2", True, black), (900, 100))  # Adjusted position
         screen.blit(font.render("ID", True, black), (750, 120))
         screen.blit(font.render("Codename", True, black), (850, 120))
 
@@ -286,15 +291,13 @@ def player_entry_screen(conn):
             team2_id_boxes[i].draw(screen)
             team2_codename_boxes[i].draw(screen)
 
-        # Draw dropdown menus
-        dropdown_menu_team1.draw(screen)
-        dropdown_menu_team2.draw(screen)
-        
+        # Draw buttons
         team_submit_button.draw(screen)
         add_new_player_button.draw(screen)
 
         pygame.display.flip()
         clock.tick(30)
+
 
 def show_splash_screen():
     clock = pygame.time.Clock()
