@@ -314,10 +314,10 @@ def player_entry_screen(conn):
             team2_codename_boxes[i].draw(screen, border_color=team2_border_color)
 
         # Render team labels and input fields with contrasting text color
-        screen.blit(font.render("Team 1", True, team1_text_color), (130, 100))
+        screen.blit(font.render("Team 1", True, team1_text_color), (200, 100))
         screen.blit(font.render("ID", True, team1_text_color), (150, 120))
         screen.blit(font.render("Codename", True, team1_text_color), (250, 120))
-        screen.blit(font.render("Team 2", True, team2_text_color), (730, 100))
+        screen.blit(font.render("Team 2", True, team2_text_color), (800, 100))
         screen.blit(font.render("ID", True, team2_text_color), (750, 120))
         screen.blit(font.render("Codename", True, team2_text_color), (850, 120))
         
