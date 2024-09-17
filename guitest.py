@@ -189,7 +189,7 @@ class DatabaseMenu:
 
         # Define the up and down arrow buttons
         self.scroll_up_button = Button(x + w + 10, y + 10, 40, 30, "Up", self.scroll_up)
-        self.scroll_down_button = Button(x + w + 10, y + h - 40, 40, 30, "Down", self.scroll_down)
+        self.scroll_down_button = Button(x + w + 10, y + h - 40, 50, 30, "Down", self.scroll_down)
 
     def fetch_entries(self):
         cursor = self.conn.cursor()
