@@ -206,7 +206,7 @@ def show_new_player_menu(conn):
         codename = new_codename_box.text
         if codename:
             new_id = add_new_player(conn, codename)
-            result_text = f"New player added with ID: {new_id} and Codename: {codename}"
+            result_text = f"New player added with ID: {new_id}"
             print(result_text)
             new_codename_box.text = result_text
             new_codename_box.txt_surface = font.render(result_text, True, black)
@@ -231,7 +231,7 @@ def show_new_player_menu(conn):
         
         # Draw modal box
         modal_box = pygame.Rect(400, 250, 400, 250)
-        pygame.draw.rect(screen, (200, 200, 200), modal_box)  # Light gray box
+        pygame.draw.rect(screen, (200, 200, 100), modal_box)  # Light gray box
         pygame.draw.rect(screen, black, modal_box, 2)  # Black border
 
         # Draw text and buttons inside the modal
