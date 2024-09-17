@@ -469,7 +469,7 @@ draw_moving_stripes(screen, stripe_color, stripe_width, scroll_offset)
 def main():
     show_splash_screen()
     conn = connect_to_database()
-    player_entry_screen(conn)
+    player_entry_screen(conn, scroll_offset)
 
 if __name__ == "__main__":
     main()
