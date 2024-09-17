@@ -178,72 +178,91 @@ class DropdownMenu:
                 pygame.draw.rect(screen, gray, rect)
                 screen.blit(self.font.render(list(self.options.keys())[i], True, black), (rect.x + 5, rect.y + 5))
 
-class DatabaseView:
-    def __init__(self, conn):
-        self.conn = conn
-        self.modal_running = True
+class DatabaseMenu:
+    def __init__(self, x, y, w, h, conn):
+        self.rect = pygame.Rect(x, y, w, h)
+        self.color = gray
         self.scroll_y = 0
-        self.max_scroll = 0
+        self.conn = conn
+        self.entries = []
+        self.fetch_entries()
 
-    def fetch_players(self):
+    def fetch_entries(self):
         cursor = self.conn.cursor()
-        cursor.execute("SELECT id, codename FROM players")
-        return cursor.fetchall()
+        cursor.execute("SELECT id, codename FROM players ORDER BY codename ASC")
+        self.entries = cursor.fetchall()
 
-    def remove_player(self, player_id):
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == 4:  # Scroll up
+                self.scroll_y = max(self.scroll_y - 10, 0)
+            elif event.button == 5:  # Scroll down
+                self.scroll_y = min(self.scroll_y + 10, max(0, len(self.entries) * 40 - self.rect.height))
+
+            for i, entry_rect in enumerate(self.entry_rects):
+                if entry_rect.collidepoint(event.pos) and event.button == 1:
+                    if self.remove_buttons[i].collidepoint(event.pos):
+                        self.remove_entry(self.entries[i][0])
+                        self.fetch_entries()  # Refresh entries after removal
+                    break
+
+    def remove_entry(self, entry_id):
         cursor = self.conn.cursor()
-        cursor.execute("DELETE FROM players WHERE id = %s", (player_id,))
+        cursor.execute("DELETE FROM players WHERE id = %s", (entry_id,))
         self.conn.commit()
 
-    def show(self):
-        clock = pygame.time.Clock()
-        players = self.fetch_players()
-        player_boxes = []
-        self.max_scroll = max(0, len(players) * 40 - screen_height + 100)
+    def draw(self, screen):
+        pygame.draw.rect(screen, self.color, self.rect)
+        cursor_y = self.rect.y - self.scroll_y
+        self.entry_rects = []
+        self.remove_buttons = []
 
-        while self.modal_running:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()
+        for i, (player_id, codename) in enumerate(self.entries):
+            entry_rect = pygame.Rect(self.rect.x, cursor_y + i * 40, self.rect.width - 50, 40)
+            pygame.draw.rect(screen, white, entry_rect)
+            pygame.draw.rect(screen, black, entry_rect, 2)
+            text_surface = font.render(f"{player_id}: {codename}", True, black)
+            screen.blit(text_surface, (entry_rect.x + 5, entry_rect.y + 5))
 
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    if event.button == 4:  # Scroll up
-                        self.scroll_y = max(0, self.scroll_y - 20)
-                    elif event.button == 5:  # Scroll down
-                        self.scroll_y = min(self.max_scroll, self.scroll_y + 20)
-                    
-                    for i, rect in enumerate(player_boxes):
-                        if rect.collidepoint(event.pos):
-                            player_id = players[i][0]
-                            self.remove_player(player_id)
-                            players.pop(i)
-                            player_boxes.pop(i)
-                            self.max_scroll = max(0, len(players) * 40 - screen_height + 100)
-                            break
-
-            screen.fill(white)
-            pygame.draw.rect(screen, gray, pygame.Rect(100, 50, 1000, 700))
-
-            for i, (player_id, codename) in enumerate(players):
-                y = 60 + i * 40 - self.scroll_y
-                if y < -30 or y > screen_height:
-                    continue
-                rect = pygame.Rect(110, y, 800, 30)
-                pygame.draw.rect(screen, white, rect)
-                pygame.draw.rect(screen, black, rect, 2)
-                screen.blit(font.render(f"{player_id}: {codename}", True, black), (120, y + 5))
-                x_button_rect = pygame.Rect(900, y, 30, 30)
-                pygame.draw.rect(screen, red, x_button_rect)
-                screen.blit(font.render("X", True, white), (910, y + 5))
-                player_boxes.append(x_button_rect)
-
-            pygame.display.flip()
-            clock.tick(30)
+            remove_button_rect = pygame.Rect(entry_rect.right, cursor_y + i * 40, 50, 40)
+            pygame.draw.rect(screen, red, remove_button_rect)
+            pygame.draw.rect(screen, black, remove_button_rect, 2)
+            remove_text_surface = font.render("X", True, black)
+            screen.blit(remove_text_surface, (remove_button_rect.x + (remove_button_rect.w - remove_text_surface.get_width()) // 2,
+                                              remove_button_rect.y + (remove_button_rect.h - remove_text_surface.get_height()) // 2))
+            self.entry_rects.append(entry_rect)
+            self.remove_buttons.append(remove_button_rect)
 
 def show_database_menu(conn):
-    db_view = DatabaseView(conn)
-    db_view.show()
+    modal_running = True
+    db_menu = DatabaseMenu(100, 100, 1000, 600, conn)
+    clock = pygame.time.Clock()
+
+    def close_modal():
+        nonlocal modal_running
+        modal_running = False
+
+    close_button = Button(1050, 700, 50, 30, "X", close_modal)
+
+    while modal_running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+            db_menu.handle_event(event)
+            close_button.handle_event(event)
+
+        screen.fill(black)
+        draw_gradient_background(screen)
+        draw_neon_lines(screen)
+
+        db_menu.draw(screen)
+        close_button.draw(screen)
+
+        pygame.display.flip()
+        clock.tick(30)
+
 
 
 
