@@ -14,6 +14,7 @@ screen_height = 800
 screen = pygame.display.set_mode((screen_width, screen_height))
 pygame.display.set_caption("Photon Laser Tag")
 
+scroll_offset = 0
 
 # Colors
 white = (255, 255, 255)
@@ -237,9 +238,10 @@ def show_new_player_menu(conn):
         clock.tick(30)
 
 # Player entry screen with two team columns
-def player_entry_screen(conn):
-    global scroll_offset
+def player_entry_screen(conn, scroll_offset):
+    
     scroll_offset += 2
+    
     draw_gradient_background(screen, top_color, bottom_color)
     draw_moving_grid(screen, grid_color, 40, scroll_offset)
     draw_twinkling_stars(screen, 100, scroll_offset)
