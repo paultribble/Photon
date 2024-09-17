@@ -227,7 +227,7 @@ def show_new_player_menu(conn):
             new_player_button.handle_event(event)
             close_button.handle_event(event)
 
-        screen.fill(white)
+        
         
         # Draw modal box
         modal_box = pygame.Rect(400, 250, 400, 250)
