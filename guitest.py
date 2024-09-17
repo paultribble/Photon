@@ -197,35 +197,21 @@ def add_new_player(conn, codename):
             conn.commit()
             return new_id
 
-def wrap_text(text, font, max_width):
-    words = text.split(' ')
-    lines = []
-    current_line = ''
-    for word in words:
-        test_line = f"{current_line} {word}".strip()
-        test_surface = font.render(test_line, True, black)
-        if test_surface.get_width() <= max_width:
-            current_line = test_line
-        else:
-            if current_line:
-                lines.append(current_line)
-            current_line = word
-    if current_line:
-        lines.append(current_line)
-    return lines
-
 def show_new_player_menu(conn):
     modal_running = True
-    new_codename_box = TextBox(450, 300, 150, 40)
+    new_codename_box = TextBox(450, 300, 300, 40)
     clock = pygame.time.Clock()
     
-    result_text = ""
+    result_id = ""
+    result_codename = ""
+    
     def save_new_player():
-        nonlocal result_text
+        nonlocal result_id, result_codename
         codename = new_codename_box.text
         if codename:
             new_id = add_new_player(conn, codename)
-            result_text = f"New player added with ID: {new_id} and Codename: {codename}"
+            result_id = f"New player ID: {new_id}"
+            result_codename = f"Codename: {codename}"
 
     def close_modal():
         nonlocal modal_running
@@ -243,12 +229,8 @@ def show_new_player_menu(conn):
             new_player_button.handle_event(event)
             close_button.handle_event(event)
 
-        # Wrap text and calculate modal box height
-        wrapped_result_text = wrap_text(result_text, font, 380)  # Width of the modal box - padding
-        text_height = len(wrapped_result_text) * 30  # Adjust line height if necessary
-
-        # Modal box height is updated to fit the text
-        modal_box = pygame.Rect(400, 250, 400, 150 + text_height)
+        # Modal box dimensions
+        modal_box = pygame.Rect(400, 250, 400, 150)  # Adjust height as needed
         pygame.draw.rect(screen, (200, 200, 200), modal_box)  # Light gray box
         pygame.draw.rect(screen, black, modal_box, 2)  # Black border
 
@@ -259,10 +241,11 @@ def show_new_player_menu(conn):
         close_button.draw(screen)
 
         # Draw result text
-        y_offset = modal_box.y + 80 + 2 * 30  # Start drawing the text two lines down
-        for line in wrapped_result_text:
+        result_lines = [result_id, result_codename]
+        y_offset = modal_box.y + 80  # Start drawing the text below the form
+        for line in result_lines:
             screen.blit(font.render(line, True, black), (modal_box.x + 10, y_offset))
-            y_offset += 30
+            y_offset += 30  # Move down for the next line
 
         pygame.display.flip()
         clock.tick(30)
