@@ -26,6 +26,13 @@ orange = (255, 165, 0)
 pink = (255, 0, 255)
 navy = (0, 0, 128)
 
+
+def clear_database(conn):
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM players")
+    conn.commit()
+    print("Database cleared.")
+
 # Dropdown menu colors
 dropdown_colors = {
     "White": white,
@@ -548,6 +555,7 @@ def draw_neon_lines(screen):
 def main():
     show_splash_screen()
     conn = connect_to_database()
+    clear_database(conn)
     player_entry_screen(conn)
 
 if __name__ == "__main__":
