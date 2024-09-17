@@ -428,15 +428,6 @@ def draw_neon_lines(screen):
         end_pos = (random.randint(0, screen_width), random.randint(0, screen_height))
         laser_positions.append((start_pos, end_pos))
 
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-                pygame.quit()
-                sys.exit()
-
-        screen.fill(black)
-
         # Draw the laser animations
         for start_pos, end_pos in laser_positions:
             pygame.draw.line(screen, red, start_pos, end_pos, 2)
