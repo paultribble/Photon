@@ -3,6 +3,7 @@ import psycopg2
 import sys
 import random
 import os
+import math
 
 # Initialize Pygame
 pygame.init()
@@ -19,25 +20,38 @@ black = (0, 0, 0)
 gray = (200, 200, 200)
 blue = (0, 0, 255)
 red = (255, 0, 0)
-
-# Fonts
-font = pygame.font.Font(None, 36)
+green = (0, 255, 0)
+yellow = (255, 255, 0)
+orange = (255, 165, 0)
+pink = (255, 0, 255)
+navy = (0, 0, 128)
 
 # Dropdown menu colors
 dropdown_colors = {
     "White": white,
     "Black": black,
     "Blue": blue,
-    "Red": red
+    "Red": red,
+    "Green": green,
+    "Yellow": yellow,
+    "Orange": orange,
+    "Pink": pink,
+    "Navy": navy
 }
+
+# Fonts
+font = pygame.font.Font(None, 36)
 
 def calculate_brightness(color):
     r, g, b = color
     return (0.299 * r + 0.587 * g + 0.114 * b)
 
+# Function to get contrasting text color
 def get_contrasting_color(background_color):
     brightness = calculate_brightness(background_color)
-    return (255, 255, 255) if brightness < 128 else (0, 0, 0)
+    return (255, 255, 255) if brightness < 128 else (0, 0, 0)  # White text if dark, Black text if bright
+
+
 
 class Button:
     def __init__(self, x, y, w, h, text, callback):
@@ -58,6 +72,37 @@ class Button:
         screen.blit(self.txt_surface, (self.rect.x + (self.rect.w - self.txt_surface.get_width()) // 2,
                                        self.rect.y + (self.rect.h - self.txt_surface.get_height()) // 2))
 
+# Load logo image
+def load_image(filename):
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    image_path = os.path.join(script_dir, "Images", filename)
+    return pygame.image.load(image_path)
+
+# Resize image to fit modestly in the center of the screen
+def resize_image(image, max_width, max_height):
+    img_width, img_height = image.get_size()
+    width_ratio = max_width / img_width
+    height_ratio = max_height / img_height
+    min_ratio = min(width_ratio, height_ratio)
+    new_width = int(img_width * min_ratio)
+    new_height = int(img_height * min_ratio)
+    return pygame.transform.scale(image, (new_width, new_height))
+
+# Database connection function
+def connect_to_database():
+    try:
+        conn = psycopg2.connect(
+            dbname="photon",
+            user="student",
+            password="student",
+            host="localhost",
+            port="5432"
+        )
+        return conn
+    except Exception as e:
+        print(f"Error connecting to PostgreSQL database: {e}")
+        sys.exit(1)
+
 class TextBox:
     def __init__(self, x, y, w, h, text='', readonly=False):
         self.rect = pygame.Rect(x, y, w, h)
@@ -69,10 +114,13 @@ class TextBox:
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
+            # If the user clicked on the input box rect.
             if self.rect.collidepoint(event.pos):
+                # Toggle the active variable.
                 self.active = not self.active
             else:
                 self.active = False
+            # Change the current color of the input box.
             self.color = pygame.Color('dodgerblue2') if self.active else pygame.Color('lightskyblue3')
 
         if event.type == pygame.KEYDOWN and not self.readonly:
@@ -84,13 +132,19 @@ class TextBox:
                     self.text = self.text[:-1]
                 else:
                     self.text += event.unicode
+                # Re-render the text.
                 self.txt_surface = font.render(self.text, True, black)
 
     def draw(self, screen, border_color=None):
+        # Use the provided border_color or default to black if not provided
         border_color = border_color if border_color is not None else black
-        screen.blit(self.txt_surface, (self.rect.x + 5, self.rect.y + 5))
-        pygame.draw.rect(screen, border_color, self.rect, 2)
 
+        # Draw the text.
+        screen.blit(self.txt_surface, (self.rect.x + 5, self.rect.y + 5))
+        # Draw the rect.
+        pygame.draw.rect(screen, border_color, self.rect, 2)  # The '2' means the border thickness.
+
+# Dropdown menu class
 class DropdownMenu:
     def __init__(self, x, y, w, h, options):
         self.rect = pygame.Rect(x, y, w, h)
@@ -124,20 +178,7 @@ class DropdownMenu:
                 pygame.draw.rect(screen, gray, rect)
                 screen.blit(self.font.render(list(self.options.keys())[i], True, black), (rect.x + 5, rect.y + 5))
 
-def connect_to_database():
-    try:
-        conn = psycopg2.connect(
-            dbname="photon",
-            user="student",
-            password="student",
-            host="localhost",
-            port="5432"
-        )
-        return conn
-    except Exception as e:
-        print(f"Error connecting to PostgreSQL database: {e}")
-        sys.exit(1)
-
+# Fetch codename from database based on ID
 def fetch_codename_from_db(player_id, conn):
     cursor = conn.cursor()
     cursor.execute("SELECT codename FROM players WHERE id = %s", (player_id,))
@@ -146,6 +187,7 @@ def fetch_codename_from_db(player_id, conn):
         return result[0]
     return ""
 
+# Add new player to the database with a random unique ID
 def add_new_player(conn, codename):
     cursor = conn.cursor()
     while True:
@@ -156,6 +198,7 @@ def add_new_player(conn, codename):
             conn.commit()
             return new_id
 
+# New Player Menu
 def show_new_player_menu(conn):
     running = True
     new_codename_box = TextBox(500, 400, 200, 40)
@@ -173,7 +216,7 @@ def show_new_player_menu(conn):
     close_button = Button(650, 350, 50, 50, "X", lambda: setattr(new_player_menu, 'running', False))
     clock = pygame.time.Clock()
 
-    new_player_menu = type('Menu', (object,), {'running': running})()
+    new_player_menu = type('Menu', (object,), {'running': running})()  # Use dynamic attribute
 
     while new_player_menu.running:
         for event in pygame.event.get():
@@ -192,6 +235,7 @@ def show_new_player_menu(conn):
         pygame.display.flip()
         clock.tick(30)
 
+# Player entry screen with two team columns
 def player_entry_screen(conn):
     draw_gradient_background(screen)
     draw_neon_lines(screen)
@@ -218,8 +262,9 @@ def player_entry_screen(conn):
     dropdown_menu_team1 = DropdownMenu(100, 80, 95, 36, dropdown_colors)
     dropdown_menu_team2 = DropdownMenu(700, 80, 95, 36, dropdown_colors)
     
-    team_submit_button = Button(500, 750, 200, 50, "Submit", submit_team)
-    add_new_player_button = Button(500, 810, 200, 50, "Add New Player", lambda: show_new_player_menu(conn))
+    # Adjust button positions here
+    team_submit_button = Button(400, 750, 200, 50, "Submit", submit_team)
+    add_new_player_button = Button(620, 750, 200, 50, "Add New Player", lambda: show_new_player_menu(conn))
     clock = pygame.time.Clock()
 
     running = True
@@ -337,7 +382,7 @@ def show_splash_screen():
 
 def draw_gradient_background(screen):
     bottom_color = (0, 0, 0)  # Black
-    top_left_color = (0, 0, 200)  # Red
+    top_left_color = (0, 0, 200)  # Blue
     top_right_color = (255,255 ,255)  # White
     """Draws a gradient background with specified colors."""
     for y in range(screen_height):
