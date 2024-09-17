@@ -201,10 +201,10 @@ def show_new_player_menu(conn):
     modal_running = True
     new_codename_box = TextBox(450, 300, 300, 40)
     clock = pygame.time.Clock()
-    
+
     result_id = ""
     result_codename = ""
-    
+
     def save_new_player():
         nonlocal result_id, result_codename
         codename = new_codename_box.text
@@ -229,8 +229,12 @@ def show_new_player_menu(conn):
             new_player_button.handle_event(event)
             close_button.handle_event(event)
 
-        # Modal box dimensions
-        modal_box = pygame.Rect(400, 250, 400, 150)  # Adjust height as needed
+        # Calculate the height of the modal box based on the result text
+        result_lines = [result_id, result_codename]
+        text_height = len(result_lines) * 30  # Estimate height needed for text
+        modal_box_height = 150 + text_height  # Base height plus space for result text
+        modal_box = pygame.Rect(400, 250, 400, modal_box_height)  # Adjust height
+
         pygame.draw.rect(screen, (200, 200, 200), modal_box)  # Light gray box
         pygame.draw.rect(screen, black, modal_box, 2)  # Black border
 
@@ -240,9 +244,8 @@ def show_new_player_menu(conn):
         new_player_button.draw(screen)
         close_button.draw(screen)
 
-        # Draw result text
-        result_lines = [result_id, result_codename]
-        y_offset = modal_box.y + 80  # Start drawing the text below the form
+        # Draw result text, starting lower down
+        y_offset = modal_box.y + 90  # Start drawing the text below the form
         for line in result_lines:
             screen.blit(font.render(line, True, black), (modal_box.x + 10, y_offset))
             y_offset += 30  # Move down for the next line
