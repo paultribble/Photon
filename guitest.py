@@ -300,7 +300,7 @@ def player_entry_screen(conn, scroll_offset):
             team1_color = dropdown_menu_team1.selected_option
             team2_color = dropdown_menu_team2.selected_option
 
-        screen.fill(white)
+        ##screen.fill(white)
 
         # Get RGB values for selected colors
         team1_rgb = dropdown_colors[team1_color]
