@@ -216,7 +216,7 @@ def wrap_text(text, font, max_width):
 
 def show_new_player_menu(conn):
     modal_running = True
-    new_codename_box = TextBox(450, 300, 200, 40)
+    new_codename_box = TextBox(450, 300, 150, 40)
     clock = pygame.time.Clock()
     
     result_text = ""
@@ -248,7 +248,7 @@ def show_new_player_menu(conn):
         text_height = len(wrapped_result_text) * 30  # Adjust line height if necessary
 
         # Modal box height is updated to fit the text
-        modal_box = pygame.Rect(400, 250, 400, 200 + text_height)
+        modal_box = pygame.Rect(400, 250, 400, 150 + text_height)
         pygame.draw.rect(screen, (200, 200, 200), modal_box)  # Light gray box
         pygame.draw.rect(screen, black, modal_box, 2)  # Black border
 
