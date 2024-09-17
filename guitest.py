@@ -310,8 +310,8 @@ def player_entry_screen(conn, scroll_offset):
         team2_border_color = team2_text_color
 
         # Draw team backgrounds with selected colors
-        pygame.draw.rect(screen, team1_rgb, pygame.Rect(90, 140, 325, 610))
-        pygame.draw.rect(screen, team2_rgb, pygame.Rect(690, 140, 325, 610))
+        pygame.draw.rect(screen, team1_rgb, pygame.Rect(90, 130, 325, 620))
+        pygame.draw.rect(screen, team2_rgb, pygame.Rect(690, 130, 325, 620))
 
         # Draw text boxes for both teams with contrasting borders
         for i in range(15):
