@@ -197,19 +197,35 @@ def add_new_player(conn, codename):
             conn.commit()
             return new_id
 
+def wrap_text(text, font, max_width):
+    words = text.split(' ')
+    lines = []
+    current_line = ''
+    for word in words:
+        test_line = f"{current_line} {word}".strip()
+        test_surface = font.render(test_line, True, black)
+        if test_surface.get_width() <= max_width:
+            current_line = test_line
+        else:
+            if current_line:
+                lines.append(current_line)
+            current_line = word
+    if current_line:
+        lines.append(current_line)
+    return lines
+
 def show_new_player_menu(conn):
     modal_running = True
     new_codename_box = TextBox(450, 300, 300, 40)
     clock = pygame.time.Clock()
-
+    
+    result_text = ""
     def save_new_player():
+        nonlocal result_text
         codename = new_codename_box.text
         if codename:
             new_id = add_new_player(conn, codename)
-            result_text = f"New player added with ID: {new_id}"
-            print(result_text)
-            new_codename_box.text = result_text
-            new_codename_box.txt_surface = font.render(result_text, True, black)
+            result_text = f"New player added with ID: {new_id} and Codename: {codename}"
 
     def close_modal():
         nonlocal modal_running
@@ -227,10 +243,10 @@ def show_new_player_menu(conn):
             new_player_button.handle_event(event)
             close_button.handle_event(event)
 
-        
+        screen.fill(white)
         
         # Draw modal box
-        modal_box = pygame.Rect(400, 250, 400, 150)
+        modal_box = pygame.Rect(400, 250, 400, 300)
         pygame.draw.rect(screen, (200, 200, 200), modal_box)  # Light gray box
         pygame.draw.rect(screen, black, modal_box, 2)  # Black border
 
@@ -239,6 +255,11 @@ def show_new_player_menu(conn):
         new_codename_box.draw(screen)
         new_player_button.draw(screen)
         close_button.draw(screen)
+
+        # Draw result text
+        wrapped_result_text = wrap_text(result_text, font, modal_box.width - 20)
+        for i, line in enumerate(wrapped_result_text):
+            screen.blit(font.render(line, True, black), (modal_box.x + 10, modal_box.y + 80 + i * 30))
 
         pygame.display.flip()
         clock.tick(30)
