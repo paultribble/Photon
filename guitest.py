@@ -243,8 +243,12 @@ def show_new_player_menu(conn):
             new_player_button.handle_event(event)
             close_button.handle_event(event)
 
-        # Draw modal box
-        modal_box = pygame.Rect(400, 250, 400, 300)
+        # Wrap text and calculate modal box height
+        wrapped_result_text = wrap_text(result_text, font, 380)  # Width of the modal box - padding
+        text_height = len(wrapped_result_text) * 30  # Adjust line height if necessary
+
+        # Modal box height is updated to fit the text
+        modal_box = pygame.Rect(400, 250, 400, 300 + text_height)
         pygame.draw.rect(screen, (200, 200, 200), modal_box)  # Light gray box
         pygame.draw.rect(screen, black, modal_box, 2)  # Black border
 
@@ -255,9 +259,10 @@ def show_new_player_menu(conn):
         close_button.draw(screen)
 
         # Draw result text
-        wrapped_result_text = wrap_text(result_text, font, modal_box.width - 20)
-        for i, line in enumerate(wrapped_result_text):
-            screen.blit(font.render(line, True, black), (modal_box.x + 10, modal_box.y + 80 + i * 30))
+        y_offset = modal_box.y + 80 + 2 * 30  # Start drawing the text two lines down
+        for line in wrapped_result_text:
+            screen.blit(font.render(line, True, black), (modal_box.x + 10, y_offset))
+            y_offset += 30
 
         pygame.display.flip()
         clock.tick(30)
