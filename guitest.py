@@ -437,7 +437,7 @@ draw_neon_lines(screen, neon_color, line_thickness, pygame.time.get_ticks())
 def main():
     show_splash_screen()
     conn = connect_to_database()
-    player_entry_screen(conn, scroll_offset)
+    player_entry_screen(conn)
 
 if __name__ == "__main__":
     main()
