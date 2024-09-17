@@ -178,6 +178,75 @@ class DropdownMenu:
                 pygame.draw.rect(screen, gray, rect)
                 screen.blit(self.font.render(list(self.options.keys())[i], True, black), (rect.x + 5, rect.y + 5))
 
+class DatabaseView:
+    def __init__(self, conn):
+        self.conn = conn
+        self.modal_running = True
+        self.scroll_y = 0
+        self.max_scroll = 0
+
+    def fetch_players(self):
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT id, codename FROM players")
+        return cursor.fetchall()
+
+    def remove_player(self, player_id):
+        cursor = self.conn.cursor()
+        cursor.execute("DELETE FROM players WHERE id = %s", (player_id,))
+        self.conn.commit()
+
+    def show(self):
+        clock = pygame.time.Clock()
+        players = self.fetch_players()
+        player_boxes = []
+        self.max_scroll = max(0, len(players) * 40 - screen_height + 100)
+
+        while self.modal_running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if event.button == 4:  # Scroll up
+                        self.scroll_y = max(0, self.scroll_y - 20)
+                    elif event.button == 5:  # Scroll down
+                        self.scroll_y = min(self.max_scroll, self.scroll_y + 20)
+                    
+                    for i, rect in enumerate(player_boxes):
+                        if rect.collidepoint(event.pos):
+                            player_id = players[i][0]
+                            self.remove_player(player_id)
+                            players.pop(i)
+                            player_boxes.pop(i)
+                            self.max_scroll = max(0, len(players) * 40 - screen_height + 100)
+                            break
+
+            screen.fill(white)
+            pygame.draw.rect(screen, gray, pygame.Rect(100, 50, 1000, 700))
+
+            for i, (player_id, codename) in enumerate(players):
+                y = 60 + i * 40 - self.scroll_y
+                if y < -30 or y > screen_height:
+                    continue
+                rect = pygame.Rect(110, y, 800, 30)
+                pygame.draw.rect(screen, white, rect)
+                pygame.draw.rect(screen, black, rect, 2)
+                screen.blit(font.render(f"{player_id}: {codename}", True, black), (120, y + 5))
+                x_button_rect = pygame.Rect(900, y, 30, 30)
+                pygame.draw.rect(screen, red, x_button_rect)
+                screen.blit(font.render("X", True, white), (910, y + 5))
+                player_boxes.append(x_button_rect)
+
+            pygame.display.flip()
+            clock.tick(30)
+
+def show_database_menu(conn):
+    db_view = DatabaseView(conn)
+    db_view.show()
+
+
+
 # Fetch codename from database based on ID
 def fetch_codename_from_db(player_id, conn):
     cursor = conn.cursor()
@@ -286,9 +355,10 @@ def player_entry_screen(conn):
     dropdown_menu_team1 = DropdownMenu(100, 80, 95, 36, dropdown_colors)
     dropdown_menu_team2 = DropdownMenu(700, 80, 95, 36, dropdown_colors)
     
-    # Adjust button positions here
     team_submit_button = Button(400, 750, 200, 50, "Submit", submit_team)
     add_new_player_button = Button(620, 750, 200, 50, "Add New Player", lambda: show_new_player_menu(conn))
+    view_database_button = Button(850, 750, 200, 50, "View Database", lambda: show_database_menu(conn))
+
     clock = pygame.time.Clock()
 
     running = True
@@ -304,6 +374,7 @@ def player_entry_screen(conn):
             
             team_submit_button.handle_event(event)
             add_new_player_button.handle_event(event)
+            view_database_button.handle_event(event)
             dropdown_menu_team1.handle_event(event)
             dropdown_menu_team2.handle_event(event)
             
@@ -342,6 +413,7 @@ def player_entry_screen(conn):
         dropdown_menu_team2.draw(screen)
         team_submit_button.draw(screen)
         add_new_player_button.draw(screen)
+        view_database_button.draw(screen)
 
         pygame.display.flip()
         clock.tick(30)
