@@ -395,7 +395,7 @@ def show_splash_screen():
 
 def draw_gradient_background(screen):
     bottom_color = (0, 0, 0)  # Black
-    top_left_color = (255, 0, 0)  # Red
+    top_left_color = (0, 0, 200)  # Red
     top_right_color = (255,255 ,255)  # White
     """Draws a gradient background with specified colors."""
     for y in range(screen_height):
