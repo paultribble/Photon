@@ -4,16 +4,21 @@
 import socket
 
 def setup_udp_client(host = '127.0.0.1' , port = 1337):
-    client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-    message = "New player added".encode('utf-8')
-    client_socket.sendto(message, ('127.0.0.1' , 1337))
-    print("Player added signal sent to server")
+        message = "New player added".encode('utf-8')
+        client_socket.sendto(message, ('127.0.0.1' , 1337))
+        print("Player added signal sent to server")
 
 
-    while True:
-        data, _ = client_socket.recvfrom(1024)
-        print(f"Received from server: {data.decode('utf-8')}")
+        while True:
+            data, _ = client_socket.recvfrom(1024)
+            print(f"Received from server: {data.decode('utf-8')}")
+    except Exception as e:
+        print(f"An eroor occured: {e}")
+    finally:
+        client_socket.close()
 
 if __name__ == "__main__":
     setup_udp_client()
