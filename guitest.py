@@ -199,7 +199,7 @@ def add_new_player(conn, codename):
 
 def show_new_player_menu(conn):
     modal_running = True
-    new_codename_box = TextBox(450, 300, 300, 40)
+    new_codename_box = TextBox(450, 300, 150, 40)
     clock = pygame.time.Clock()
 
     result_id = ""
@@ -245,7 +245,7 @@ def show_new_player_menu(conn):
         close_button.draw(screen)
 
         # Draw result text, starting lower down
-        y_offset = modal_box.y + 90  # Start drawing the text below the form
+        y_offset = modal_box.y + 150  # Start drawing the text below the form
         for line in result_lines:
             screen.blit(font.render(line, True, black), (modal_box.x + 10, y_offset))
             y_offset += 30  # Move down for the next line
