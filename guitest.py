@@ -4,7 +4,7 @@ import sys
 import random
 import os
 import math
-import socket
+
 # Initialize Pygame
 pygame.init()
 
@@ -25,40 +25,6 @@ yellow = (255, 255, 0)
 orange = (255, 165, 0)
 pink = (255, 0, 255)
 navy = (0, 0, 128)
-
-
-# Initialize UDP sockets
-UDP_BROADCAST_PORT = 7500
-UDP_RECEIVE_PORT = 7501
-
-def init_udp_sockets():
-    global broadcast_socket, receive_socket
-    # Create a socket for broadcasting
-    broadcast_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    broadcast_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-    
-    # Create a socket for receiving
-    receive_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    receive_socket.bind(('0.0.0.0', UDP_RECEIVE_PORT))
-    
-def send_equipment_id(equipment_id):
-    message = f"{equipment_id}".encode()
-    broadcast_socket.sendto(message, ('<broadcast>', UDP_BROADCAST_PORT))
-
-def receive_data():
-    try:
-        data, _ = receive_socket.recvfrom(1024)
-        return data.decode()
-    except socket.error:
-        return None
-
-def close_udp_sockets():
-    broadcast_socket.close()
-    receive_socket.close()
-
-# Initialize UDP sockets
-init_udp_sockets()
-
 
 
 def clear_database(conn):
@@ -338,19 +304,7 @@ def add_new_player(conn, codename):
         if cursor.fetchone() is None:
             cursor.execute("INSERT INTO players (id, codename) VALUES (%s, %s)", (new_id, codename))
             conn.commit()
-            send_equipment_id(new_id)  # Send the new equipment ID over UDP
             return new_id
-
-def handle_incoming_data():
-    data = receive_data()
-    if data:
-        try:
-            sender_id, receiver_id = map(int, data.split(':'))
-            print(f"Equipment ID {sender_id} hit Equipment ID {receiver_id}")
-            # Handle the received data (e.g., update game state)
-        except ValueError:
-            print(f"Received invalid data: {data}")
-
 
 def show_new_player_menu(conn):
     modal_running = True
@@ -599,28 +553,10 @@ def draw_neon_lines(screen):
             pygame.draw.line(screen, red, start_pos, end_pos, 2)
 
 def main():
-    try:
-        # Display the splash screen
-        show_splash_screen()
-        
-        # Connect to the PostgreSQL database
-        conn = connect_to_database()
-        
-        # Uncomment the line below if you need to clear the database for testing
-        # clear_database(conn)
-        
-        # Show the player entry screen, passing the database connection
-        player_entry_screen(conn)
-    
-    except Exception as e:
-        # Print any exceptions that occur
-        print(f"An error occurred: {e}")
-    
-    finally:
-        # Ensure that the database connection is closed properly
-        if conn:
-            conn.close()
+    show_splash_screen()
+    conn = connect_to_database()
+    ##clear_database(conn)
+    player_entry_screen(conn)
 
 if __name__ == "__main__":
     main()
-
