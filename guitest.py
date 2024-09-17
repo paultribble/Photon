@@ -187,7 +187,6 @@ def fetch_codename_from_db(player_id, conn):
         return result[0]
     return ""
 
-# Add new player to the database with a random unique ID
 def add_new_player(conn, codename):
     cursor = conn.cursor()
     while True:
@@ -198,10 +197,10 @@ def add_new_player(conn, codename):
             conn.commit()
             return new_id
 
-# New Player Menu
 def show_new_player_menu(conn):
-    running = True
-    new_codename_box = TextBox(500, 400, 200, 40)
+    modal_running = True
+    new_codename_box = TextBox(450, 300, 300, 40)
+    clock = pygame.time.Clock()
 
     def save_new_player():
         codename = new_codename_box.text
@@ -212,13 +211,14 @@ def show_new_player_menu(conn):
             new_codename_box.text = result_text
             new_codename_box.txt_surface = font.render(result_text, True, black)
 
-    new_player_button = Button(500, 500, 200, 50, "Add New Player", save_new_player)
-    close_button = Button(650, 350, 50, 50, "X", lambda: setattr(new_player_menu, 'running', False))
-    clock = pygame.time.Clock()
+    def close_modal():
+        nonlocal modal_running
+        modal_running = False
 
-    new_player_menu = type('Menu', (object,), {'running': running})()  # Use dynamic attribute
+    new_player_button = Button(450, 350, 150, 40, "Add New Player", save_new_player)
+    close_button = Button(750, 300, 40, 40, "X", close_modal)
 
-    while new_player_menu.running:
+    while modal_running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -228,10 +228,18 @@ def show_new_player_menu(conn):
             close_button.handle_event(event)
 
         screen.fill(white)
-        screen.blit(font.render("Enter New Codename:", True, black), (500, 350))
+        
+        # Draw modal box
+        modal_box = pygame.Rect(400, 250, 400, 250)
+        pygame.draw.rect(screen, (200, 200, 200), modal_box)  # Light gray box
+        pygame.draw.rect(screen, black, modal_box, 2)  # Black border
+
+        # Draw text and buttons inside the modal
+        screen.blit(font.render("Enter New Codename:", True, black), (modal_box.x + 10, modal_box.y + 10))
         new_codename_box.draw(screen)
         new_player_button.draw(screen)
         close_button.draw(screen)
+
         pygame.display.flip()
         clock.tick(30)
 
