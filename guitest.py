@@ -243,10 +243,7 @@ def player_entry_screen(conn, scroll_offset):
     scroll_offset += 2
     
     draw_gradient_background(screen, top_color, bottom_color)
-    draw_moving_grid(screen, grid_color, 40, scroll_offset)
-    draw_twinkling_stars(screen, 100, scroll_offset)
     draw_neon_lines(screen, neon_color, 4, pygame.time.get_ticks())
-    draw_moving_stripes(screen, stripe_color, 20, scroll_offset)
     team1_id_boxes = [TextBox(100, 150 + i * 40, 100, 30) for i in range(15)]
     team1_codename_boxes = [TextBox(250, 150 + i * 40, 150, 30, readonly=True) for i in range(15)]
     team2_id_boxes = [TextBox(700, 150 + i * 40, 100, 30) for i in range(15)]
@@ -411,35 +408,13 @@ def draw_gradient_background(screen, top_color, bottom_color):
         pygame.draw.line(screen, color, (0, y), (screen_width, y))
 
 # Example usage
-top_color = (10, 10, 100)  # Dark blue
+top_color = (10, 10, 200)  # Dark blue
 bottom_color = (0, 0, 0)   # Black
 draw_gradient_background(screen, top_color, bottom_color)
 
-def draw_moving_grid(screen, grid_color, grid_size, scroll_offset):
-    """Draws a grid pattern that scrolls vertically."""
-    for x in range(0, screen_width, grid_size):
-        for y in range(0, screen_height, grid_size):
-            pygame.draw.line(screen, grid_color, (x, y - scroll_offset % grid_size), (x, y + grid_size))
-            pygame.draw.line(screen, grid_color, (x - scroll_offset % grid_size, y), (x + grid_size, y))
-
-# Example usage
-grid_color = (0, 255, 255)  # Neon cyan
-grid_size = 40
-draw_moving_grid(screen, grid_color, grid_size, scroll_offset)
 
 
-def draw_twinkling_stars(screen, num_stars, scroll_offset):
-    """Draws randomly placed twinkling stars that fade in and out."""
-    for _ in range(num_stars):
-        x = random.randint(0, screen_width)
-        y = (random.randint(0, screen_height) + scroll_offset) % screen_height
-        brightness = random.randint(150, 255)
-        color = (brightness, brightness, brightness)
-        pygame.draw.circle(screen, color, (x, y), 2)
 
-# Example usage
-num_stars = 100
-draw_twinkling_stars(screen, num_stars, scroll_offset)
 
 def draw_neon_lines(screen, color, line_thickness, time):
     """Draws glowing neon lines that pulse."""
