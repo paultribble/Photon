@@ -1,9 +1,8 @@
-import pygame
 import psycopg2
 import sys
 import random
 import os
-import math
+import pygame
 
 # Initialize Pygame
 pygame.init()
@@ -25,13 +24,6 @@ yellow = (255, 255, 0)
 orange = (255, 165, 0)
 pink = (255, 0, 255)
 navy = (0, 0, 128)
-
-
-def clear_database(conn):
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM players")
-    conn.commit()
-    print("Database cleared.")
 
 # Dropdown menu colors
 dropdown_colors = {
@@ -57,8 +49,6 @@ def calculate_brightness(color):
 def get_contrasting_color(background_color):
     brightness = calculate_brightness(background_color)
     return (255, 255, 255) if brightness < 128 else (0, 0, 0)  # White text if dark, Black text if bright
-
-
 
 class Button:
     def __init__(self, x, y, w, h, text, callback):
@@ -235,328 +225,105 @@ class DatabaseMenu:
         self.entry_rects = []
         self.remove_buttons = []
 
-        for i, (player_id, codename) in enumerate(self.entries):
-            entry_rect = pygame.Rect(self.rect.x, cursor_y + i * 40, self.rect.width - 50, 40)
-            pygame.draw.rect(screen, white, entry_rect)
-            pygame.draw.rect(screen, black, entry_rect, 2)
-            text_surface = font.render(f"{player_id}: {codename}", True, black)
-            screen.blit(text_surface, (entry_rect.x + 5, entry_rect.y + 5))
-
-            remove_button_rect = pygame.Rect(entry_rect.right, cursor_y + i * 40, 50, 40)
-            pygame.draw.rect(screen, red, remove_button_rect)
-            pygame.draw.rect(screen, black, remove_button_rect, 2)
-            remove_text_surface = font.render("X", True, black)
-            screen.blit(remove_text_surface, (remove_button_rect.x + (remove_button_rect.w - remove_text_surface.get_width()) // 2,
-                                              remove_button_rect.y + (remove_button_rect.h - remove_text_surface.get_height()) // 2))
+        for i, (entry_id, codename) in enumerate(self.entries):
+            entry_rect = pygame.Rect(self.rect.x + 10, cursor_y + i * 40, self.rect.w - 20, 40)
             self.entry_rects.append(entry_rect)
+
+            pygame.draw.rect(screen, gray, entry_rect)
+            screen.blit(font.render(f"ID: {entry_id} - Codename: {codename}", True, black), (entry_rect.x + 5, entry_rect.y + 5))
+
+            remove_button_rect = pygame.Rect(entry_rect.x + entry_rect.w - 30, entry_rect.y + 5, 20, 20)
+            pygame.draw.rect(screen, red, remove_button_rect)
+            screen.blit(font.render("X", True, black), (remove_button_rect.x + 5, remove_button_rect.y + 2))
             self.remove_buttons.append(remove_button_rect)
 
-        # Draw the scroll buttons
         self.scroll_up_button.draw(screen)
         self.scroll_down_button.draw(screen)
 
-def show_database_menu(conn):
-    modal_running = True
-    db_menu = DatabaseMenu(100, 100, 1000, 600, conn)
-    clock = pygame.time.Clock()
+class MainMenu:
+    def __init__(self):
+        self.splash_screen()
 
-    def close_modal():
-        nonlocal modal_running
-        modal_running = False
+    def splash_screen(self):
+        # Load and resize logo
+        logo = load_image("logo.png")
+        logo = resize_image(logo, 200, 100)
+        logo_x = (screen_width - logo.get_width()) // 2
+        logo_y = (screen_height - logo.get_height()) // 2
+        logo_rect = pygame.Rect(logo_x, logo_y, logo.get_width(), logo.get_height())
 
-    close_button = Button(1050, 50, 50, 30, "X", close_modal)
+        # Create buttons
+        start_button = Button(screen_width // 2 - 50, screen_height // 2 + 60, 100, 50, "Start", self.start_game)
+        quit_button = Button(screen_width // 2 - 50, screen_height // 2 + 120, 100, 50, "Quit", pygame.quit)
 
-    while modal_running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
+        clock = pygame.time.Clock()
+        running = True
+        while running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                start_button.handle_event(event)
+                quit_button.handle_event(event)
 
-            db_menu.handle_event(event)
-            close_button.handle_event(event)
+            screen.fill(black)
+            screen.blit(logo, logo_rect.topleft)
+            start_button.draw(screen)
+            quit_button.draw(screen)
+            pygame.display.flip()
+            clock.tick(30)
 
-        screen.fill(black)
-        draw_gradient_background(screen)
-        draw_neon_lines(screen)
+    def start_game(self):
+        player_entry_screen()
 
-        db_menu.draw(screen)
-        close_button.draw(screen)
-
-        pygame.display.flip()
-        clock.tick(80)
-
-
-
-# Fetch codename from database based on ID
-def fetch_codename_from_db(player_id, conn):
-    cursor = conn.cursor()
-    cursor.execute("SELECT codename FROM players WHERE id = %s", (player_id,))
-    result = cursor.fetchone()
-    if result:
-        return result[0]
-    return ""
-
-def add_new_player(conn, codename):
-    cursor = conn.cursor()
-    while True:
-        new_id = random.randint(1, 999999)
-        cursor.execute("SELECT * FROM players WHERE id = %s", (new_id,))
-        if cursor.fetchone() is None:
-            cursor.execute("INSERT INTO players (id, codename) VALUES (%s, %s)", (new_id, codename))
-            conn.commit()
-            return new_id
-
-def show_new_player_menu(conn):
-    modal_running = True
-    new_codename_box = TextBox(450, 300, 300, 40)
-    clock = pygame.time.Clock()
-
-    result_id = ""
-    result_codename = ""
-
-    def save_new_player():
-        nonlocal result_id, result_codename
-        codename = new_codename_box.text
-        if codename:
-            new_id = add_new_player(conn, codename)
-            result_id = f"New player ID: {new_id}"
-            result_codename = f"Codename: {codename}"
-
-    def close_modal():
-        nonlocal modal_running
-        modal_running = False
-
-    new_player_button = Button(450, 350, 150, 40, "Add New Player", save_new_player)
-    close_button = Button(750, 300, 40, 40, "X", close_modal)
-
-    while modal_running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-            new_codename_box.handle_event(event)
-            new_player_button.handle_event(event)
-            close_button.handle_event(event)
-
-        # Base dimensions for the modal box
-        base_x, base_y = 400, 250
-        base_width, base_height = 400, 150  # Default base height
-        modal_box = pygame.Rect(base_x, base_y, base_width, base_height)
-
-        if result_id or result_codename:
-            # Calculate the height of the modal box based on the result text
-            result_lines = [result_id, result_codename]
-            text_height = len(result_lines) * 30
-            modal_box.height = base_height + text_height  # Extend height
-
-        pygame.draw.rect(screen, (200, 200, 200), modal_box)  # Light gray box
-        pygame.draw.rect(screen, black, modal_box, 2)  # Black border
-
-        # Draw text and buttons inside the modal
-        screen.blit(font.render("Enter New Codename:", True, black), (modal_box.x + 10, modal_box.y + 10))
-        new_codename_box.draw(screen)
-        new_player_button.draw(screen)
-        close_button.draw(screen)
-
-        # Draw result text, starting lower down
-        y_offset = modal_box.y + 150  # Start drawing the text below the form
-        for line in [result_id, result_codename]:
-            if line:
-                screen.blit(font.render(line, True, black), (modal_box.x + 10, y_offset))
-                y_offset += 30  # Move down for the next line
-
-        pygame.display.flip()
-        clock.tick(30)
-
-# Player entry screen with two team columns
-def player_entry_screen(conn):
-    draw_gradient_background(screen)
-    draw_neon_lines(screen)
-    team1_id_boxes = [TextBox(100, 150 + i * 40, 100, 30) for i in range(15)]
-    team1_codename_boxes = [TextBox(250, 150 + i * 40, 150, 30, readonly=True) for i in range(15)]
-    team2_id_boxes = [TextBox(700, 150 + i * 40, 100, 30) for i in range(15)]
-    team2_codename_boxes = [TextBox(850, 150 + i * 40, 150, 30, readonly=True) for i in range(15)]
-
-    def submit_team():
-        for i, box in enumerate(team1_id_boxes):
-            if box.text:
-                codename = fetch_codename_from_db(box.text, conn)
-                team1_codename_boxes[i].text = codename
-                team1_codename_boxes[i].txt_surface = font.render(codename, True, black)
-        for i, box in enumerate(team2_id_boxes):
-            if box.text:
-                codename = fetch_codename_from_db(box.text, conn)
-                team2_codename_boxes[i].text = codename
-                team2_codename_boxes[i].txt_surface = font.render(codename, True, black)
-
-    team1_color = "White"
-    team2_color = "White"
-    
-    dropdown_menu_team1 = DropdownMenu(100, 80, 95, 36, dropdown_colors)
-    dropdown_menu_team2 = DropdownMenu(700, 80, 95, 36, dropdown_colors)
-    
-    team_submit_button = Button(400, 750, 200, 50, "Submit", submit_team)
-    add_new_player_button = Button(620, 750, 200, 50, "Add New Player", lambda: show_new_player_menu(conn))
-    view_database_button = Button(850, 750, 200, 50, "View Database", lambda: show_database_menu(conn))
-
-    clock = pygame.time.Clock()
-
-    running = True
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-                pygame.quit()
-                sys.exit()
-
-            for box in team1_id_boxes + team2_id_boxes:
-                box.handle_event(event)
-            
-            team_submit_button.handle_event(event)
-            add_new_player_button.handle_event(event)
-            view_database_button.handle_event(event)
-            dropdown_menu_team1.handle_event(event)
-            dropdown_menu_team2.handle_event(event)
-            
-            team1_color = dropdown_menu_team1.selected_option
-            team2_color = dropdown_menu_team2.selected_option
-
-        screen.fill(black)
-        draw_gradient_background(screen)
-        draw_neon_lines(screen)
-
-        team1_rgb = dropdown_colors[team1_color]
-        team2_rgb = dropdown_colors[team2_color]
-
-        team1_text_color = get_contrasting_color(team1_rgb)
-        team2_text_color = get_contrasting_color(team2_rgb)
-        team1_border_color = team1_text_color
-        team2_border_color = team2_text_color
-
-        pygame.draw.rect(screen, team1_rgb, pygame.Rect(90, 70, 325, 680))
-        pygame.draw.rect(screen, team2_rgb, pygame.Rect(690, 70, 325, 680))
-
-        for i in range(15):
-            team1_id_boxes[i].draw(screen, border_color=team1_border_color)
-            team1_codename_boxes[i].draw(screen, border_color=team1_border_color)
-            team2_id_boxes[i].draw(screen, border_color=team2_border_color)
-            team2_codename_boxes[i].draw(screen, border_color=team2_border_color)
-
-        screen.blit(font.render("Team 1", True, black), (200, 90))
-        screen.blit(font.render("ID", True, black), (145, 115))
-        screen.blit(font.render("Codename", True, black), (250, 115))
-        screen.blit(font.render("Team 2", True, black), (800, 90))
-        screen.blit(font.render("ID", True, black), (745, 115))
-        screen.blit(font.render("Codename", True, black), (850, 115))
-        
-        dropdown_menu_team1.draw(screen)
-        dropdown_menu_team2.draw(screen)
-        team_submit_button.draw(screen)
-        add_new_player_button.draw(screen)
-        view_database_button.draw(screen)
-
-        pygame.display.flip()
-        clock.tick(30)
-
-
-def show_splash_screen():
-    clock = pygame.time.Clock()
-    running = True
-    laser_positions = []
-
-    # Load and resize logo image
-    logo_image = load_image("logo.jpg")
-    
-    # Resize the logo to be 60% of the screen size (adjust the percentage as needed)
-    logo_width = int(screen_width * 0.6)
-    logo_height = int(screen_height * 0.6)
-    logo_image = pygame.transform.scale(logo_image, (logo_width, logo_height))
-    
-    # Create a new surface for the border
-    border_thickness = 10  # Adjust the border thickness as needed
-    logo_with_border = pygame.Surface((logo_width + 2 * border_thickness, logo_height + 2 * border_thickness))
-    
-    # Fill the new surface with white for the border
-    logo_with_border.fill(white)
-    
-    # Blit the logo onto the white surface, centered inside the border
-    logo_with_border.blit(logo_image, (border_thickness, border_thickness))
-    
-    # Get the rectangle of the bordered image and center it
-    logo_rect = logo_with_border.get_rect(center=(screen_width // 2, screen_height // 2))
-
-    # Generate 10 random lasers
-    for _ in range(30):
-        start_pos = (random.randint(0, screen_width), random.randint(0, screen_height))
-        end_pos = (random.randint(0, screen_width), random.randint(0, screen_height))
-        laser_positions.append((start_pos, end_pos))
-
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-                pygame.quit()
-                sys.exit()
-
-        screen.fill(black)
-
-        # Draw the laser animations
-        for start_pos, end_pos in laser_positions:
-            pygame.draw.line(screen, red, start_pos, end_pos, 2)
-
-        # Draw the logo with the white border
-        screen.blit(logo_with_border, logo_rect)
-
-        pygame.display.flip()
-        clock.tick(30)
-
-        pygame.time.delay(3000)  # Display splash screen for 3 seconds
-        running = False
-
-def draw_gradient_background(screen):
-    bottom_color = (0, 0, 0)  # Black
-    top_left_color = (0, 0, 200)  # Blue
-    top_right_color = (255,255 ,255)  # White
-    """Draws a gradient background with specified colors."""
-    for y in range(screen_height):
-        for x in range(screen_width):
-            # Calculate the ratios for the colors
-            ratio_x = x / screen_width
-            ratio_y = y / screen_height
-
-            # Blend the top left and top right colors
-            top_color = (
-                int(top_left_color[0] * (1 - ratio_x) + top_right_color[0] * ratio_x),
-                int(top_left_color[1] * (1 - ratio_x) + top_right_color[1] * ratio_x),
-                int(top_left_color[2] * (1 - ratio_x) + top_right_color[2] * ratio_x)
-            )
-            
-            # Blend the result with the bottom color
-            color = (
-                int(top_color[0] * (1 - ratio_y) + bottom_color[0] * ratio_y),
-                int(top_color[1] * (1 - ratio_y) + bottom_color[1] * ratio_y),
-                int(top_color[2] * (1 - ratio_y) + bottom_color[2] * ratio_y)
-            )
-            
-            # Draw the pixel
-            screen.set_at((x, y), color)
-
-def draw_neon_lines(screen):
-    laser_positions = []
-    for _ in range(30):
-        start_pos = (random.randint(0, screen_width), random.randint(0, screen_height))
-        end_pos = (random.randint(0, screen_width), random.randint(0, screen_height))
-        laser_positions.append((start_pos, end_pos))
-
-        # Draw the laser animations
-        for start_pos, end_pos in laser_positions:
-            pygame.draw.line(screen, red, start_pos, end_pos, 2)
-
-def main():
-    show_splash_screen()
+def player_entry_screen():
     conn = connect_to_database()
-    ##clear_database(conn)
-    player_entry_screen(conn)
+    blue_team_color = dropdown_colors["Blue"]
+    red_team_color = dropdown_colors["Red"]
+
+    blue_team_dropdown = DropdownMenu(50, 50, 200, 40, dropdown_colors)
+    red_team_dropdown = DropdownMenu(50, 100, 200, 40, dropdown_colors)
+
+    blue_team_textbox = TextBox(50, 150, 200, 40)
+    red_team_textbox = TextBox(50, 200, 200, 40)
+
+    submit_button = Button(screen_width // 2 - 50, screen_height - 100, 100, 50, "Submit", lambda: print("Submit pressed"))
+
+    database_menu = DatabaseMenu(50, 300, screen_width - 100, screen_height - 400, conn)
+
+    clock = pygame.time.Clock()
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+            blue_team_dropdown.handle_event(event)
+            red_team_dropdown.handle_event(event)
+            blue_team_textbox.handle_event(event)
+            red_team_textbox.handle_event(event)
+            submit_button.handle_event(event)
+            database_menu.handle_event(event)
+
+        screen.fill(black)
+
+        # Draw dropdowns
+        blue_team_dropdown.draw(screen)
+        red_team_dropdown.draw(screen)
+
+        # Draw textboxes
+        blue_team_textbox.draw(screen)
+        red_team_textbox.draw(screen)
+
+        # Draw submit button
+        submit_button.draw(screen)
+
+        # Draw database menu
+        database_menu.draw(screen)
+
+        pygame.display.flip()
+        clock.tick(30)
 
 if __name__ == "__main__":
-    main()
+    MainMenu()
