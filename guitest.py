@@ -207,9 +207,11 @@ class DatabaseMenu:
                     break
 
     def remove_entry(self, entry_id):
+        print(f"Attempting to remove entry with ID: {entry_id}")  # Debugging line
         cursor = self.conn.cursor()
         cursor.execute("DELETE FROM players WHERE id = %s", (entry_id,))
         self.conn.commit()
+        print(f"Entry with ID: {entry_id} removed")  # Debugging line
 
     def draw(self, screen):
         pygame.draw.rect(screen, self.color, self.rect)
