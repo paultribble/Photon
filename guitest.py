@@ -262,7 +262,7 @@ def show_database_menu(conn):
         close_button.draw(screen)
 
         pygame.display.flip()
-        clock.tick(30)
+        clock.tick(10)
 
 
 
