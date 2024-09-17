@@ -233,6 +233,7 @@ class DatabaseMenu:
             self.entry_rects.append(entry_rect)
             self.remove_buttons.append(remove_button_rect)
 
+
 def show_database_menu(conn):
     modal_running = True
     db_menu = DatabaseMenu(100, 100, 1000, 600, conn)
