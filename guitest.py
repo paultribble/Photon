@@ -396,7 +396,7 @@ def show_splash_screen():
 def draw_gradient_background(screen):
     bottom_color = (0, 0, 0)  # Black
     top_left_color = (255, 0, 0)  # Red
-    top_right_color = (173, 216, 230)  # Light blue
+    top_right_color = (255,255 ,255)  # White
     """Draws a gradient background with specified colors."""
     for y in range(screen_height):
         for x in range(screen_width):
@@ -422,17 +422,24 @@ def draw_gradient_background(screen):
             screen.set_at((x, y), color)
 
 def draw_neon_lines(screen, color, line_thickness, time):
-    """Draws glowing neon lines that pulse."""
-    amplitude = 10
-    for i in range(0, screen_width, 100):
-        offset = amplitude * math.sin(time / 500.0 + i)
-        pygame.draw.line(screen, color, (i, 300 + offset), (i, screen_height), line_thickness)
+    laser_positions = []
+    for _ in range(30):
+        start_pos = (random.randint(0, screen_width), random.randint(0, screen_height))
+        end_pos = (random.randint(0, screen_width), random.randint(0, screen_height))
+        laser_positions.append((start_pos, end_pos))
 
-# Example usage
-neon_color = (255, 0, 255)  # Neon pink
-line_thickness = 4
-draw_neon_lines(screen, neon_color, line_thickness, pygame.time.get_ticks())
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+                pygame.quit()
+                sys.exit()
 
+        screen.fill(black)
+
+        # Draw the laser animations
+        for start_pos, end_pos in laser_positions:
+            pygame.draw.line(screen, red, start_pos, end_pos, 2)
 
 def main():
     show_splash_screen()
