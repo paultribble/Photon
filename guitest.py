@@ -555,7 +555,7 @@ def draw_neon_lines(screen):
 def main():
     show_splash_screen()
     conn = connect_to_database()
-    clear_database(conn)
+    ##clear_database(conn)
     player_entry_screen(conn)
 
 if __name__ == "__main__":
