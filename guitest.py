@@ -240,7 +240,7 @@ def player_entry_screen(conn):
     
     draw_gradient_background(screen)
 
-    draw_neon_lines(screen, neon_color, 4, pygame.time.get_ticks())
+    draw_neon_lines(screen)
     team1_id_boxes = [TextBox(100, 150 + i * 40, 100, 30) for i in range(15)]
     team1_codename_boxes = [TextBox(250, 150 + i * 40, 150, 30, readonly=True) for i in range(15)]
     team2_id_boxes = [TextBox(700, 150 + i * 40, 100, 30) for i in range(15)]
@@ -421,7 +421,7 @@ def draw_gradient_background(screen):
             # Draw the pixel
             screen.set_at((x, y), color)
 
-def draw_neon_lines(screen, color, line_thickness, time):
+def draw_neon_lines(screen):
     laser_positions = []
     for _ in range(30):
         start_pos = (random.randint(0, screen_width), random.randint(0, screen_height))
