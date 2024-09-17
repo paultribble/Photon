@@ -199,7 +199,7 @@ def add_new_player(conn, codename):
 
 def show_new_player_menu(conn):
     modal_running = True
-    new_codename_box = TextBox(450, 300, 150, 40)
+    new_codename_box = TextBox(450, 300, 100, 40)
     clock = pygame.time.Clock()
 
     result_id = ""
