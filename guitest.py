@@ -51,6 +51,39 @@ def get_contrasting_color(background_color):
     brightness = calculate_brightness(background_color)
     return (255, 255, 255) if brightness < 128 else (0, 0, 0)  # White text if dark, Black text if bright
 
+class Scrollbar:
+    def __init__(self, x, y, w, h, content_height):
+        self.rect = pygame.Rect(x, y, w, h)
+        self.thumb_rect = pygame.Rect(x, y, w, 20)  # Initial thumb size and position
+        self.color = gray
+        self.thumb_color = black
+        self.content_height = content_height
+        self.scroll_max = max(0, content_height - h)
+        self.scroll_y = 0
+        self.dragging = False
+
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if self.thumb_rect.collidepoint(event.pos):
+                self.dragging = True
+                self.drag_start_y = event.pos[1]
+                self.drag_start_scroll = self.scroll_y
+        elif event.type == pygame.MOUSEBUTTONUP:
+            self.dragging = False
+        elif event.type == pygame.MOUSEMOTION:
+            if self.dragging:
+                dy = event.pos[1] - self.drag_start_y
+                self.scroll_y = min(max(self.drag_start_scroll + dy, 0), self.scroll_max)
+                self.update_thumb_position()
+
+    def update_thumb_position(self):
+        thumb_height = max(20, int(self.rect.height * (self.rect.height / self.content_height)))
+        self.thumb_rect.height = thumb_height
+        self.thumb_rect.y = self.rect.y + (self.scroll_y / self.scroll_max) * (self.rect.height - thumb_height)
+
+    def draw(self, screen):
+        pygame.draw.rect(screen, self.color, self.rect)
+        pygame.draw.rect(screen, self.thumb_color, self.thumb_rect)
 
 
 class Button:
@@ -186,6 +219,7 @@ class DatabaseMenu:
         self.conn = conn
         self.entries = []
         self.fetch_entries()
+        self.scrollbar = Scrollbar(x + w - 20, y, 20, h, len(self.entries) * 40)
 
     def fetch_entries(self):
         cursor = self.conn.cursor()
@@ -194,30 +228,24 @@ class DatabaseMenu:
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
-            print(f"Mouse clicked at: {event.pos}")  # Debugging line
-
             if event.button == 4:  # Scroll up
                 self.scroll_y = max(self.scroll_y - 10, 0)
-                print("Scrolled up")  # Debugging line
             elif event.button == 5:  # Scroll down
                 self.scroll_y = min(self.scroll_y + 10, max(0, len(self.entries) * 40 - self.rect.height))
-                print("Scrolled down")  # Debugging line
 
-            for i, entry_rect in enumerate(self.entry_rects):
-                if entry_rect.collidepoint(event.pos):
-                    print(f"Clicked within entry rect: {i}")  # Debugging line
-                    if self.remove_buttons[i].collidepoint(event.pos):
-                        print(f"Clicked on 'X' button for entry: {self.entries[i][0]}")  # Debugging line
-                        self.remove_entry(self.entries[i][0])
-                        self.fetch_entries()  # Refresh entries after removal
+        self.scrollbar.handle_event(event)
+
+        for i, entry_rect in enumerate(self.entry_rects):
+            if entry_rect.collidepoint(event.pos):
+                if self.remove_buttons[i].collidepoint(event.pos):
+                    self.remove_entry(self.entries[i][0])
+                    self.fetch_entries()  # Refresh entries after removal
                     break
 
     def remove_entry(self, entry_id):
-        print(f"Attempting to remove entry with ID: {entry_id}")  # Debugging line
         cursor = self.conn.cursor()
         cursor.execute("DELETE FROM players WHERE id = %s", (entry_id,))
         self.conn.commit()
-        print(f"Entry with ID: {entry_id} removed")  # Debugging line
 
     def draw(self, screen):
         pygame.draw.rect(screen, self.color, self.rect)
@@ -240,6 +268,8 @@ class DatabaseMenu:
                                               remove_button_rect.y + (remove_button_rect.h - remove_text_surface.get_height()) // 2))
             self.entry_rects.append(entry_rect)
             self.remove_buttons.append(remove_button_rect)
+
+        self.scrollbar.draw(screen)
 
 
 def show_database_menu(conn):
@@ -445,10 +475,6 @@ def player_entry_screen(conn):
 
         pygame.display.flip()
         clock.tick(30)
-
-
-
-
 
 def show_splash_screen():
     clock = pygame.time.Clock()
