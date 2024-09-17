@@ -14,8 +14,6 @@ screen_height = 800
 screen = pygame.display.set_mode((screen_width, screen_height))
 pygame.display.set_caption("Photon Laser Tag")
 
-scroll_offset = 0
-
 # Colors
 white = (255, 255, 255)
 black = (0, 0, 0)
@@ -238,11 +236,10 @@ def show_new_player_menu(conn):
         clock.tick(30)
 
 # Player entry screen with two team columns
-def player_entry_screen(conn, scroll_offset):
+def player_entry_screen(conn):
     
-    scroll_offset += 2
-    
-    draw_gradient_background(screen, top_color, bottom_color)
+    draw_gradient_background(screen)
+
     draw_neon_lines(screen, neon_color, 4, pygame.time.get_ticks())
     team1_id_boxes = [TextBox(100, 150 + i * 40, 100, 30) for i in range(15)]
     team1_codename_boxes = [TextBox(250, 150 + i * 40, 150, 30, readonly=True) for i in range(15)]
@@ -396,25 +393,33 @@ def show_splash_screen():
         pygame.time.delay(3000)  # Display splash screen for 3 seconds
         running = False
 
-def draw_gradient_background(screen, top_color, bottom_color):
-    """Draws a vertical gradient from top_color to bottom_color."""
+def draw_gradient_background(screen):
+    bottom_color = (0, 0, 0)  # Black
+    top_left_color = (255, 0, 0)  # Red
+    top_right_color = (173, 216, 230)  # Light blue
+    """Draws a gradient background with specified colors."""
     for y in range(screen_height):
-        ratio = y / screen_height
-        color = (
-            int(top_color[0] * (1 - ratio) + bottom_color[0] * ratio),
-            int(top_color[1] * (1 - ratio) + bottom_color[1] * ratio),
-            int(top_color[2] * (1 - ratio) + bottom_color[2] * ratio)
-        )
-        pygame.draw.line(screen, color, (0, y), (screen_width, y))
+        for x in range(screen_width):
+            # Calculate the ratios for the colors
+            ratio_x = x / screen_width
+            ratio_y = y / screen_height
 
-# Example usage
-top_color = (10, 10, 200)  # Dark blue
-bottom_color = (0, 0, 0)   # Black
-draw_gradient_background(screen, top_color, bottom_color)
-
-
-
-
+            # Blend the top left and top right colors
+            top_color = (
+                int(top_left_color[0] * (1 - ratio_x) + top_right_color[0] * ratio_x),
+                int(top_left_color[1] * (1 - ratio_x) + top_right_color[1] * ratio_x),
+                int(top_left_color[2] * (1 - ratio_x) + top_right_color[2] * ratio_x)
+            )
+            
+            # Blend the result with the bottom color
+            color = (
+                int(top_color[0] * (1 - ratio_y) + bottom_color[0] * ratio_y),
+                int(top_color[1] * (1 - ratio_y) + bottom_color[1] * ratio_y),
+                int(top_color[2] * (1 - ratio_y) + bottom_color[2] * ratio_y)
+            )
+            
+            # Draw the pixel
+            screen.set_at((x, y), color)
 
 def draw_neon_lines(screen, color, line_thickness, time):
     """Draws glowing neon lines that pulse."""
@@ -427,18 +432,6 @@ def draw_neon_lines(screen, color, line_thickness, time):
 neon_color = (255, 0, 255)  # Neon pink
 line_thickness = 4
 draw_neon_lines(screen, neon_color, line_thickness, pygame.time.get_ticks())
-
-def draw_moving_stripes(screen, stripe_color, stripe_width, scroll_offset):
-    """Draws moving stripes across the background."""
-    for i in range(0, screen_width, stripe_width * 2):
-        pygame.draw.rect(screen, stripe_color, (i - scroll_offset % (stripe_width * 2), 0, stripe_width, screen_height))
-
-# Example usage
-stripe_color = (255, 0, 0)  # Red stripes
-stripe_width = 20
-draw_moving_stripes(screen, stripe_color, stripe_width, scroll_offset)
-
-
 
 
 def main():
