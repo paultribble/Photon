@@ -194,14 +194,20 @@ class DatabaseMenu:
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
+            print(f"Mouse clicked at: {event.pos}")  # Debugging line
+
             if event.button == 4:  # Scroll up
                 self.scroll_y = max(self.scroll_y - 10, 0)
+                print("Scrolled up")  # Debugging line
             elif event.button == 5:  # Scroll down
                 self.scroll_y = min(self.scroll_y + 10, max(0, len(self.entries) * 40 - self.rect.height))
+                print("Scrolled down")  # Debugging line
 
             for i, entry_rect in enumerate(self.entry_rects):
-                if entry_rect.collidepoint(event.pos) and event.button == 1:
+                if entry_rect.collidepoint(event.pos):
+                    print(f"Clicked within entry rect: {i}")  # Debugging line
                     if self.remove_buttons[i].collidepoint(event.pos):
+                        print(f"Clicked on 'X' button for entry: {self.entries[i][0]}")  # Debugging line
                         self.remove_entry(self.entries[i][0])
                         self.fetch_entries()  # Refresh entries after removal
                     break
