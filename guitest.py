@@ -230,8 +230,8 @@ def show_new_player_menu(conn):
         
         
         # Draw modal box
-        modal_box = pygame.Rect(400, 250, 400, 250)
-        pygame.draw.rect(screen, (200, 200, 100), modal_box)  # Light gray box
+        modal_box = pygame.Rect(400, 250, 400, 150)
+        pygame.draw.rect(screen, (200, 200, 200), modal_box)  # Light gray box
         pygame.draw.rect(screen, black, modal_box, 2)  # Black border
 
         # Draw text and buttons inside the modal
