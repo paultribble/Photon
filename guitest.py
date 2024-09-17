@@ -243,7 +243,7 @@ def show_database_menu(conn):
         nonlocal modal_running
         modal_running = False
 
-    close_button = Button(1050, 700, 50, 30, "X", close_modal)
+    close_button = Button(1050, 50, 50, 30, "X", close_modal)
 
     while modal_running:
         for event in pygame.event.get():
