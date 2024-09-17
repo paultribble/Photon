@@ -250,7 +250,7 @@ def show_new_player_menu(conn):
         close_button.draw(screen)
 
         # Draw result text, starting lower down
-        y_offset = modal_box.y + 90  # Start drawing the text below the form
+        y_offset = modal_box.y + 150  # Start drawing the text below the form
         for line in [result_id, result_codename]:
             if line:
                 screen.blit(font.render(line, True, black), (modal_box.x + 10, y_offset))
