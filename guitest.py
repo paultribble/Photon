@@ -247,8 +247,12 @@ class DatabaseMenu:
 
 def send_equipment_id(equipment_id):
     message = f"Equipment ID: {equipment_id}"
-    udp_socket.sendto(message.encode(), (UDP_IP, UDP_PORT))
-    print(f"Sent: {message}")
+    print(f"Attempting to send: {message}")  # Print message before sending
+    try:
+        udp_socket.sendto(message.encode(), (UDP_IP, UDP_PORT))
+        print(f"Sent: {message}")  # Confirm successful send
+    except Exception as e:
+        print(f"Error sending message: {e}")  # Print error if send fails
 
 def show_database_menu(conn):
     modal_running = True
