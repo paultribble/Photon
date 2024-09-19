@@ -1,4 +1,4 @@
-#Currently not working, will scale up once sending and receiving packets works
+
 
 
 import socket
