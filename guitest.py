@@ -366,7 +366,7 @@ def show_new_player_menu(conn):
                 y_offset += 30  # Move down for the next line
 
         pygame.display.flip()
-        clock.tick(30)
+        clock.tick(60)
 
 # Player entry screen with two team columns
 def player_entry_screen(conn):
@@ -456,7 +456,7 @@ def player_entry_screen(conn):
         view_database_button.draw(screen)
 
         pygame.display.flip()
-        clock.tick(30)
+        clock.tick(60)
 
 
 def show_splash_screen():
@@ -508,7 +508,7 @@ def show_splash_screen():
         screen.blit(logo_with_border, logo_rect)
 
         pygame.display.flip()
-        clock.tick(30)
+        clock.tick(60)
 
         pygame.time.delay(3000)  # Display splash screen for 3 seconds
         running = False
