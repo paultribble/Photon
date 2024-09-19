@@ -1,4 +1,4 @@
-#Currently not working, will scale up once sending and receiving packets works
+
 
 
 import socket
@@ -16,7 +16,7 @@ def setup_udp_client(host = '127.0.0.1' , port = 1337):
             data, _ = client_socket.recvfrom(1024)
             print(f"Received from server: {data.decode('utf-8')}")
     except Exception as e:
-        print(f"An eroor occured: {e}")
+        print(f"An error occured: {e}")
     finally:
         client_socket.close()
 
