@@ -4,7 +4,6 @@ import sys
 import random
 import os
 import math
-import socket  # Import socket for UDP
 
 # Initialize Pygame
 pygame.init()
@@ -27,10 +26,6 @@ orange = (255, 165, 0)
 pink = (255, 0, 255)
 navy = (0, 0, 128)
 
-# UDP setup
-UDP_IP = "127.0.0.1"  # Localhost, change if needed
-UDP_PORT = 7500
-udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # Create UDP socket
 
 def clear_database(conn):
     cursor = conn.cursor()
@@ -62,6 +57,8 @@ def calculate_brightness(color):
 def get_contrasting_color(background_color):
     brightness = calculate_brightness(background_color)
     return (255, 255, 255) if brightness < 128 else (0, 0, 0)  # White text if dark, Black text if bright
+
+
 
 class Button:
     def __init__(self, x, y, w, h, text, callback):
@@ -124,10 +121,13 @@ class TextBox:
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
+            # If the user clicked on the input box rect.
             if self.rect.collidepoint(event.pos):
+                # Toggle the active variable.
                 self.active = not self.active
             else:
                 self.active = False
+            # Change the current color of the input box.
             self.color = pygame.Color('dodgerblue2') if self.active else pygame.Color('lightskyblue3')
 
         if event.type == pygame.KEYDOWN and not self.readonly:
@@ -139,12 +139,17 @@ class TextBox:
                     self.text = self.text[:-1]
                 else:
                     self.text += event.unicode
+                # Re-render the text.
                 self.txt_surface = font.render(self.text, True, black)
 
     def draw(self, screen, border_color=None):
+        # Use the provided border_color or default to black if not provided
         border_color = border_color if border_color is not None else black
+
+        # Draw the text.
         screen.blit(self.txt_surface, (self.rect.x + 5, self.rect.y + 5))
-        pygame.draw.rect(screen, border_color, self.rect, 2)
+        # Draw the rect.
+        pygame.draw.rect(screen, border_color, self.rect, 2)  # The '2' means the border thickness.
 
 # Dropdown menu class
 class DropdownMenu:
@@ -189,6 +194,7 @@ class DatabaseMenu:
         self.entries = []
         self.fetch_entries()
 
+        # Define the up and down arrow buttons
         self.scroll_up_button = Button(x + w + 10, y + 10, 40, 30, "Up", self.scroll_up)
         self.scroll_down_button = Button(x + w + 10, y + h - 40, 60, 30, "Down", self.scroll_down)
 
@@ -205,7 +211,7 @@ class DatabaseMenu:
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
-            if event.button == 1:
+            if event.button == 1:  # Left mouse button
                 if self.scroll_up_button.rect.collidepoint(event.pos):
                     self.scroll_up()
                 elif self.scroll_down_button.rect.collidepoint(event.pos):
@@ -215,7 +221,7 @@ class DatabaseMenu:
                 if entry_rect.collidepoint(event.pos):
                     if self.remove_buttons[i].collidepoint(event.pos):
                         self.remove_entry(self.entries[i][0])
-                        self.fetch_entries()
+                        self.fetch_entries()  # Refresh entries after removal
                     break
 
     def remove_entry(self, entry_id):
@@ -232,27 +238,22 @@ class DatabaseMenu:
         for i, (player_id, codename) in enumerate(self.entries):
             entry_rect = pygame.Rect(self.rect.x, cursor_y + i * 40, self.rect.width - 50, 40)
             pygame.draw.rect(screen, white, entry_rect)
+            pygame.draw.rect(screen, black, entry_rect, 2)
             text_surface = font.render(f"{player_id}: {codename}", True, black)
             screen.blit(text_surface, (entry_rect.x + 5, entry_rect.y + 5))
+
+            remove_button_rect = pygame.Rect(entry_rect.right, cursor_y + i * 40, 50, 40)
+            pygame.draw.rect(screen, red, remove_button_rect)
+            pygame.draw.rect(screen, black, remove_button_rect, 2)
+            remove_text_surface = font.render("X", True, black)
+            screen.blit(remove_text_surface, (remove_button_rect.x + (remove_button_rect.w - remove_text_surface.get_width()) // 2,
+                                              remove_button_rect.y + (remove_button_rect.h - remove_text_surface.get_height()) // 2))
             self.entry_rects.append(entry_rect)
+            self.remove_buttons.append(remove_button_rect)
 
-            remove_button = pygame.Rect(entry_rect.x + entry_rect.width + 10, entry_rect.y + 5, 30, 30)
-            pygame.draw.rect(screen, red, remove_button)
-            remove_text_surface = font.render("X", True, white)
-            screen.blit(remove_text_surface, (remove_button.x + 5, remove_button.y + 5))
-            self.remove_buttons.append(remove_button)
-
+        # Draw the scroll buttons
         self.scroll_up_button.draw(screen)
         self.scroll_down_button.draw(screen)
-
-def send_equipment_id(equipment_id):
-    message = f"Equipment ID: {equipment_id}"
-    print(f"Attempting to send: {message}")  # Print message before sending
-    try:
-        udp_socket.sendto(message.encode(), (UDP_IP, UDP_PORT))
-        print(f"Sent: {message}")  # Confirm successful send
-    except Exception as e:
-        print(f"Error sending message: {e}")  # Print error if send fails
 
 def show_database_menu(conn):
     modal_running = True
