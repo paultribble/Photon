@@ -103,12 +103,16 @@ def connect_to_database():
         print(f"Error connecting to PostgreSQL database: {e}")
         sys.exit(1)
 
+# Text input box class for pygame window
 class TextBox:
     def __init__(self, x, y, w, h, text='', readonly=False):
+        # Initialize the text box with the provided dimensions
         self.rect = pygame.Rect(x, y, w, h)
+        # Initialize the text box with the provided color
         self.color = pygame.Color('lightskyblue3')
         self.text = text
         self.txt_surface = font.render(text, True, black)
+        # Initialize the text box as inactive
         self.active = False
         self.readonly = readonly
 
