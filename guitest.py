@@ -26,6 +26,13 @@ orange = (255, 165, 0)
 pink = (255, 0, 255)
 navy = (0, 0, 128)
 
+
+def clear_database(conn):
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM players")
+    conn.commit()
+    print("Database cleared.")
+
 # Dropdown menu colors
 dropdown_colors = {
     "White": white,
@@ -363,7 +370,7 @@ def show_new_player_menu(conn):
                 y_offset += 30  # Move down for the next line
 
         pygame.display.flip()
-        clock.tick(30)
+        clock.tick(60)
 
 # Player entry screen with two team columns
 def player_entry_screen(conn):
@@ -453,7 +460,7 @@ def player_entry_screen(conn):
         view_database_button.draw(screen)
 
         pygame.display.flip()
-        clock.tick(30)
+        clock.tick(60)
 
 
 def show_splash_screen():
@@ -505,7 +512,7 @@ def show_splash_screen():
         screen.blit(logo_with_border, logo_rect)
 
         pygame.display.flip()
-        clock.tick(30)
+        clock.tick(60)
 
         pygame.time.delay(3000)  # Display splash screen for 3 seconds
         running = False
@@ -552,6 +559,7 @@ def draw_neon_lines(screen):
 def main():
     show_splash_screen()
     conn = connect_to_database()
+    ##clear_database(conn)
     player_entry_screen(conn)
 
 if __name__ == "__main__":
