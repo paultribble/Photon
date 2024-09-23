@@ -73,7 +73,7 @@ class Button:
         if event.type == pygame.MOUSEBUTTONDOWN:
             if self.rect.collidepoint(event.pos):
                 self.callback()
-
+    
     def draw(self, screen):
         pygame.draw.rect(screen, self.color, self.rect)
         screen.blit(self.txt_surface, (self.rect.x + (self.rect.w - self.txt_surface.get_width()) // 2,
@@ -189,6 +189,7 @@ class DropdownMenu:
                 pygame.draw.rect(screen, gray, rect)
                 screen.blit(self.font.render(list(self.options.keys())[i], True, black), (rect.x + 5, rect.y + 5))
 
+# Database menu class
 class DatabaseMenu:
     def __init__(self, x, y, w, h, conn):
         self.rect = pygame.Rect(x, y, w, h)

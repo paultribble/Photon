@@ -16,4 +16,4 @@ sudo apt install python3-tk
 | Paul Tribble          | paultribble     |
 | Adel Barbarawi        | Adel-Barbarawi  |
 | Dakota Stokes         | dakotalstokes   |
-| Brooke Avant          |
+| Brooke Avant          | brookeavant5    |
