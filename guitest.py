@@ -150,7 +150,10 @@ def delete_player(player_id, conn):
 
 # Main Tkinter Frame
 root = tk.Tk()
+root.withdraw()  # Hide the main window initially
 show_splash_screen()  # Show splash screen before main window
+
+# Create the main window after the splash screen
 root.title("Photon Laser Tag Setup")
 root.geometry("1000x800")
 
@@ -195,5 +198,5 @@ view_database_button.grid(row=0, column=2, padx=10)
 button_frame.place(relx=0.5, rely=0.6, anchor='center')
 
 # Start Tkinter main loop
+root.deiconify()  # Show the main window after the splash screen
 root.mainloop()
-
