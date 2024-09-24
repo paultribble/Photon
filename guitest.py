@@ -57,27 +57,29 @@ def show_splash_screen():
 def start_main_window():
     root.deiconify()  # Show the main window after the splash screen
 
-# Function to broadcast equipment ID
-def validate_player_id(player_id_var, codename_entry, equipment_entry, conn, sock_broadcast):
+# Function to validate and broadcast player ID and equipment ID
+def validate_and_broadcast(player_id_var, codename_entry, equipment_entry, conn, sock_broadcast):
     cursor = conn.cursor()
     player_id = player_id_var.get()
-    
-    codename_entry.delete(0, tk.END)
-    equipment_entry.delete(0, tk.END)
     
     if player_id:  # If ID is not empty
         cursor.execute("SELECT codename FROM players WHERE id = %s", (player_id,))
         result = cursor.fetchone()
         if result:
+            codename_entry.delete(0, tk.END)
             codename_entry.insert(0, result[0])  # Insert fetched codename
         else:
+            codename_entry.delete(0, tk.END)
             codename_entry.insert(0, "Invalid ID")  # Show "Invalid ID"
-    
+            return
+
     equipment_id = equipment_entry.get()
     if equipment_id:
-        message = f"Equipment ID {equipment_id} for Player ID {player_id}"
+        message = f"Player ID: {player_id}, Equipment ID: {equipment_id}"
         sock_broadcast.sendto(message.encode(), ('<broadcast>', 7500))  # Broadcast on port 7500
         print(f"Sent: {message}")  # Log the sent message
+    else:
+        messagebox.showwarning("Warning", "Equipment ID cannot be empty.")
 
 # Create input forms for team player entries
 def create_input_form(frame, team_name, color, row, col, conn, sock_broadcast):
@@ -100,7 +102,9 @@ def create_input_form(frame, team_name, color, row, col, conn, sock_broadcast):
         entry_codename.grid(row=i + 2, column=col + 1, padx=5, pady=2)
         equipment_combobox.grid(row=i + 2, column=col + 2, padx=5, pady=2)
 
-        player_id_var.trace_add("write", lambda name, index, mode, var=player_id_var, codename_entry=entry_codename, equipment_combobox=equipment_combobox: validate_player_id(var, codename_entry, equipment_combobox, conn, sock_broadcast))
+        # Add enter button to validate and broadcast
+        enter_button = tk.Button(frame, text="Enter", command=lambda pid_var=player_id_var, codename=entry_codename, equip=equipment_combobox: validate_and_broadcast(pid_var, codename, equip, conn, sock_broadcast))
+        enter_button.grid(row=i + 2, column=col + 3, padx=5, pady=2)
 
         entries.append((entry_id, entry_codename, equipment_combobox))
 
@@ -196,12 +200,15 @@ team2_entries = create_input_form(frame, "Team 2", "white", 0, 3, conn, sock_bro
 button_frame = tk.Frame(root, bg='black')
 
 add_player_button = tk.Button(button_frame, text="Add New Player", command=lambda: add_new_player_tk(conn), width=15)
-add_player_button.grid(row=0, column=1, padx=10)
+add_player_button.grid(row=0, column=1, padx=10, pady=5)
 
-view_database_button = tk.Button(button_frame, text="View Database", command=lambda: show_database_menu_tk(conn), width=15)
-view_database_button.grid(row=0, column=2, padx=10)
+view_db_button = tk.Button(button_frame, text="View Player Database", command=lambda: show_database_menu_tk(conn), width=20)
+view_db_button.grid(row=0, column=2, padx=10, pady=5)
 
-button_frame.place(relx=0.5, rely=0.6, anchor='center')
+clear_db_button = tk.Button(button_frame, text="Clear Database", command=lambda: clear_database(conn), width=15)
+clear_db_button.grid(row=0, column=3, padx=10, pady=5)
 
-# Start Tkinter main loop
+button_frame.place(relx=0.5, rely=0.9, anchor='center')
+
 root.mainloop()
+
