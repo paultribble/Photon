@@ -3,7 +3,6 @@ import psycopg2
 import sys
 import random
 import tkinter as tk
-from tkinter import ttk
 from tkinter import messagebox, simpledialog
 
 # Database connection
@@ -97,13 +96,13 @@ canvas.pack()
 draw_background(canvas)
 
 # Team Entry Forms
-frame = tk.Frame(root)
+frame = tk.Frame(root, bg='black')
 frame.place(relx=0.5, rely=0.5, anchor='center')  # Center the frame
 create_input_form(frame, "Team 1", "white", 0, 0)
 create_input_form(frame, "Team 2", "white", 0, 2)
 
 # Buttons
-button_frame = tk.Frame(root)
+button_frame = tk.Frame(root, bg='black')
 button_frame.pack(pady=20)
 
 submit_button = tk.Button(button_frame, text="Submit", command=lambda: print("Submit clicked!"), width=15)
@@ -120,5 +119,7 @@ conn = connect_to_database()
 
 # Start Tkinter main loop
 root.mainloop()
+
+
 
 
