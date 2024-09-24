@@ -71,7 +71,7 @@ def update_codename(player_id_var, codename_entry, conn):
 
         if result:
             codename_entry.insert(0, result[0])  # Insert codename
-            codename_entry.config(fg='gray')    # Reset color to black
+            codename_entry.config(fg='black')    # Reset color to black
         else:
             codename_entry.insert(0, "Invalid ID")
             codename_entry.config(fg='gray')  # Set text color to gray
@@ -82,6 +82,10 @@ def update_codename(player_id_var, codename_entry, conn):
 def validate_and_broadcast(player_id_var, codename_entry, equipment_entry, conn, sock_broadcast):
     cursor = conn.cursor()
     player_id = player_id_var.get()
+    equipment_id = equipment_entry.get()
+
+    # Temporary variable for equipment ID and player details
+    temporary_data = {}
 
     if player_id:  # If ID is not empty
         cursor.execute("SELECT codename FROM players WHERE id = %s", (player_id,))
@@ -90,15 +94,15 @@ def validate_and_broadcast(player_id_var, codename_entry, equipment_entry, conn,
             codename_entry.delete(0, tk.END)
             codename_entry.insert(0, result[0])  # Insert fetched codename
             codename_entry.config(fg='black')    # Reset color to black once validated
+            temporary_data[player_id] = {'codename': result[0], 'equipment_id': equipment_id}  # Store player data
         else:
             codename_entry.delete(0, tk.END)
             codename_entry.insert(0, "Invalid ID")
             codename_entry.config(fg='gray')  # Keep text gray if ID is invalid
             return
 
-    equipment_id = equipment_entry.get()
     if equipment_id:
-        message = f"Player ID: {player_id}, Equipment ID: {equipment_id}"
+        message = f"Equipment ID: {equipment_id}"  # Send only the Equipment ID
         sock_broadcast.sendto(message.encode(), ('<broadcast>', 7500))  # Broadcast on port 7500
         print(f"Sent: {message}")  # Log the sent message
     else:
@@ -135,8 +139,6 @@ def create_input_form(frame, team_name, color, row, col, conn, sock_broadcast):
         entries.append((entry_id, entry_codename, equipment_combobox))
 
     return entries
-
-
 
 # Function to listen for incoming UDP data
 def listen_for_data(sock_receive):
@@ -188,55 +190,37 @@ def delete_player(player_id, conn):
 root = tk.Tk()
 root.withdraw()  # Hide the main window initially
 
-# Show the splash screen and run the main window after it closes
+# Show the splash screen and run the main window after it
 show_splash_screen()
-root.after(3000, start_main_window)  # After 3 seconds, show the main window
+root.after(3000, start_main_window)
 
-root.title("Photon Laser Tag Setup")
-root.geometry("1000x800")
-
-# Create a canvas to draw the background
-canvas = tk.Canvas(root, width=1000, height=800, bg='black')
-canvas.pack()
-
-# Function for generating dynamic background
-def draw_background(canvas):
-    canvas.delete("all")
-    for _ in range(30):
-        start_pos = (random.randint(0, 1000), random.randint(0, 800))
-        end_pos = (random.randint(0, 1000), random.randint(0, 800))
-        canvas.create_line(start_pos, end_pos, fill="red", width=2)
-    canvas.after(800, draw_background, canvas)
-
-# Start drawing the background
-draw_background(canvas)
-
-# Team Entry Forms
-frame = tk.Frame(root, bg='black')
-frame.place(relx=0.5, rely=0.4, anchor='center')
-
-conn = connect_to_database()
+# Set up sockets and database connection
 sock_broadcast, sock_receive = setup_udp_sockets()
+conn = connect_to_database()
 
-receive_thread = threading.Thread(target=listen_for_data, args=(sock_receive,), daemon=True)
-receive_thread.start()
+# Start the UDP listener in a separate thread
+listener_thread = threading.Thread(target=listen_for_data, args=(sock_receive,), daemon=True)
+listener_thread.start()
 
-team1_entries = create_input_form(frame, "Team 1", "white", 0, 0, conn, sock_broadcast)
-team2_entries = create_input_form(frame, "Team 2", "white", 0, 4, conn, sock_broadcast)
+# Create the input form for players
+frame = tk.Frame(root)
+frame.pack(pady=20)
+create_input_form(frame, "Blue Team", "blue", 0, 0, conn, sock_broadcast)
+create_input_form(frame, "Red Team", "red", 0, 4, conn, sock_broadcast)
 
-# Buttons
-button_frame = tk.Frame(root, bg='black')
+# Create menu for database operations
+menu_bar = tk.Menu(root)
+root.config(menu=menu_bar)
+database_menu = tk.Menu(menu_bar, tearoff=0)
+menu_bar.add_cascade(label="Database", menu=database_menu)
+database_menu.add_command(label="Show Players", command=lambda: show_database_menu_tk(conn))
+database_menu.add_command(label="Add Player", command=lambda: add_new_player_tk(conn))
+database_menu.add_command(label="Clear Database", command=lambda: clear_database(conn))
 
-add_player_button = tk.Button(button_frame, text="Add New Player", command=lambda: add_new_player_tk(conn), width=15)
-add_player_button.grid(row=0, column=1, padx=10, pady=5)
-
-view_db_button = tk.Button(button_frame, text="View Player Database", command=lambda: show_database_menu_tk(conn), width=20)
-view_db_button.grid(row=0, column=2, padx=10, pady=5)
-
-clear_db_button = tk.Button(button_frame, text="Clear Database", command=lambda: clear_database(conn), width=15)
-clear_db_button.grid(row=0, column=3, padx=10, pady=5)
-
-button_frame.place(relx=0.5, rely=0.9, anchor='center')
-
+# Run the main event loop
 root.mainloop()
 
+# Cleanup on exit
+sock_broadcast.close()
+sock_receive.close()
+conn.close()
