@@ -29,9 +29,14 @@ def setup_udp_sockets():
     sock_broadcast.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 
     sock_receive = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock_receive.bind(('', 7501))
+    try:
+        sock_receive.bind(('', 7501))
+    except OSError as e:
+        print(f"Error binding to port 7501: {e}")
+        sys.exit(1)
     
     return sock_broadcast, sock_receive
+
 
 # Splash Screen Function
 def show_splash_screen():
@@ -205,6 +210,7 @@ sock_broadcast, sock_receive = setup_udp_sockets()  # Now sock_receive will be d
 # Start the UDP listener in a separate thread
 listener_thread = threading.Thread(target=listen_for_data, args=(sock_receive,), daemon=True)
 listener_thread.start()
+
 
 root.title("Photon Laser Tag Setup")
 root.geometry("1000x800")
