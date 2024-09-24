@@ -21,7 +21,7 @@ def connect_to_database():
     except Exception as e:
         print(f"Error connecting to PostgreSQL database: {e}")
         sys.exit(1)
-        
+
 # Set up UDP sockets for broadcasting and receiving
 def setup_udp_sockets():
     # Create a socket for broadcasting data (UDP port 7500)
@@ -96,7 +96,6 @@ def listen_for_data(sock_receive):
         data, addr = sock_receive.recvfrom(1024)  # Receive up to 1024 bytes
         print(f"Received data: {data.decode()} from {addr}")
 
-
 # Function to clear the database
 def clear_database(conn):
     cursor = conn.cursor()
@@ -131,16 +130,11 @@ def add_new_player_tk(conn):
                 messagebox.showinfo("Success", f"New Player Added: ID={new_id}, Codename={codename}")
                 break
 
-
-
 def delete_player(player_id, conn):
     cursor = conn.cursor()
     cursor.execute("DELETE FROM players WHERE id = %s", (player_id,))
     conn.commit()
     messagebox.showinfo("Success", f"Player with ID={player_id} has been deleted.")
-
-
-
 
 # Main Tkinter Frame
 root = tk.Tk()
@@ -158,7 +152,7 @@ def draw_background(canvas):
         start_pos = (random.randint(0, 1000), random.randint(0, 800))
         end_pos = (random.randint(0, 1000), random.randint(0, 800))
         canvas.create_line(start_pos, end_pos, fill="red", width=2)
-    canvas.after(800, draw_background, canvas)  # Call draw_background again after 100 ms
+    canvas.after(800, draw_background, canvas)  # Call draw_background again after 800 ms
 
 # Start drawing the background
 draw_background(canvas)
@@ -169,8 +163,15 @@ frame.place(relx=0.5, rely=0.3, anchor='center')  # Center the frame
 
 conn = connect_to_database()
 
-team1_entries = create_input_form(frame, "Team 1", "white", 0, 0, conn)
-team2_entries = create_input_form(frame, "Team 2", "white", 0, 3, conn)  # Adjust for the second team
+# Set up UDP sockets
+sock_broadcast, sock_receive = setup_udp_sockets()
+
+# Start the listening thread
+receive_thread = threading.Thread(target=listen_for_data, args=(sock_receive,), daemon=True)
+receive_thread.start()
+
+team1_entries = create_input_form(frame, "Team 1", "white", 0, 0, conn, sock_broadcast)
+team2_entries = create_input_form(frame, "Team 2", "white", 0, 3, conn, sock_broadcast)  # Adjust for the second team
 
 # Buttons
 button_frame = tk.Frame(root, bg='black')
