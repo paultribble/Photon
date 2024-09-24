@@ -55,7 +55,9 @@ def validate_player_id(player_id_var, codename_entry, equipment_entry, conn, soc
     equipment_id = equipment_entry.get()
     if equipment_id:
         message = f"Equipment ID {equipment_id} for Player ID {player_id}"
-        sock_broadcast.sendto(message.encode(), ('<broadcast>', 7500))  # Broadcast on port 7500
+        sock_broadcast.sendto(message.encode(), ('<broadcast>', 7500))  # Broadcast on port 7500)
+        print(f"Sent: {message}")  # Log the sent message
+
 
 # Create input forms for team player entries
 def create_input_form(frame, team_name, color, row, col, conn, sock_broadcast):
@@ -95,6 +97,7 @@ def listen_for_data(sock_receive):
     while True:
         data, addr = sock_receive.recvfrom(1024)  # Receive up to 1024 bytes
         print(f"Received data: {data.decode()} from {addr}")
+
 
 # Function to clear the database
 def clear_database(conn):
