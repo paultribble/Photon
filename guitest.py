@@ -53,6 +53,10 @@ def show_splash_screen():
     # Close splash screen after 3 seconds
     splash.after(3000, splash.destroy)  # 3000 milliseconds = 3 seconds
 
+# Function to start the main window after splash
+def start_main_window():
+    root.deiconify()  # Show the main window after the splash screen
+
 # Function to broadcast equipment ID
 def validate_player_id(player_id_var, codename_entry, equipment_entry, conn, sock_broadcast):
     cursor = conn.cursor()
@@ -151,9 +155,11 @@ def delete_player(player_id, conn):
 # Main Tkinter Frame
 root = tk.Tk()
 root.withdraw()  # Hide the main window initially
-show_splash_screen()  # Show splash screen before main window
 
-# Create the main window after the splash screen
+# Show the splash screen and run the main window after it closes
+show_splash_screen()
+root.after(3000, start_main_window)  # After 3 seconds, show the main window
+
 root.title("Photon Laser Tag Setup")
 root.geometry("1000x800")
 
@@ -198,5 +204,4 @@ view_database_button.grid(row=0, column=2, padx=10)
 button_frame.place(relx=0.5, rely=0.6, anchor='center')
 
 # Start Tkinter main loop
-root.deiconify()  # Show the main window after the splash screen
 root.mainloop()
