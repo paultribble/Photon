@@ -35,6 +35,19 @@ def setup_udp_sockets():
     
     return sock_broadcast, sock_receive
 
+# Splash Screen Function
+def show_splash_screen():
+    splash = tk.Toplevel()
+    splash.title("Welcome to Photon Laser Tag!")
+    splash.geometry("400x300")
+    splash.configure(bg='black')
+
+    label = tk.Label(splash, text="Welcome to Photon Laser Tag!", bg='black', fg='white', font=("Arial", 20))
+    label.pack(expand=True)
+
+    # Close splash screen after 3 seconds
+    splash.after(3000, splash.destroy)  # 3000 milliseconds = 3 seconds
+
 # Function to broadcast equipment ID
 def validate_player_id(player_id_var, codename_entry, equipment_entry, conn, sock_broadcast):
     cursor = conn.cursor()
@@ -145,6 +158,7 @@ def delete_player(player_id, conn):
 
 # Main Tkinter Frame
 root = tk.Tk()
+show_splash_screen()
 root.title("Photon Laser Tag Setup")
 root.geometry("1000x800")
 
