@@ -1,11 +1,3 @@
-import pygame
-import psycopg2
-import sys
-import random
-import tkinter as tk
-from tkinter import ttk
-from tkinter import messagebox, simpledialog
-
 # Pygame initialization
 pygame.init()
 
@@ -33,6 +25,10 @@ def connect_to_database():
 root = tk.Tk()
 root.title("Photon Laser Tag Setup")
 root.geometry("1200x800")
+
+# Tkinter frame for embedding inside pygame
+frame = tk.Frame(root)
+frame.pack(pady=10)
 
 # Colors for team selection
 dropdown_colors = {
@@ -69,18 +65,36 @@ def create_input_form(frame, team_name, color, row, col):
     tk.Label(frame, text="ID", font=("Arial", 10, "bold"), width=8).grid(row=1, column=col, padx=5)
     tk.Label(frame, text="Codename", font=("Arial", 10, "bold"), width=10).grid(row=1, column=col+1, padx=5)
 
+    id_entries = []
+    codename_entries = []
+
     for i in range(15):
         entry_id = tk.Entry(frame, width=8)
         entry_codename = tk.Entry(frame, width=15)
         entry_id.grid(row=i+2, column=col, padx=5, pady=2)
         entry_codename.grid(row=i+2, column=col+1, padx=5, pady=2)
+        id_entries.append(entry_id)
+        codename_entries.append(entry_codename)
+    
+    return id_entries, codename_entries
 
-# Function to clear database
-def clear_database(conn):
+# Function to handle auto-filling codenames
+def auto_fill_codenames(conn, id_entries, codename_entries):
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM players")
-    conn.commit()
-    print("Database cleared.")
+    for i, entry_id in enumerate(id_entries):
+        player_id = entry_id.get()
+        if player_id:
+            cursor.execute("SELECT codename FROM players WHERE id = %s", (player_id,))
+            result = cursor.fetchone()
+            if result:
+                codename_entries[i].delete(0, tk.END)
+                codename_entries[i].insert(0, result[0])
+            else:
+                messagebox.showwarning("Not Found", f"Player ID {player_id} not found in the database.")
+
+# Submit button functionality to auto-fill codenames
+def submit_players(conn, id_entries, codename_entries):
+    auto_fill_codenames(conn, id_entries, codename_entries)
 
 # Adding new player through Tkinter
 def add_new_player_tk(conn):
@@ -96,38 +110,15 @@ def add_new_player_tk(conn):
                 messagebox.showinfo("Success", f"New Player Added: ID={new_id}, Codename={codename}")
                 break
 
-# View database
-def show_database_menu_tk(conn):
-    cursor = conn.cursor()
-    cursor.execute("SELECT id, codename FROM players ORDER BY codename ASC")
-    entries = cursor.fetchall()
-
-    database_window = tk.Toplevel(root)
-    database_window.title("Player Database")
-
-    for i, (player_id, codename) in enumerate(entries):
-        tk.Label(database_window, text=f"{player_id}: {codename}").grid(row=i, column=0)
-        tk.Button(database_window, text="Delete", command=lambda pid=player_id: delete_player(pid, conn)).grid(row=i, column=1)
-
-def delete_player(player_id, conn):
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM players WHERE id = %s", (player_id,))
-    conn.commit()
-    messagebox.showinfo("Success", f"Player with ID={player_id} has been deleted.")
-
-# Main Tkinter Frame
-frame = tk.Frame(root)
-frame.pack(pady=10)
-
 # Team 1 and Team 2 Entry Forms
-create_input_form(frame, "Team 1", "white", 0, 0)
-create_input_form(frame, "Team 2", "white", 0, 2)
+team1_id_entries, team1_codename_entries = create_input_form(frame, "Team 1", "white", 0, 0)
+team2_id_entries, team2_codename_entries = create_input_form(frame, "Team 2", "white", 0, 2)
 
 # Submit and Other Buttons
 button_frame = tk.Frame(root)
 button_frame.pack(pady=20)
 
-submit_button = tk.Button(button_frame, text="Submit", width=15)
+submit_button = tk.Button(button_frame, text="Submit", width=15, command=lambda: submit_players(conn, team1_id_entries + team2_id_entries, team1_codename_entries + team2_codename_entries))
 submit_button.grid(row=0, column=0, padx=10)
 
 add_player_button = tk.Button(button_frame, text="Add New Player", command=lambda: add_new_player_tk(conn), width=15)
@@ -154,5 +145,6 @@ conn = connect_to_database()
 
 # Tkinter main loop
 root.mainloop()
+
 
 
