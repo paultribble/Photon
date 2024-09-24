@@ -88,6 +88,22 @@ def show_database_menu_tk(conn):
         tk.Label(database_window, text=f"{player_id}: {codename}").grid(row=i, column=0)
         tk.Button(database_window, text="Delete", command=lambda pid=player_id: delete_player(pid, conn)).grid(row=i, column=1)
 
+# Function to add a new player through a Tkinter dialog
+def add_new_player_tk(conn):
+    codename = simpledialog.askstring("Input", "Enter New Codename:")
+    if codename:
+        cursor = conn.cursor()
+        while True:
+            new_id = random.randint(1, 99)  # Generate a new ID between 1 and 99
+            cursor.execute("SELECT * FROM players WHERE id = %s", (new_id,))
+            if cursor.fetchone() is None:
+                cursor.execute("INSERT INTO players (id, codename) VALUES (%s, %s)", (new_id, codename))
+                conn.commit()
+                messagebox.showinfo("Success", f"New Player Added: ID={new_id}, Codename={codename}")
+                break
+
+
+
 def delete_player(player_id, conn):
     cursor = conn.cursor()
     cursor.execute("DELETE FROM players WHERE id = %s", (player_id,))
