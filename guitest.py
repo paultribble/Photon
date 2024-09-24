@@ -43,7 +43,7 @@ def show_splash_screen():
     # Load the image
     logo_path = "Images/logo.jpg"  # Path to your image
     logo_image = Image.open(logo_path)  # Open the image
-    logo_image = logo_image.resize((300, 200), Image.ANTIALIAS)  # Resize the image (optional)
+    logo_image = logo_image.resize((300, 200), Image.LANCZOS)  # Resize the image (optional)
     logo_photo = ImageTk.PhotoImage(logo_image)  # Create a PhotoImage object
 
     label = tk.Label(splash, image=logo_photo, bg='black')
