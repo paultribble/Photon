@@ -68,6 +68,35 @@ def create_input_form(frame, team_name, color, row, col, conn):
 
     return entries
 
+# Function to clear the database
+def clear_database(conn):
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM players")
+    conn.commit()
+    print("Database cleared.")
+
+# View database function
+def show_database_menu_tk(conn):
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, codename FROM players ORDER BY codename ASC")
+    entries = cursor.fetchall()
+
+    database_window = tk.Toplevel(root)
+    database_window.title("Player Database")
+
+    for i, (player_id, codename) in enumerate(entries):
+        tk.Label(database_window, text=f"{player_id}: {codename}").grid(row=i, column=0)
+        tk.Button(database_window, text="Delete", command=lambda pid=player_id: delete_player(pid, conn)).grid(row=i, column=1)
+
+def delete_player(player_id, conn):
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM players WHERE id = %s", (player_id,))
+    conn.commit()
+    messagebox.showinfo("Success", f"Player with ID={player_id} has been deleted.")
+
+
+
+
 # Main Tkinter Frame
 root = tk.Tk()
 root.title("Photon Laser Tag Setup")
