@@ -196,10 +196,6 @@ root.withdraw()  # Hide the main window initially
 show_splash_screen()
 root.after(3000, start_main_window)  # After 3 seconds, show the main window
 
-# Set up sockets and database connection
-sock_broadcast, sock_receive = setup_udp_sockets()
-conn = connect_to_database()
-
 # Start the UDP listener in a separate thread
 listener_thread = threading.Thread(target=listen_for_data, args=(sock_receive,), daemon=True)
 listener_thread.start()
