@@ -1,4 +1,3 @@
-import os
 import pygame
 import psycopg2
 import sys
@@ -13,6 +12,7 @@ pygame.init()
 # Window Dimensions
 screen_width = 1200
 screen_height = 800
+pygame.display.set_caption("Photon Laser Tag")
 
 # Database connection
 def connect_to_database():
@@ -41,19 +41,12 @@ dropdown_colors = {
     "Orange": "#FFA500", "Pink": "#FFC0CB", "Navy": "#000080"
 }
 
-# Embedding Pygame inside a Tkinter Canvas
-embed_frame = tk.Frame(root, width=screen_width, height=screen_height)
-embed_frame.pack()
-
-canvas = tk.Canvas(embed_frame, width=screen_width, height=screen_height)
-canvas.pack()
-
-os.environ['SDL_WINDOWID'] = str(canvas.winfo_id())
-pygame.display.init()
+# Create the main Pygame display for laser background animation
 screen = pygame.display.set_mode((screen_width, screen_height))
 
 # Function for generating laser lines
 def draw_lasers():
+    screen.fill((0, 0, 0))
     for _ in range(30):
         start_pos = (random.randint(0, screen_width), random.randint(0, screen_height))
         end_pos = (random.randint(0, screen_width), random.randint(0, screen_height))
@@ -122,13 +115,13 @@ def delete_player(player_id, conn):
     conn.commit()
     messagebox.showinfo("Success", f"Player with ID={player_id} has been deleted.")
 
-# Main Tkinter Frame for UI
-ui_frame = tk.Frame(root)
-ui_frame.pack(pady=10)
+# Main Tkinter Frame
+frame = tk.Frame(root)
+frame.pack(pady=10)
 
 # Team 1 and Team 2 Entry Forms
-create_input_form(ui_frame, "Team 1", "white", 0, 0)
-create_input_form(ui_frame, "Team 2", "white", 0, 2)
+create_input_form(frame, "Team 1", "white", 0, 0)
+create_input_form(frame, "Team 2", "white", 0, 2)
 
 # Submit and Other Buttons
 button_frame = tk.Frame(root)
@@ -161,6 +154,5 @@ conn = connect_to_database()
 
 # Tkinter main loop
 root.mainloop()
-
 
 
