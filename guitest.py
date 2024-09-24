@@ -5,6 +5,7 @@ import random
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox, simpledialog
+
 # Pygame initialization
 pygame.init()
 
@@ -117,6 +118,25 @@ def add_new_player_tk(conn):
                 messagebox.showinfo("Success", f"New Player Added: ID={new_id}, Codename={codename}")
                 break
 
+# View database
+def show_database_menu_tk(conn):
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, codename FROM players ORDER BY codename ASC")
+    entries = cursor.fetchall()
+
+    database_window = tk.Toplevel(root)
+    database_window.title("Player Database")
+
+    for i, (player_id, codename) in enumerate(entries):
+        tk.Label(database_window, text=f"{player_id}: {codename}").grid(row=i, column=0)
+        tk.Button(database_window, text="Delete", command=lambda pid=player_id: delete_player(pid, conn)).grid(row=i, column=1)
+
+def delete_player(player_id, conn):
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM players WHERE id = %s", (player_id,))
+    conn.commit()
+    messagebox.showinfo("Success", f"Player with ID={player_id} has been deleted.")
+
 # Team 1 and Team 2 Entry Forms
 team1_id_entries, team1_codename_entries = create_input_form(frame, "Team 1", "white", 0, 0)
 team2_id_entries, team2_codename_entries = create_input_form(frame, "Team 2", "white", 0, 2)
@@ -152,6 +172,3 @@ conn = connect_to_database()
 
 # Tkinter main loop
 root.mainloop()
-
-
-
