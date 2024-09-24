@@ -48,9 +48,11 @@ embed_frame.pack()
 canvas = tk.Canvas(embed_frame, width=screen_width, height=screen_height)
 canvas.pack()
 
+root.update()  # Ensures Tkinter window is fully drawn
 os.environ['SDL_WINDOWID'] = str(canvas.winfo_id())
 pygame.display.init()
 screen = pygame.display.set_mode((screen_width, screen_height))
+
 
 # Function for generating laser lines
 def draw_lasers():
