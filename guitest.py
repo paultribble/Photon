@@ -1,7 +1,9 @@
+import socket
+import threading
+import random
 import pygame
 import psycopg2
 import sys
-import random
 import tkinter as tk
 from tkinter import messagebox, simpledialog
 
@@ -19,9 +21,21 @@ def connect_to_database():
     except Exception as e:
         print(f"Error connecting to PostgreSQL database: {e}")
         sys.exit(1)
+        
+# Set up UDP sockets for broadcasting and receiving
+def setup_udp_sockets():
+    # Create a socket for broadcasting data (UDP port 7500)
+    sock_broadcast = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock_broadcast.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 
-# Function to fetch and validate codename for the entered ID
-def validate_player_id(player_id_var, codename_entry, equipment_entry, conn):
+    # Create a socket for receiving data (UDP port 7501)
+    sock_receive = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock_receive.bind(('', 7501))  # Listen on all interfaces on port 7501
+    
+    return sock_broadcast, sock_receive
+
+# Function to broadcast equipment ID
+def validate_player_id(player_id_var, codename_entry, equipment_entry, conn, sock_broadcast):
     cursor = conn.cursor()
     player_id = player_id_var.get()
     
@@ -36,37 +50,52 @@ def validate_player_id(player_id_var, codename_entry, equipment_entry, conn):
             codename_entry.insert(0, result[0])  # Insert fetched codename
         else:
             codename_entry.insert(0, "Invalid ID")  # Show "Invalid ID"
-    else:
-        codename_entry.delete(0, tk.END)  # Clear "Invalid ID" if field is empty
+    
+    # If equipment ID is entered, broadcast the equipment ID
+    equipment_id = equipment_entry.get()
+    if equipment_id:
+        message = f"Equipment ID {equipment_id} for Player ID {player_id}"
+        sock_broadcast.sendto(message.encode(), ('<broadcast>', 7500))  # Broadcast on port 7500
 
-# Function for creating input forms
-def create_input_form(frame, team_name, color, row, col, conn):
+# Create input forms for team player entries
+def create_input_form(frame, team_name, color, row, col, conn, sock_broadcast):
+    # Team label
     team_label = tk.Label(frame, text=team_name, bg=color, font=("Arial", 12, "bold"), width=10)
     team_label.grid(row=0, column=col, padx=10)
 
+    # Column labels for ID, Codename, Equipment
     tk.Label(frame, text="ID", font=("Arial", 10, "bold"), width=8).grid(row=1, column=col, padx=5)
     tk.Label(frame, text="Codename", font=("Arial", 10, "bold"), width=10).grid(row=1, column=col + 1, padx=5)
     tk.Label(frame, text="Equipment", font=("Arial", 10, "bold"), width=8).grid(row=1, column=col + 2, padx=5)
 
+    # Create 15 player entry fields
     entries = []
     for i in range(15):
-        # Create StringVar to track player ID changes
         player_id_var = tk.StringVar()
 
         entry_id = tk.Entry(frame, width=8, textvariable=player_id_var)
         entry_codename = tk.Entry(frame, width=15)
-        entry_equipment = tk.Entry(frame, width=5)  # Small input for Equipment ID
+        entry_equipment = tk.Entry(frame, width=5)
         
+        # Layout of player entries in grid
         entry_id.grid(row=i + 2, column=col, padx=5, pady=2)
         entry_codename.grid(row=i + 2, column=col + 1, padx=5, pady=2)
         entry_equipment.grid(row=i + 2, column=col + 2, padx=5, pady=2)
 
-        # Bind the StringVar to the validate function dynamically
-        player_id_var.trace_add("write", lambda name, index, mode, var=player_id_var, codename_entry=entry_codename, equipment_entry=entry_equipment: validate_player_id(var, codename_entry, equipment_entry, conn))
+        # Bind the StringVar to the validate function
+        player_id_var.trace_add("write", lambda name, index, mode, var=player_id_var, codename_entry=entry_codename, equipment_entry=entry_equipment: validate_player_id(var, codename_entry, equipment_entry, conn, sock_broadcast))
 
+        # Add entry fields to the list
         entries.append((entry_id, entry_codename, entry_equipment))
 
     return entries
+
+# Function to listen for incoming UDP data
+def listen_for_data(sock_receive):
+    while True:
+        data, addr = sock_receive.recvfrom(1024)  # Receive up to 1024 bytes
+        print(f"Received data: {data.decode()} from {addr}")
+
 
 # Function to clear the database
 def clear_database(conn):
