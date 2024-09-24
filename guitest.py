@@ -158,7 +158,7 @@ def delete_player(player_id, conn):
 
 # Main Tkinter Frame
 root = tk.Tk()
-show_splash_screen()
+show_splash_screen()  # Show splash screen before main window
 root.title("Photon Laser Tag Setup")
 root.geometry("1000x800")
 
@@ -168,45 +168,39 @@ canvas.pack()
 
 # Function for generating dynamic background
 def draw_background(canvas):
-    canvas.delete("all")  # Clear the canvas
+    canvas.delete("all")
     for _ in range(30):
         start_pos = (random.randint(0, 1000), random.randint(0, 800))
         end_pos = (random.randint(0, 1000), random.randint(0, 800))
         canvas.create_line(start_pos, end_pos, fill="red", width=2)
-    canvas.after(800, draw_background, canvas)  # Call draw_background again after 800 ms
+    canvas.after(800, draw_background, canvas)
 
 # Start drawing the background
 draw_background(canvas)
 
 # Team Entry Forms
 frame = tk.Frame(root, bg='black')
-frame.place(relx=0.5, rely=0.3, anchor='center')  # Center the frame
+frame.place(relx=0.5, rely=0.3, anchor='center')
 
 conn = connect_to_database()
-
-# Set up UDP sockets
 sock_broadcast, sock_receive = setup_udp_sockets()
 
-# Start the listening thread
 receive_thread = threading.Thread(target=listen_for_data, args=(sock_receive,), daemon=True)
 receive_thread.start()
 
 team1_entries = create_input_form(frame, "Team 1", "white", 0, 0, conn, sock_broadcast)
-team2_entries = create_input_form(frame, "Team 2", "white", 0, 3, conn, sock_broadcast)  # Adjust for the second team
+team2_entries = create_input_form(frame, "Team 2", "white", 0, 3, conn, sock_broadcast)
 
 # Buttons
 button_frame = tk.Frame(root, bg='black')
 
-# Submit Button: No longer needed since dynamic checking is used.
 add_player_button = tk.Button(button_frame, text="Add New Player", command=lambda: add_new_player_tk(conn), width=15)
 add_player_button.grid(row=0, column=1, padx=10)
 
-# View database
 view_database_button = tk.Button(button_frame, text="View Database", command=lambda: show_database_menu_tk(conn), width=15)
 view_database_button.grid(row=0, column=2, padx=10)
 
-# Position the button frame right under the player entry frame
-button_frame.place(relx=0.5, rely=0.6, anchor='center')  # Adjust 'rely' to control vertical placement
+button_frame.place(relx=0.5, rely=0.6, anchor='center')
 
 # Start Tkinter main loop
 root.mainloop()
