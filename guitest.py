@@ -77,20 +77,23 @@ def create_input_form(frame, team_name, color, row, col, conn, sock_broadcast):
 
         entry_id = tk.Entry(frame, width=8, textvariable=player_id_var)
         entry_codename = tk.Entry(frame, width=15)
-        entry_equipment = tk.Entry(frame, width=5)
-        
+        # Create a Combobox for equipment instead of an Entry
+        equipment_combobox = ttk.Combobox(frame, width=5, values=list(range(1, 31)))
+        equipment_combobox.set("")  # Set default value
+
         # Layout of player entries in grid
         entry_id.grid(row=i + 2, column=col, padx=5, pady=2)
         entry_codename.grid(row=i + 2, column=col + 1, padx=5, pady=2)
-        entry_equipment.grid(row=i + 2, column=col + 2, padx=5, pady=2)
+        equipment_combobox.grid(row=i + 2, column=col + 2, padx=5, pady=2)
 
         # Bind the StringVar to the validate function
-        player_id_var.trace_add("write", lambda name, index, mode, var=player_id_var, codename_entry=entry_codename, equipment_entry=entry_equipment: validate_player_id(var, codename_entry, equipment_entry, conn, sock_broadcast))
+        player_id_var.trace_add("write", lambda name, index, mode, var=player_id_var, codename_entry=entry_codename, equipment_combobox=equipment_combobox: validate_player_id(var, codename_entry, equipment_combobox, conn, sock_broadcast))
 
         # Add entry fields to the list
-        entries.append((entry_id, entry_codename, entry_equipment))
+        entries.append((entry_id, entry_codename, equipment_combobox))
 
     return entries
+
 
 # Function to listen for incoming UDP data
 def listen_for_data(sock_receive):
