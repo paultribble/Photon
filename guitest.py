@@ -86,7 +86,7 @@ def create_input_form(frame, team_name, color, row, col):
 # Main Tkinter Frame
 root = tk.Tk()
 root.title("Photon Laser Tag Setup")
-root.geometry("800x700")
+root.geometry("1000x700")
 
 # Create a canvas to draw the background
 canvas = tk.Canvas(root, width=800, height=600, bg='black')
