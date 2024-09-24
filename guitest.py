@@ -185,7 +185,7 @@ draw_background(canvas)
 
 # Team Entry Forms
 frame = tk.Frame(root, bg='black')
-frame.place(relx=0.5, rely=0.3, anchor='center')
+frame.place(relx=0.5, rely=0.4, anchor='center')
 
 conn = connect_to_database()
 sock_broadcast, sock_receive = setup_udp_sockets()
