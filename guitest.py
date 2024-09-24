@@ -1,7 +1,6 @@
 import socket
 import threading
 import random
-import pygame
 import psycopg2
 import sys
 import tkinter as tk
@@ -14,9 +13,9 @@ def connect_to_database():
         conn = psycopg2.connect(
             dbname="photon",
             user="student",
-           # password="student",
-           # host="localhost",
-           # port="5432"
+            # password="student",
+            # host="localhost",
+            # port="5432"
         )
         return conn
     except Exception as e:
@@ -25,13 +24,11 @@ def connect_to_database():
 
 # Set up UDP sockets for broadcasting and receiving
 def setup_udp_sockets():
-    # Create a socket for broadcasting data (UDP port 7500)
     sock_broadcast = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock_broadcast.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 
-    # Create a socket for receiving data (UDP port 7501)
     sock_receive = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock_receive.bind(('', 7501))  # Listen on all interfaces on port 7501
+    sock_receive.bind(('', 7501))
     
     return sock_broadcast, sock_receive
 
@@ -47,13 +44,14 @@ def show_splash_screen():
 
     # Close splash screen after 3 seconds
     splash.after(3000, splash.destroy)  # 3000 milliseconds = 3 seconds
+    splash.grab_set()  # Make the splash screen modal
+    splash.wait_window()  # Wait for the splash screen to close
 
 # Function to broadcast equipment ID
 def validate_player_id(player_id_var, codename_entry, equipment_entry, conn, sock_broadcast):
     cursor = conn.cursor()
     player_id = player_id_var.get()
     
-    # Clear codename and equipment fields
     codename_entry.delete(0, tk.END)
     equipment_entry.delete(0, tk.END)
     
@@ -65,56 +63,44 @@ def validate_player_id(player_id_var, codename_entry, equipment_entry, conn, soc
         else:
             codename_entry.insert(0, "Invalid ID")  # Show "Invalid ID"
     
-    # If equipment ID is entered, broadcast the equipment ID
     equipment_id = equipment_entry.get()
     if equipment_id:
         message = f"Equipment ID {equipment_id} for Player ID {player_id}"
-        sock_broadcast.sendto(message.encode(), ('<broadcast>', 7500))  # Broadcast on port 7500)
+        sock_broadcast.sendto(message.encode(), ('<broadcast>', 7500))  # Broadcast on port 7500
         print(f"Sent: {message}")  # Log the sent message
-
 
 # Create input forms for team player entries
 def create_input_form(frame, team_name, color, row, col, conn, sock_broadcast):
-    # Team label
     team_label = tk.Label(frame, text=team_name, bg=color, font=("Arial", 12, "bold"), width=10)
     team_label.grid(row=0, column=col, padx=10)
 
-    # Column labels for ID, Codename, Equipment
     tk.Label(frame, text="ID", font=("Arial", 10, "bold"), width=8).grid(row=1, column=col, padx=5)
     tk.Label(frame, text="Codename", font=("Arial", 10, "bold"), width=10).grid(row=1, column=col + 1, padx=5)
     tk.Label(frame, text="Equipment", font=("Arial", 10, "bold"), width=8).grid(row=1, column=col + 2, padx=5)
 
-    # Create 15 player entry fields
     entries = []
     for i in range(15):
         player_id_var = tk.StringVar()
-
         entry_id = tk.Entry(frame, width=8, textvariable=player_id_var)
         entry_codename = tk.Entry(frame, width=15)
-        # Create a Combobox for equipment instead of an Entry
         equipment_combobox = ttk.Combobox(frame, width=5, values=list(range(1, 31)))
         equipment_combobox.set("")  # Set default value
 
-        # Layout of player entries in grid
         entry_id.grid(row=i + 2, column=col, padx=5, pady=2)
         entry_codename.grid(row=i + 2, column=col + 1, padx=5, pady=2)
         equipment_combobox.grid(row=i + 2, column=col + 2, padx=5, pady=2)
 
-        # Bind the StringVar to the validate function
         player_id_var.trace_add("write", lambda name, index, mode, var=player_id_var, codename_entry=entry_codename, equipment_combobox=equipment_combobox: validate_player_id(var, codename_entry, equipment_combobox, conn, sock_broadcast))
 
-        # Add entry fields to the list
         entries.append((entry_id, entry_codename, equipment_combobox))
 
     return entries
-
 
 # Function to listen for incoming UDP data
 def listen_for_data(sock_receive):
     while True:
         data, addr = sock_receive.recvfrom(1024)  # Receive up to 1024 bytes
         print(f"Received data: {data.decode()} from {addr}")
-
 
 # Function to clear the database
 def clear_database(conn):
@@ -204,3 +190,4 @@ button_frame.place(relx=0.5, rely=0.6, anchor='center')
 
 # Start Tkinter main loop
 root.mainloop()
+
