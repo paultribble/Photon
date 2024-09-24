@@ -1,3 +1,4 @@
+import os
 import pygame
 import psycopg2
 import sys
