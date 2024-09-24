@@ -6,6 +6,7 @@ import sys
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox, simpledialog
+from PIL import Image, ImageTk
 
 # Database connection
 def connect_to_database():
@@ -39,13 +40,18 @@ def show_splash_screen():
     splash.geometry("400x300")
     splash.configure(bg='black')
 
-    label = tk.Label(splash, text="Welcome to Photon Laser Tag!", bg='black', fg='white', font=("Arial", 20))
+    # Load the image
+    logo_path = "Images/logo.jpg"  # Path to your image
+    logo_image = Image.open(logo_path)  # Open the image
+    logo_image = logo_image.resize((300, 200), Image.ANTIALIAS)  # Resize the image (optional)
+    logo_photo = ImageTk.PhotoImage(logo_image)  # Create a PhotoImage object
+
+    label = tk.Label(splash, image=logo_photo, bg='black')
+    label.image = logo_photo  # Keep a reference to the image
     label.pack(expand=True)
 
     # Close splash screen after 3 seconds
     splash.after(3000, splash.destroy)  # 3000 milliseconds = 3 seconds
-    splash.grab_set()  # Make the splash screen modal
-    splash.wait_window()  # Wait for the splash screen to close
 
 # Function to broadcast equipment ID
 def validate_player_id(player_id_var, codename_entry, equipment_entry, conn, sock_broadcast):
