@@ -4,7 +4,7 @@ import random
 import pygame
 import psycopg2
 import sys
-import tkinter as tkk
+import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox, simpledialog
 
