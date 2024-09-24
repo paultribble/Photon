@@ -4,7 +4,8 @@ import random
 import pygame
 import psycopg2
 import sys
-import tkinter as tk
+import tkinter as tkk
+from tkinter import ttk
 from tkinter import messagebox, simpledialog
 
 # Database connection
