@@ -1,3 +1,10 @@
+import pygame
+import psycopg2
+import sys
+import random
+import tkinter as tk
+from tkinter import ttk
+from tkinter import messagebox, simpledialog
 # Pygame initialization
 pygame.init()
 
