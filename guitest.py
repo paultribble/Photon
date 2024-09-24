@@ -14,9 +14,9 @@ def connect_to_database():
         conn = psycopg2.connect(
             dbname="photon",
             user="student",
-            password="student",
-            host="localhost",
-            port="5432"
+           # password="student",
+           # host="localhost",
+           # port="5432"
         )
         return conn
     except Exception as e:
