@@ -29,14 +29,9 @@ def setup_udp_sockets():
     sock_broadcast.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 
     sock_receive = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    try:
-        sock_receive.bind(('', 7501))
-    except OSError as e:
-        print(f"Error binding to port 7501: {e}")
-        sys.exit(1)
+    sock_receive.bind(('', 7501))
     
     return sock_broadcast, sock_receive
-
 
 # Splash Screen Function
 def show_splash_screen():
@@ -87,10 +82,6 @@ def update_codename(player_id_var, codename_entry, conn):
 def validate_and_broadcast(player_id_var, codename_entry, equipment_entry, conn, sock_broadcast):
     cursor = conn.cursor()
     player_id = player_id_var.get()
-    equipment_id = equipment_entry.get()
-
-    # Temporary variable for equipment ID and player details
-    temporary_data = {}
 
     if player_id:  # If ID is not empty
         cursor.execute("SELECT codename FROM players WHERE id = %s", (player_id,))
@@ -99,15 +90,15 @@ def validate_and_broadcast(player_id_var, codename_entry, equipment_entry, conn,
             codename_entry.delete(0, tk.END)
             codename_entry.insert(0, result[0])  # Insert fetched codename
             codename_entry.config(fg='black')    # Reset color to black once validated
-            temporary_data[player_id] = {'codename': result[0], 'equipment_id': equipment_id}  # Store player data
         else:
             codename_entry.delete(0, tk.END)
             codename_entry.insert(0, "Invalid ID")
             codename_entry.config(fg='gray')  # Keep text gray if ID is invalid
             return
 
+    equipment_id = equipment_entry.get()
     if equipment_id:
-        message = f"Equipment ID: {equipment_id}"  # Send only the Equipment ID
+        message = f"Player ID: {player_id}, Equipment ID: {equipment_id}"
         sock_broadcast.sendto(message.encode(), ('<broadcast>', 7500))  # Broadcast on port 7500
         print(f"Sent: {message}")  # Log the sent message
     else:
@@ -201,17 +192,6 @@ root.withdraw()  # Hide the main window initially
 show_splash_screen()
 root.after(3000, start_main_window)  # After 3 seconds, show the main window
 
-# Set up database connection first
-conn = connect_to_database()  # Ensure database is connected first
-
-# Then set up sockets
-sock_broadcast, sock_receive = setup_udp_sockets()  # Now sock_receive will be defined
-
-# Start the UDP listener in a separate thread
-listener_thread = threading.Thread(target=listen_for_data, args=(sock_receive,), daemon=True)
-listener_thread.start()
-
-
 root.title("Photon Laser Tag Setup")
 root.geometry("1000x800")
 
@@ -241,8 +221,8 @@ sock_broadcast, sock_receive = setup_udp_sockets()
 receive_thread = threading.Thread(target=listen_for_data, args=(sock_receive,), daemon=True)
 receive_thread.start()
 
-team1_entries = create_input_form(frame, "Blue Team", "white", 0, 0, conn, sock_broadcast)
-team2_entries = create_input_form(frame, "Red Team", "white", 0, 4, conn, sock_broadcast)
+team1_entries = create_input_form(frame, "Team 1", "white", 0, 0, conn, sock_broadcast)
+team2_entries = create_input_form(frame, "Team 2", "white", 0, 4, conn, sock_broadcast)
 
 # Buttons
 button_frame = tk.Frame(root, bg='black')
