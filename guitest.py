@@ -41,6 +41,20 @@ def add_new_player_tk(conn):
                 messagebox.showinfo("Success", f"New Player Added: ID={new_id}, Codename={codename}")
                 break
 
+# Function to submit player IDs and fetch codenames
+def submit_players(conn, entries):
+    cursor = conn.cursor()
+    for entry_id, entry_codename in entries:
+        player_id = entry_id.get()
+        if player_id:
+            cursor.execute("SELECT codename FROM players WHERE id = %s", (player_id,))
+            result = cursor.fetchone()
+            if result:
+                entry_codename.delete(0, tk.END)
+                entry_codename.insert(0, result[0])  # Insert fetched codename
+            else:
+                messagebox.showwarning("Warning", f"ID {player_id} not found in the database.")
+
 # View database
 def show_database_menu_tk(conn):
     cursor = conn.cursor()
@@ -77,11 +91,14 @@ def create_input_form(frame, team_name, color, row, col):
     tk.Label(frame, text="ID", font=("Arial", 10, "bold"), width=8).grid(row=1, column=col, padx=5)
     tk.Label(frame, text="Codename", font=("Arial", 10, "bold"), width=10).grid(row=1, column=col + 1, padx=5)
 
+    entries = []
     for i in range(15):
         entry_id = tk.Entry(frame, width=8)
         entry_codename = tk.Entry(frame, width=15)
         entry_id.grid(row=i + 2, column=col, padx=5, pady=2)
         entry_codename.grid(row=i + 2, column=col + 1, padx=5, pady=2)
+        entries.append((entry_id, entry_codename))
+    return entries
 
 # Main Tkinter Frame
 root = tk.Tk()
@@ -98,36 +115,33 @@ draw_background(canvas)
 # Team Entry Forms
 frame = tk.Frame(root, bg='black')
 frame.place(relx=0.5, rely=0.3, anchor='center')  # Center the frame
-create_input_form(frame, "Team 1", "white", 0, 0)
-create_input_form(frame, "Team 2", "white", 0, 2)
+team1_entries = create_input_form(frame, "Team 1", "white", 0, 0)
+team2_entries = create_input_form(frame, "Team 2", "white", 0, 2)
 
 # Buttons
-# Team Entry Forms (Player Entry Frame)
-frame = tk.Frame(root, bg='black')
-frame.place(relx=0.5, rely=0.3, anchor='center')  # Moved up higher (rely=0.3)
-
-# Buttons Frame (directly under the player entry frame)
 button_frame = tk.Frame(root, bg='black')
 
-# Add buttons to the button frame
-submit_button = tk.Button(button_frame, text="Submit", command=lambda: print("Submit clicked!"), width=15)
+# Submit Button: Submit IDs and fetch codenames
+submit_button = tk.Button(button_frame, text="Submit", command=lambda: submit_players(conn, team1_entries + team2_entries), width=15)
 submit_button.grid(row=0, column=0, padx=10)
 
-add_player_button = tk.Button(button_frame, text="Add New Player", width=15)
+# Add new player
+add_player_button = tk.Button(button_frame, text="Add New Player", command=lambda: add_new_player_tk(conn), width=15)
 add_player_button.grid(row=0, column=1, padx=10)
 
-view_database_button = tk.Button(button_frame, text="View Database", width=15)
+# View database
+view_database_button = tk.Button(button_frame, text="View Database", command=lambda: show_database_menu_tk(conn), width=15)
 view_database_button.grid(row=0, column=2, padx=10)
 
 # Position the button frame right under the player entry frame
 button_frame.place(relx=0.5, rely=0.6, anchor='center')  # Adjust 'rely' to control vertical placement
-
 
 # Database connection
 conn = connect_to_database()
 
 # Start Tkinter main loop
 root.mainloop()
+
 
 
 
