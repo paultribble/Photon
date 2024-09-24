@@ -89,7 +89,7 @@ root.title("Photon Laser Tag Setup")
 root.geometry("1000x800")
 
 # Create a canvas to draw the background
-canvas = tk.Canvas(root, width=800, height=600, bg='black')
+canvas = tk.Canvas(root, width=1000, height=800, bg='black')
 canvas.pack()
 
 # Start drawing the background
