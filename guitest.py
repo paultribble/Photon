@@ -33,7 +33,7 @@ def add_new_player_tk(conn):
     if codename:
         cursor = conn.cursor()
         while True:
-            new_id = random.randint(1, 999999)
+            new_id = random.randint(1, 99)
             cursor.execute("SELECT * FROM players WHERE id = %s", (new_id,))
             if cursor.fetchone() is None:
                 cursor.execute("INSERT INTO players (id, codename) VALUES (%s, %s)", (new_id, codename))
@@ -86,7 +86,7 @@ def create_input_form(frame, team_name, color, row, col):
 # Main Tkinter Frame
 root = tk.Tk()
 root.title("Photon Laser Tag Setup")
-root.geometry("1000x700")
+root.geometry("1000x800")
 
 # Create a canvas to draw the background
 canvas = tk.Canvas(root, width=800, height=600, bg='black')
@@ -97,7 +97,7 @@ draw_background(canvas)
 
 # Team Entry Forms
 frame = tk.Frame(root, bg='black')
-frame.place(relx=0.5, rely=0.5, anchor='center')  # Center the frame
+frame.place(relx=0.5, rely=0.3, anchor='center')  # Center the frame
 create_input_form(frame, "Team 1", "white", 0, 0)
 create_input_form(frame, "Team 2", "white", 0, 2)
 
@@ -105,7 +105,7 @@ create_input_form(frame, "Team 2", "white", 0, 2)
 button_frame = tk.Frame(root, bg='white')
 button_frame.pack(pady=20)
 
-submit_button = tk.Button(button_frame, text="Submit", command=lambda: print("Submit clicked!"), width=15)
+submit_button = tk.Button(button_frame, text="Submit Players", command=lambda: print("Submit clicked!"), width=15)
 submit_button.grid(row=0, column=0, padx=10)
 
 add_player_button = tk.Button(button_frame, text="Add New Player", command=lambda: add_new_player_tk(conn), width=15)
