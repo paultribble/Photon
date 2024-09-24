@@ -194,7 +194,7 @@ receive_thread = threading.Thread(target=listen_for_data, args=(sock_receive,), 
 receive_thread.start()
 
 team1_entries = create_input_form(frame, "Team 1", "white", 0, 0, conn, sock_broadcast)
-team2_entries = create_input_form(frame, "Team 2", "white", 0, 3, conn, sock_broadcast)
+team2_entries = create_input_form(frame, "Team 2", "white", 0, 4, conn, sock_broadcast)
 
 # Buttons
 button_frame = tk.Frame(root, bg='black')
