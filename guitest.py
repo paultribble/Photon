@@ -81,7 +81,7 @@ def draw_background(canvas):
         start_pos = (random.randint(0, 1000), random.randint(0, 800))
         end_pos = (random.randint(0, 1000), random.randint(0, 800))
         canvas.create_line(start_pos, end_pos, fill="red", width=2)
-    canvas.after(400, draw_background, canvas)  # Call draw_background again after 100 ms
+    canvas.after(800, draw_background, canvas)  # Call draw_background again after 100 ms
 
 # Function for creating input forms
 def create_input_form(frame, team_name, color, row, col):
