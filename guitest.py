@@ -102,17 +102,26 @@ create_input_form(frame, "Team 1", "white", 0, 0)
 create_input_form(frame, "Team 2", "white", 0, 2)
 
 # Buttons
-button_frame = tk.Frame(root, bg='white')
-button_frame.pack(pady=20)
+# Team Entry Forms (Player Entry Frame)
+frame = tk.Frame(root, bg='black')
+frame.place(relx=0.5, rely=0.3, anchor='center')  # Moved up higher (rely=0.3)
 
-submit_button = tk.Button(button_frame, text="Submit Players", command=lambda: print("Submit clicked!"), width=15)
+# Buttons Frame (directly under the player entry frame)
+button_frame = tk.Frame(root, bg='black')
+
+# Add buttons to the button frame
+submit_button = tk.Button(button_frame, text="Submit", command=lambda: print("Submit clicked!"), width=15)
 submit_button.grid(row=0, column=0, padx=10)
 
-add_player_button = tk.Button(button_frame, text="Add New Player", command=lambda: add_new_player_tk(conn), width=15)
+add_player_button = tk.Button(button_frame, text="Add New Player", width=15)
 add_player_button.grid(row=0, column=1, padx=10)
 
-view_database_button = tk.Button(button_frame, text="View Database", command=lambda: show_database_menu_tk(conn), width=15)
+view_database_button = tk.Button(button_frame, text="View Database", width=15)
 view_database_button.grid(row=0, column=2, padx=10)
+
+# Position the button frame right under the player entry frame
+button_frame.place(relx=0.5, rely=0.6, anchor='center')  # Adjust 'rely' to control vertical placement
+
 
 # Database connection
 conn = connect_to_database()
