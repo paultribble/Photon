@@ -86,7 +86,7 @@ def create_input_form(frame, team_name, color, row, col, conn, sock_broadcast):
 
     tk.Label(frame, text="ID", font=("Arial", 10, "bold"), width=8).grid(row=1, column=col, padx=5)
     tk.Label(frame, text="Codename", font=("Arial", 10, "bold"), width=10).grid(row=1, column=col + 1, padx=5)
-    tk.Label(frame, text="Equipment", font=("Arial", 10, "bold"), width=8).grid(row=1, column=col + 2, padx=5)
+    tk.Label(frame, text="Equipment", font=("Arial", 10, "bold"), width=10).grid(row=1, column=col + 2, padx=5)
 
     entries = []
     for i in range(15):
