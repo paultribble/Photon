@@ -57,19 +57,43 @@ def show_splash_screen():
 def start_main_window():
     root.deiconify()  # Show the main window after the splash screen
 
-# Function to validate and broadcast player ID and equipment ID
+# Function to update codename field dynamically based on typed ID
+def update_codename(player_id_var, codename_entry, conn):
+    player_id = player_id_var.get()
+
+    # Clear the codename entry field before updating
+    codename_entry.delete(0, tk.END)
+
+    if player_id.isdigit():  # Check if the input is numeric
+        cursor = conn.cursor()
+        cursor.execute("SELECT codename FROM players WHERE id = %s", (player_id,))
+        result = cursor.fetchone()
+
+        if result:
+            codename_entry.insert(0, result[0])  # Insert codename
+            codename_entry.config(fg='black')    # Reset color to black
+        else:
+            codename_entry.insert(0, "Invalid ID")
+            codename_entry.config(fg='gray')  # Set text color to gray
+    else:
+        codename_entry.config(fg='black')  # Reset color to black for non-numeric input
+
+# Modified validate_and_broadcast to reset the color once Enter is pressed
 def validate_and_broadcast(player_id_var, codename_entry, equipment_entry, conn, sock_broadcast):
     cursor = conn.cursor()
     player_id = player_id_var.get()
-    
+
     if player_id:  # If ID is not empty
         cursor.execute("SELECT codename FROM players WHERE id = %s", (player_id,))
         result = cursor.fetchone()
         if result:
-            codename_entry.config(fg='black')  # Set the text color to black after Enter is pressed
+            codename_entry.delete(0, tk.END)
+            codename_entry.insert(0, result[0])  # Insert fetched codename
+            codename_entry.config(fg='black')    # Reset color to black once validated
         else:
             codename_entry.delete(0, tk.END)
-            codename_entry.insert(0, "Invalid ID")  # Show "Invalid ID"
+            codename_entry.insert(0, "Invalid ID")
+            codename_entry.config(fg='gray')  # Keep text gray if ID is invalid
             return
 
     equipment_id = equipment_entry.get()
@@ -80,24 +104,7 @@ def validate_and_broadcast(player_id_var, codename_entry, equipment_entry, conn,
     else:
         messagebox.showwarning("Warning", "Equipment ID cannot be empty.")
 
-def update_codename(player_id_var, codename_entry, conn):
-    cursor = conn.cursor()
-    player_id = player_id_var.get()
-
-    if player_id:  # If ID is not empty
-        cursor.execute("SELECT codename FROM players WHERE id = %s", (player_id,))
-        result = cursor.fetchone()
-        if result:
-            codename_entry.delete(0, tk.END)
-            codename_entry.insert(0, result[0])  # Insert fetched codename
-            codename_entry.config(fg='gray')  # Set the text color to gray
-        else:
-            codename_entry.delete(0, tk.END)  # Clear codename if no match found
-    else:
-        codename_entry.delete(0, tk.END)  # Clear codename if ID is empty
-
-
-# Create input forms for team player entries
+# In create_input_form, bind the update_codename function to the player ID entry
 def create_input_form(frame, team_name, color, row, col, conn, sock_broadcast):
     team_label = tk.Label(frame, text=team_name, bg=color, font=("Arial", 12, "bold"), width=10)
     team_label.grid(row=0, column=col, padx=10)
@@ -118,8 +125,8 @@ def create_input_form(frame, team_name, color, row, col, conn, sock_broadcast):
         entry_codename.grid(row=i + 2, column=col + 1, padx=5, pady=2)
         equipment_combobox.grid(row=i + 2, column=col + 2, padx=5, pady=2)
 
-        # Bind the player ID entry to update the codename dynamically
-        entry_id.bind("<KeyRelease>", lambda event, pid_var=player_id_var, codename=entry_codename: update_codename(pid_var, codename, conn))
+        # Bind the update_codename function to player ID field updates
+        player_id_var.trace_add('write', lambda name, index, mode, pid_var=player_id_var, codename=entry_codename: update_codename(pid_var, codename, conn))
 
         # Add enter button to validate and broadcast
         enter_button = tk.Button(frame, text="Enter", command=lambda pid_var=player_id_var, codename=entry_codename, equip=equipment_combobox: validate_and_broadcast(pid_var, codename, equip, conn, sock_broadcast))
@@ -128,6 +135,7 @@ def create_input_form(frame, team_name, color, row, col, conn, sock_broadcast):
         entries.append((entry_id, entry_codename, equipment_combobox))
 
     return entries
+
 
 
 # Function to listen for incoming UDP data
