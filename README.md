@@ -35,7 +35,10 @@ Run the main.py script:
 python3 main.py
 
 
-The splash screen will appear, followed by the main window where you can enter player data for two teams, view the player database, and broadcast equipment IDs.
+Optional: UDP_Listener.py 
+This is for checking that the UDP messages are correctly sent.
+
+The splash screen will appear, followed by the main window where you can enter player data for two teams, view the player database, and press enter for each team member to submit ID, Codename, and Equipment ID Initialization over UDP broadcast.
 
 
 | Real Name             | GitHub Username |
