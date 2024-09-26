@@ -125,16 +125,16 @@ def create_input_form(frame, team_name, color, row, col, conn, sock_broadcast):
         equipment_combobox = ttk.Combobox(frame, width=5, values=list(range(1, 31)))
         equipment_combobox.set("")  # Set default value
 
-        entry_id.grid(row=i + 2, column=col, padx=5, pady=2)
-        entry_codename.grid(row=i + 2, column=col + 1, padx=5, pady=2)
-        equipment_combobox.grid(row=i + 2, column=col + 2, padx=5, pady=2)
+        entry_id.grid(row=i + 3, column=col, padx=5, pady=2)
+        entry_codename.grid(row=i + 3, column=col + 1, padx=5, pady=2)
+        equipment_combobox.grid(row=i + 3, column=col + 2, padx=5, pady=2)
 
         # Bind the update_codename function to player ID field updates
         player_id_var.trace_add('write', lambda name, index, mode, pid_var=player_id_var, codename=entry_codename: update_codename(pid_var, codename, conn))
 
         # Add enter button to validate and broadcast
         enter_button = tk.Button(frame, text="Enter", command=lambda pid_var=player_id_var, codename=entry_codename, equip=equipment_combobox: validate_and_broadcast(pid_var, codename, equip, conn, sock_broadcast))
-        enter_button.grid(row=i + 4, column=col + 3, padx=5, pady=2)
+        enter_button.grid(row=i + 3, column=col + 3, padx=5, pady=2)
 
         entries.append((entry_id, entry_codename, equipment_combobox))
 
