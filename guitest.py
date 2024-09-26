@@ -98,7 +98,7 @@ def validate_and_broadcast(player_id_var, codename_entry, equipment_entry, conn,
 
     equipment_id = equipment_entry.get()
     if equipment_id:
-        message = f"Player ID: {player_id}, Equipment ID: {equipment_id}"
+        message = f"Equipment ID: {equipment_id}"
         sock_broadcast.sendto(message.encode(), ('<broadcast>', 7500))  # Broadcast on port 7500
         print(f"Sent: {message}")  # Log the sent message
     else:
