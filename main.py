@@ -113,9 +113,9 @@ def create_input_form(frame, team_name, color, row, col, conn, sock_broadcast):
     team_label = tk.Label(frame, text=team_name, bg=color, font=("Arial", 12, "bold"), width=10)
     team_label.grid(row=0, column=col, padx=10)
 
-    tk.Label(frame, text="ID", font=("Arial", 10, "bold"), width=8).grid(row=1, column=col, padx=5)
-    tk.Label(frame, text="Codename", font=("Arial", 10, "bold"), width=10).grid(row=1, column=col + 1, padx=5)
-    tk.Label(frame, text="Equipment", font=("Arial", 10, "bold"), width=10).grid(row=1, column=col + 2, padx=5)
+    tk.Label(frame, text="ID", font=("Arial", 10, "bold"), width=8).grid(row=2, column=col, padx=5)
+    tk.Label(frame, text="Codename", font=("Arial", 10, "bold"), width=10).grid(row=2, column=col + 1, padx=5)
+    tk.Label(frame, text="Equipment", font=("Arial", 10, "bold"), width=10).grid(row=2, column=col + 2, padx=5)
 
     entries = []
     for i in range(15):
@@ -225,8 +225,8 @@ sock_broadcast, sock_receive = setup_udp_sockets()
 receive_thread = threading.Thread(target=listen_for_data, args=(sock_receive,), daemon=True)
 receive_thread.start()
 
-team1_entries = create_input_form(frame, "Team 1", "white", 0, 0, conn, sock_broadcast)
-team2_entries = create_input_form(frame, "Team 2", "white", 0, 4, conn, sock_broadcast)
+team1_entries = create_input_form(frame, "Red Team", "white", 0, 0, conn, sock_broadcast)
+team2_entries = create_input_form(frame, "Blue Team", "white", 0, 4, conn, sock_broadcast)
 
 # Buttons
 button_frame = tk.Frame(root, bg='black')
