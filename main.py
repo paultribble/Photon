@@ -72,9 +72,12 @@ def update_codename(player_id_var, codename_entry, conn):
 
         if result:
             codename_entry.insert(0, result[0])  # Insert codename
+            codename_entry.config(fg='gray')    # Reset color to gray
         else:
             codename_entry.insert(0, "Invalid ID")
-
+            codename_entry.config(fg='gray')  # Set text color to gray
+    else:
+        codename_entry.config(fg='black')  # Reset color to black for non-numeric input
     # Set the codename entry back to read-only
     codename_entry.config(state='readonly')
 
