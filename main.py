@@ -225,8 +225,8 @@ sock_broadcast, sock_receive = setup_udp_sockets()
 receive_thread = threading.Thread(target=listen_for_data, args=(sock_receive,), daemon=True)
 receive_thread.start()
 
-team1_entries = create_input_form(frame, "Red Team", "red", -1, 0, conn, sock_broadcast)
-team2_entries = create_input_form(frame, "Blue Team", "blue", -1, 4, conn, sock_broadcast)
+team1_entries = create_input_form(frame, "Red Team", "red", 0, 0, conn, sock_broadcast)
+team2_entries = create_input_form(frame, "Blue Team", "blue", 0, 4, conn, sock_broadcast)
 
 # Buttons
 button_frame = tk.Frame(root, bg='black')
