@@ -113,9 +113,9 @@ def create_input_form(frame, team_name, color, row, col, conn, sock_broadcast):
     team_label = tk.Label(frame, text=team_name, bg=color, font=("Arial", 12, "bold"), width=10)
     team_label.grid(row=0, column=col, padx=10)
 
-    tk.Label(frame, text="ID", font=("Arial", 10, "bold"), width=8).grid(row=2, column=col, padx=5)
-    tk.Label(frame, text="Codename", font=("Arial", 10, "bold"), width=10).grid(row=2, column=col + 1, padx=5)
-    tk.Label(frame, text="Equipment", font=("Arial", 10, "bold"), width=10).grid(row=2, column=col + 2, padx=5)
+    tk.Label(frame, text="ID", font=("Arial", 10, "bold"), width=8).grid(row=1, column=col, padx=5)
+    tk.Label(frame, text="Codename", font=("Arial", 10, "bold"), width=10).grid(row=1, column=col + 1, padx=5)
+    tk.Label(frame, text="Equipment", font=("Arial", 10, "bold"), width=10).grid(row=1, column=col + 2, padx=5)
 
     entries = []
     for i in range(15):
@@ -125,9 +125,9 @@ def create_input_form(frame, team_name, color, row, col, conn, sock_broadcast):
         equipment_combobox = ttk.Combobox(frame, width=5, values=list(range(1, 31)))
         equipment_combobox.set("")  # Set default value
 
-        entry_id.grid(row=i + 2, column=col, padx=5, pady=2)
-        entry_codename.grid(row=i + 2, column=col + 1, padx=5, pady=2)
-        equipment_combobox.grid(row=i + 2, column=col + 2, padx=5, pady=2)
+        entry_id.grid(row=i + 3, column=col, padx=5, pady=2)
+        entry_codename.grid(row=i + 3, column=col + 1, padx=5, pady=2)
+        equipment_combobox.grid(row=i + 3, column=col + 2, padx=5, pady=2)
 
         # Bind the update_codename function to player ID field updates
         player_id_var.trace_add('write', lambda name, index, mode, pid_var=player_id_var, codename=entry_codename: update_codename(pid_var, codename, conn))
