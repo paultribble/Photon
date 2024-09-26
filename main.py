@@ -61,7 +61,8 @@ def start_main_window():
 def update_codename(player_id_var, codename_entry, conn):
     player_id = player_id_var.get()
 
-    # Clear the codename entry field before updating
+    # Temporarily allow writing to the codename entry
+    codename_entry.config(state='normal')
     codename_entry.delete(0, tk.END)
 
     if player_id.isdigit():  # Check if the input is numeric
@@ -71,12 +72,12 @@ def update_codename(player_id_var, codename_entry, conn):
 
         if result:
             codename_entry.insert(0, result[0])  # Insert codename
-            codename_entry.config(fg='gray')    # Reset color to black
         else:
             codename_entry.insert(0, "Invalid ID")
-            codename_entry.config(fg='gray')  # Set text color to gray
-    else:
-        codename_entry.config(fg='black')  # Reset color to black for non-numeric input
+
+    # Set the codename entry back to read-only
+    codename_entry.config(state='readonly')
+
 
 # Modified validate_and_broadcast to reset the color once Enter is pressed
 def validate_and_broadcast(player_id_var, codename_entry, equipment_entry, conn, sock_broadcast):
