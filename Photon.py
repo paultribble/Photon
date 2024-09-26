@@ -239,4 +239,3 @@ clear_db_button.grid(row=0, column=3, padx=10, pady=5)
 button_frame.place(relx=0.5, rely=0.9, anchor='center')
 
 root.mainloop()
-
