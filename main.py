@@ -113,9 +113,9 @@ def create_input_form(frame, team_name, color, row, col, conn, sock_broadcast):
     team_label = tk.Label(frame, text=team_name, bg=color, font=("Arial", 12, "bold"), width=10)
     team_label.grid(row=0, column=col, padx=10)
 
-    tk.Label(frame, text="ID", font=("Arial", 10, "bold"), width=8).grid(row=1, column=col, padx=5)
-    tk.Label(frame, text="Codename", font=("Arial", 10, "bold"), width=10).grid(row=1, column=col + 1, padx=5)
-    tk.Label(frame, text="Equipment", font=("Arial", 10, "bold"), width=10).grid(row=1, column=col + 2, padx=5)
+    tk.Label(frame, text="ID", font=("Arial", 10, "bold"), width=8).grid(row=1.5, column=col, padx=5)
+    tk.Label(frame, text="Codename", font=("Arial", 10, "bold"), width=10).grid(row=1.5, column=col + 1, padx=5)
+    tk.Label(frame, text="Equipment", font=("Arial", 10, "bold"), width=10).grid(row=1.5, column=col + 2, padx=5)
 
     entries = []
     for i in range(15):
@@ -134,7 +134,7 @@ def create_input_form(frame, team_name, color, row, col, conn, sock_broadcast):
 
         # Add enter button to validate and broadcast
         enter_button = tk.Button(frame, text="Enter", command=lambda pid_var=player_id_var, codename=entry_codename, equip=equipment_combobox: validate_and_broadcast(pid_var, codename, equip, conn, sock_broadcast))
-        enter_button.grid(row=i + 2, column=col + 3, padx=5, pady=2)
+        enter_button.grid(row=i + 3, column=col + 3, padx=5, pady=2)
 
         entries.append((entry_id, entry_codename, equipment_combobox))
 
