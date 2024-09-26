@@ -122,7 +122,7 @@ def create_input_form(frame, team_name, color, row, col, conn, sock_broadcast):
         player_id_var = tk.StringVar()
         entry_id = tk.Entry(frame, width=8, textvariable=player_id_var)
         entry_codename = tk.Entry(frame, width=15, state='readonly')
-        equipment_combobox = ttk.Combobox(frame, width=5, values=list(range(1, 31)))
+        equipment_combobox = ttk.Combobox(frame, width=5, values=list(range(1, 999)))
         equipment_combobox.set("")  # Set default value
 
         entry_id.grid(row=i + 3, column=col, padx=5, pady=2)
