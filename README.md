@@ -1,14 +1,42 @@
-# Photon
+
+Photon Laser Tag Setup
+Overview
+This project is a Photon Laser Tag setup application that uses Tkinter for the graphical interface, UDP sockets for communication, and PostgreSQL for managing player data. The game allows for the entry and management of players across two teams, with broadcast capabilities for equipment IDs.
 
 
+Step-by-Step Installation
+Install Python 3.x: Download and install Python from the official website: https://www.python.org/downloads/
+
+Install Required Python Packages:
+socket
+threading
+random
+psycopg2
+sys
+tkinter
+Pillow
 
 
-Python
+File Structure
 
-pip install psycopg2-binary
-pip install tkinter
-sudo apt update
-sudo apt install python3-tk
+project_root/
+│
+├── main.py               # Main application script
+├── Images/
+│   └── logo.jpg          # Logo image used for the splash screen
+└── README.md             # This ReadMe file
+
+main.py: The main script that contains all functionality (UI, UDP communication, database handling).
+Images/: Contains the logo image (logo.jpg) used in the splash screen.
+
+How to Run the Program
+Run the main.py script:
+
+python3 main.py
+
+
+The splash screen will appear, followed by the main window where you can enter player data for two teams, view the player database, and broadcast equipment IDs.
+
 
 | Real Name             | GitHub Username |
 |-----------------------|-----------------|
