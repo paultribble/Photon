@@ -34,6 +34,7 @@ def main():
 
     # Function to start the game (open Play Action Screen)
     def start_game(red_team_players, blue_team_players):
+        udp_comm.broadcast_message("202")  # Send the 202 broadcast message
         play_screen = PlayActionScreen(root, udp_comm, red_team_players, blue_team_players)
 
     # Handle application exit to ensure sockets are closed
