@@ -3,14 +3,11 @@ import psycopg2
 import sys
 
 class Database:
-    def __init__(self, dbname="photon", user="student", password=None, host="localhost", port="5432"):
+    def __init__(self, dbname="photon", user="student"):
         try:
             self.conn = psycopg2.connect(
                 dbname=dbname,
                 user=user,
-                password=password,
-                host=host,
-                port=port
             )
             self.conn.autocommit = True
         except Exception as e:
