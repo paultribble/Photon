@@ -5,6 +5,7 @@ from udp_communication import UDPCommunication
 from splash_screen import SplashScreen
 from setup_screen import SetupScreen
 from play_action_screen import PlayActionScreen
+import atexit
 
 def main():
     # Initialize the main Tkinter window
@@ -32,8 +33,8 @@ def main():
     root.after(3000, show_setup_screen)  # Schedule to show setup screen after splash
 
     # Function to start the game (open Play Action Screen)
-    def start_game():
-        play_screen = PlayActionScreen(root, udp_comm)
+    def start_game(red_team_players, blue_team_players):
+        play_screen = PlayActionScreen(root, udp_comm, red_team_players, blue_team_players)
 
     # Handle application exit to ensure sockets are closed
     def on_close():
@@ -42,6 +43,9 @@ def main():
         root.destroy()
 
     root.protocol("WM_DELETE_WINDOW", on_close)
+
+    # Register cleanup in case of unexpected exits
+    atexit.register(on_close)
 
     # Start the Tkinter event loop
     root.mainloop()
