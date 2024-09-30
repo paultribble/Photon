@@ -1,7 +1,28 @@
-# play_action_screen.py
 import tkinter as tk
 from tkinter import ttk, scrolledtext
 import threading
+import socket
+
+class UDPCommunication:
+    def __init__(self, broadcast_port, client_port):
+        self.broadcast_port = broadcast_port
+        self.client_port = client_port
+        self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.server_socket.bind(('', self.client_port))
+        self.listener_thread = None
+
+    def broadcast_message(self, message):
+        self.server_socket.sendto(str.encode(message), ('<broadcast>', self.broadcast_port))
+
+    def start_listener(self, message_handler):
+        self.listener_thread = threading.Thread(target=self.listen_for_messages, args=(message_handler,))
+        self.listener_thread.start()
+
+    def listen_for_messages(self, message_handler):
+        while True:
+            data, addr = self.server_socket.recvfrom(1024)
+            message = data.decode('utf-8')
+            message_handler(message, addr)
 
 class PlayActionScreen:
     def __init__(self, parent, udp_comm, red_team_players, blue_team_players):
@@ -53,26 +74,47 @@ class PlayActionScreen:
             team_labels_dict[codename] = label
 
     def handle_udp_message(self, message, addr):
-        # Parse the message and update scores or log events
-        # Example messages:
-        # "Tag: PlayerA tagged PlayerB"
-        # "Capture: PlayerC captured Base"
-        # "Score: PlayerD scored a point"
-
+        # Handle the received UDP message
         if message.startswith("Score:"):
             # Example: "Score: PlayerD scored a point"
-            try:
-                parts = message.split(":")
-                if len(parts) >= 2:
-                    action = parts[1].strip()
-                    codename = action.split()[0]  # Assuming format "PlayerD scored a point"
-                    self.update_score(codename, increment=1)
-                    self.log_event(f"{codename} scored a point!")
-            except Exception as e:
-                self.log_event(f"Error parsing score message: {message}")
+            self.process_score_message(message)
+        elif message == "53":
+            self.handle_base_score("green")
+        elif message == "43":
+            self.handle_base_score("red")
         else:
-            # Log other game actions
-            self.log_event(f"{message} from {addr}")
+            self.process_hit_message(message)
+
+    def process_score_message(self, message):
+        try:
+            parts = message.split(":")
+            if len(parts) >= 2:
+                action = parts[1].strip()
+                codename = action.split()[0]  # Assuming format "PlayerD scored a point"
+                self.update_score(codename, increment=1)
+                self.log_event(f"{codename} scored a point!")
+        except Exception as e:
+            self.log_event(f"Error parsing score message: {message}")
+
+    def handle_base_score(self, team_color):
+        if team_color == "green":
+            for codename in self.blue_team_scores:
+                self.update_score(codename, increment=100)
+                self.log_event(f"{codename} scored 100 points! [Green Base Captured]")
+        elif team_color == "red":
+            for codename in self.red_team_scores:
+                self.update_score(codename, increment=100)
+                self.log_event(f"{codename} scored 100 points! [Red Base Captured]")
+
+    def process_hit_message(self, message):
+        # Example message format: "equipment_id:equipment_id"
+        try:
+            transmitting_id, hit_id = map(int, message.split(':'))
+            self.log_event(f"Player {hit_id} was hit by player {transmitting_id}.")
+            # Optionally, send back the equipment ID of the player that got hit
+            self.udp_comm.broadcast_message(str(hit_id))
+        except ValueError:
+            self.log_event(f"Invalid message format received: {message}")
 
     def update_score(self, codename, increment=1):
         # Check if codename is in red team
@@ -94,3 +136,6 @@ class PlayActionScreen:
 
     def on_close(self):
         self.play_screen.destroy()
+        # Optionally, stop the UDP listener thread
+        if self.udp_comm.listener_thread is not None:
+            self.udp_comm.listener_thread.join()
