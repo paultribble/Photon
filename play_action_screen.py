@@ -110,9 +110,12 @@ class PlayActionScreen:
         # Example message format: "equipment_id:equipment_id"
         try:
             transmitting_id, hit_id = map(int, message.split(':'))
-            self.log_event(f"Player {hit_id} was hit by player {transmitting_id}.")
-            # Optionally, send back the equipment ID of the player that got hit
-            self.udp_comm.broadcast_message(str(hit_id))
+            transmitting_codename = self.get_codename_by_equipment_id(transmitting_id)
+            hit_codename = self.get_codename_by_equipment_id(hit_id)
+            if transmitting_codename and hit_codename:
+                self.log_event(f"{hit_codename} was hit by {transmitting_codename}.")
+                # Optionally, send back the equipment ID of the player that got hit
+                self.udp_comm.broadcast_message(str(hit_id))
         except ValueError:
             self.log_event(f"Invalid message format received: {message}")
 
