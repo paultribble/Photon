@@ -119,6 +119,12 @@ class PlayActionScreen:
         except ValueError:
             self.log_event(f"Invalid message format received: {message}")
 
+    def get_codename_by_equipment_id(self, equipment_id):
+        # Assuming you have a mapping of equipment IDs to codenames
+        # You need to define how you map equipment IDs to player codenames
+        equipment_to_codename = {1: 'PlayerA', 2: 'PlayerB', 3: 'PlayerC', 4: 'PlayerD', 5: 'PlayerE'}  # Example mapping
+        return equipment_to_codename.get(equipment_id)
+
     def update_score(self, codename, increment=1):
         # Check if codename is in red team
         if codename in self.red_team_scores:
