@@ -1,6 +1,6 @@
 # setup_screen.py
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, simpledialog
 import random
 
 class SetupScreen:
@@ -12,6 +12,10 @@ class SetupScreen:
 
         self.frame = tk.Frame(parent, bg='black')
         self.frame.pack(expand=True, fill='both')
+
+        # Lists to store team players
+        self.red_team_players = []
+        self.blue_team_players = []
 
         self.create_widgets()
 
@@ -28,10 +32,10 @@ class SetupScreen:
         self.team_frame.place(relx=0.5, rely=0.4, anchor='center')
 
         self.red_team_entries = self.create_input_form(
-            self.team_frame, "Red Team", "red", 0, 0
+            self.team_frame, "Red Team", "red", 0, 0, self.red_team_players
         )
         self.blue_team_entries = self.create_input_form(
-            self.team_frame, "Blue Team", "cyan", 0, 4
+            self.team_frame, "Blue Team", "cyan", 0, 4, self.blue_team_players
         )
 
         # Buttons Frame
@@ -80,7 +84,7 @@ class SetupScreen:
             self.canvas.create_line(start_pos, end_pos, fill="red", width=2)
         self.canvas.after(800, self.draw_background)
 
-    def create_input_form(self, frame, team_name, color, row, col):
+    def create_input_form(self, frame, team_name, color, row, col, team_players_list):
         team_label = tk.Label(frame, text=team_name, bg=color, font=("Arial", 12, "bold"), width=10)
         team_label.grid(row=row, column=col, padx=10)
 
@@ -107,7 +111,7 @@ class SetupScreen:
             enter_button = tk.Button(
                 frame,
                 text="Enter",
-                command=lambda pid_var=player_id_var, codename=entry_codename, equip=equipment_combobox: self.validate_and_broadcast(pid_var, codename, equip),
+                command=lambda pid_var=player_id_var, codename=entry_codename, equip=equipment_combobox, team=team_players_list: self.validate_and_broadcast(pid_var, codename, equip, team),
                 width=8
             )
             enter_button.grid(row=i + row + 2, column=col + 3, padx=5, pady=2)
@@ -136,7 +140,7 @@ class SetupScreen:
 
         codename_entry.config(state='readonly')
 
-    def validate_and_broadcast(self, player_id_var, codename_entry, equipment_combobox):
+    def validate_and_broadcast(self, player_id_var, codename_entry, equipment_combobox, team_players_list):
         player_id = player_id_var.get()
         equipment_id = equipment_combobox.get()
 
@@ -148,6 +152,9 @@ class SetupScreen:
                 codename_entry.insert(0, codename)
                 codename_entry.config(fg='black')    # Reset color to black once validated
                 codename_entry.config(state='readonly')
+                # Add to team list if not already present
+                if codename not in team_players_list:
+                    team_players_list.append(codename)
             else:
                 codename_entry.config(state='normal')
                 codename_entry.delete(0, tk.END)
@@ -186,4 +193,4 @@ class SetupScreen:
                 messagebox.showerror("Error", "Failed to clear the database.")
 
     def start_game(self):
-        self.start_game_callback()
+        self.start_game_callback(self.red_team_players, self.blue_team_players)

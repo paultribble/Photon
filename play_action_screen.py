@@ -4,9 +4,15 @@ from tkinter import ttk, scrolledtext
 import threading
 
 class PlayActionScreen:
-    def __init__(self, parent, udp_comm):
+    def __init__(self, parent, udp_comm, red_team_players, blue_team_players):
         self.parent = parent
         self.udp_comm = udp_comm
+        self.red_team_players = red_team_players
+        self.blue_team_players = blue_team_players
+
+        # Initialize player scores
+        self.red_team_scores = {codename: 0 for codename in self.red_team_players}
+        self.blue_team_scores = {codename: 0 for codename in self.blue_team_players}
 
         self.play_screen = tk.Toplevel(parent)
         self.play_screen.title("Play Action Screen")
@@ -20,11 +26,11 @@ class PlayActionScreen:
         self.frame_blue_team.grid(row=0, column=2, padx=10, pady=10, sticky="n")
 
         # Initialize team score labels
-        self.red_team_scores = {}
-        self.blue_team_scores = {}
+        self.red_team_labels = {}
+        self.blue_team_labels = {}
 
-        self.setup_team_scores(self.frame_red_team, self.red_team_scores)
-        self.setup_team_scores(self.frame_blue_team, self.blue_team_scores)
+        self.setup_team_scores(self.frame_red_team, self.red_team_labels, self.red_team_scores)
+        self.setup_team_scores(self.frame_blue_team, self.blue_team_labels, self.blue_team_scores)
 
         # Game Action Area (Scrollable)
         self.frame_action = tk.LabelFrame(self.play_screen, text="Game Action", bg="black", fg="white", width=500, height=600)
@@ -34,27 +40,51 @@ class PlayActionScreen:
         self.game_action_text = scrolledtext.ScrolledText(self.frame_action, wrap=tk.WORD, width=60, height=30, state='disabled')
         self.game_action_text.pack(padx=10, pady=10)
 
-        # Bind UDP receive callback to update game action area
+        # Start UDP listener
         self.udp_comm.start_listener(self.handle_udp_message)
 
-    def setup_team_scores(self, frame, team_scores_dict):
-        # For simplicity, initialize all scores to 0
-        for i in range(15):
-            label = tk.Label(frame, text=f"Player {i+1}: 0", bg=frame.cget("bg"), fg="white", font=("Arial", 10))
+        # Handle window close
+        self.play_screen.protocol("WM_DELETE_WINDOW", self.on_close)
+
+    def setup_team_scores(self, frame, team_labels_dict, team_scores_dict):
+        for codename in team_scores_dict:
+            label = tk.Label(frame, text=f"{codename}: {team_scores_dict[codename]}", bg=frame.cget("bg"), fg="white", font=("Arial", 10))
             label.pack(anchor='w', padx=5, pady=2)
-            team_scores_dict[f"Player {i+1}"] = label
+            team_labels_dict[codename] = label
 
     def handle_udp_message(self, message, addr):
-        # Here you can parse the message and update scores or log events
-        # For simplicity, we'll log all messages to the game action area
-        game_event = f"{message} from {addr}"
-        print(game_event)  # Print to console
+        # Parse the message and update scores or log events
+        # Example messages:
+        # "Tag: PlayerA tagged PlayerB"
+        # "Capture: PlayerC captured Base"
+        # "Score: PlayerD scored a point"
 
-        # Update the game action text area
-        self.game_action_text.config(state='normal')  # Make text widget editable
-        self.game_action_text.insert(tk.END, game_event + "\n")  # Add new event
-        self.game_action_text.see(tk.END)  # Auto-scroll to the latest entry
-        self.game_action_text.config(state='disabled')  # Make it read-only again
+        if message.startswith("Score:"):
+            # Example: "Score: PlayerD scored a point"
+            try:
+                parts = message.split(":")
+                if len(parts) >= 2:
+                    action = parts[1].strip()
+                    codename = action.split()[0]  # Assuming format "PlayerD scored a point"
+                    self.update_score(codename, increment=1)
+                    self.log_event(f"{codename} scored a point!")
+            except Exception as e:
+                self.log_event(f"Error parsing score message: {message}")
+        else:
+            # Log other game actions
+            self.log_event(f"{message} from {addr}")
+
+    def update_score(self, codename, increment=1):
+        # Check if codename is in red team
+        if codename in self.red_team_scores:
+            self.red_team_scores[codename] += increment
+            self.red_team_labels[codename].config(text=f"{codename}: {self.red_team_scores[codename]}")
+        # Check if codename is in blue team
+        elif codename in self.blue_team_scores:
+            self.blue_team_scores[codename] += increment
+            self.blue_team_labels[codename].config(text=f"{codename}: {self.blue_team_scores[codename]}")
+        else:
+            self.log_event(f"Unknown player: {codename}")
 
     def log_event(self, event):
         self.game_action_text.config(state='normal')
@@ -62,5 +92,5 @@ class PlayActionScreen:
         self.game_action_text.see(tk.END)
         self.game_action_text.config(state='disabled')
 
-    def close_screen(self):
+    def on_close(self):
         self.play_screen.destroy()
