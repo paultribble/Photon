@@ -164,7 +164,7 @@ class SetupScreen:
                 return
 
         if equipment_id:
-            message = f"Equipment ID: {equipment_id}"
+            message = {equipment_id}
             self.udp_comm.send_broadcast(message)
             print(f"Sent: {message}")
         else:
