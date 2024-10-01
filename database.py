@@ -1,7 +1,7 @@
 # database.py
 import psycopg2
 import sys
-
+import random
 class Database:
     def __init__(self, dbname="photon", user="student"):
         try:
