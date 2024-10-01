@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk, scrolledtext
 import threading
 import socket
+import setup_screen
 
 class UDPCommunication:
     def __init__(self, broadcast_port, client_port):
