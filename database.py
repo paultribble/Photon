@@ -8,10 +8,7 @@ class Database:
         try:
             self.conn = psycopg2.connect(
                 dbname=dbname,
-                user=user,
-                password=password,
-                host=host,
-                port=port
+                user=user
             )
             self.conn.autocommit = True
         except Exception as e:
