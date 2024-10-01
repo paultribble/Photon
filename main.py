@@ -17,7 +17,7 @@ def main():
 
     # Initialize UDP Communication
     try:
-        udp_comm = UDPCommunication(broadcast_port=7500, client_port=7501)
+        udp_comm =  UDPCommunication(broadcast_port=7500, receive_port=7501)
     except OSError:
         print("Failed to bind UDP ports. Make sure no other application is using these ports.")
         return
