@@ -13,7 +13,7 @@ class SetupScreen:
         self.frame = tk.Frame(parent, bg='black')
         self.frame.pack(expand=True, fill='both')
 
-        # Lists to store team players as tuples of (equipment_id, codename)
+        # Lists to store team players
         self.red_team_players = []
         self.blue_team_players = []
 
@@ -88,70 +88,85 @@ class SetupScreen:
         team_label = tk.Label(frame, text=team_name, bg=color, font=("Arial", 12, "bold"), width=10)
         team_label.grid(row=row, column=col, padx=10)
 
-        tk.Label(frame, text="Equipment ID", font=("Arial", 10, "bold"), width=12, bg=color).grid(row=row+1, column=col, padx=5)
+        tk.Label(frame, text="ID", font=("Arial", 10, "bold"), width=8, bg=color).grid(row=row+1, column=col, padx=5)
         tk.Label(frame, text="Codename", font=("Arial", 10, "bold"), width=10, bg=color).grid(row=row+1, column=col+1, padx=5)
         tk.Label(frame, text="Equipment", font=("Arial", 10, "bold"), width=10, bg=color).grid(row=row+1, column=col+2, padx=5)
 
         entries = []
         for i in range(15):
-            equipment_id_var = tk.StringVar()
-            codename_var = tk.StringVar()
-            entry_equipment_id = tk.Entry(frame, width=12, textvariable=equipment_id_var)
-            entry_codename = tk.Entry(frame, width=10, textvariable=codename_var, state='readonly')
+            player_id_var = tk.StringVar()
+            entry_id = tk.Entry(frame, width=8, textvariable=player_id_var)
+            entry_codename = tk.Entry(frame, width=15, state='readonly')
             equipment_combobox = ttk.Combobox(frame, width=5, values=list(range(1, 31)))
             equipment_combobox.set("")  # Set default value
 
-            entry_equipment_id.grid(row=i + row + 2, column=col, padx=5, pady=2)
+            entry_id.grid(row=i + row + 2, column=col, padx=5, pady=2)
             entry_codename.grid(row=i + row + 2, column=col + 1, padx=5, pady=2)
             equipment_combobox.grid(row=i + row + 2, column=col + 2, padx=5, pady=2)
 
-            # Bind the update_codename function to equipment ID field updates
-            equipment_id_var.trace_add('write', lambda name, index, mode, eid_var=equipment_id_var, cname_var=codename_var: self.update_codename(eid_var, cname_var))
+            # Bind the update_codename function to player ID field updates
+            player_id_var.trace_add('write', lambda name, index, mode, pid_var=player_id_var, codename=entry_codename: self.update_codename(pid_var, codename, self.database))
 
             # Add enter button to validate and broadcast
             enter_button = tk.Button(
                 frame,
                 text="Enter",
-                command=lambda eid_var=equipment_id_var, cname_var=codename_var, equip=equipment_combobox, team=team_players_list: self.validate_and_broadcast(eid_var, cname_var, equip, team),
+                command=lambda pid_var=player_id_var, codename=entry_codename, equip=equipment_combobox, team=team_players_list: self.validate_and_broadcast(pid_var, codename, equip, team),
                 width=8
             )
             enter_button.grid(row=i + row + 2, column=col + 3, padx=5, pady=2)
 
-            entries.append((entry_equipment_id, entry_codename, equipment_combobox))
+            entries.append((entry_id, entry_codename, equipment_combobox))
 
         return entries
 
-    def update_codename(self, equipment_id_var, codename_var):
-        equipment_id = equipment_id_var.get()
+    def update_codename(self, player_id_var, codename_entry, database):
+        player_id = player_id_var.get()
 
         # Clear the codename entry field before updating
-        codename_var.set("")
+        codename_entry.config(state='normal')
+        codename_entry.delete(0, tk.END)
 
-        if equipment_id.isdigit():  # Check if the input is numeric
-            codename = self.database.get_codename(equipment_id)
+        if player_id.isdigit():  # Check if the input is numeric
+            codename = database.get_codename(player_id)
             if codename:
-                codename_var.set(codename)  # Insert codename
+                codename_entry.insert(0, codename)  # Insert codename
+                codename_entry.config(fg='gray')    # Set text color to gray
             else:
-                codename_var.set("Invalid ID")
+                codename_entry.insert(0, "Invalid ID")
+                codename_entry.config(fg='gray')  # Set text color to gray
         else:
-            codename_var.set("")  # Reset for non-numeric input
+            codename_entry.config(fg='black')  # Reset color to black for non-numeric input
 
-    def validate_and_broadcast(self, equipment_id_var, codename_var, equipment_combobox, team_players_list):
-        equipment_id = equipment_id_var.get()
-        codename = codename_var.get()
-        equipment_id_selected = equipment_combobox.get()
+        codename_entry.config(state='readonly')
 
-        if equipment_id and codename != "Invalid ID":
-            # Add to team list if not already present
-            if codename not in team_players_list:
-                team_players_list.append(codename)
-        else:
-            return
+    def validate_and_broadcast(self, player_id_var, codename_entry, equipment_combobox, team_players_list):
+        player_id = player_id_var.get()
+        equipment_id = equipment_combobox.get()
 
-        if equipment_id_selected:
-            # Assuming equipment_id_selected is unique and corresponds to a player's equipment ID
-            # Update the equipment_id_to_codename mapping here if needed
-            pass
+        if player_id:
+            codename = self.database.get_codename(player_id)
+            if codename:
+                codename_entry.config(state='normal')
+                codename_entry.delete(0, tk.END)
+                codename_entry.insert(0, codename)
+                codename_entry.config(fg='black')    # Reset color to black once validated
+                codename_entry.config(state='readonly')
+                # Add to team list if not already present
+                if codename not in team_players_list:
+                    team_players_list.append(codename)
+            else:
+                codename_entry.config(state='normal')
+                codename_entry.delete(0, tk.END)
+                codename_entry.insert(0, "Invalid ID")
+                codename_entry.config(fg='gray')  # Keep text gray if ID is invalid
+                codename_entry.config(state='readonly')
+                return
+
+        if equipment_id:
+            message = f"Equipment ID: {equipment_id}"
+            self.udp_comm.send_broadcast(message)
+            print(f"Sent: {message}")
         else:
             messagebox.showwarning("Warning", "Equipment ID cannot be empty.")
 
@@ -178,30 +193,4 @@ class SetupScreen:
                 messagebox.showerror("Error", "Failed to clear the database.")
 
     def start_game(self):
-        # Gather Red and Blue team player data
-        red_team_players = []
-        blue_team_players = []
-        equipment_id_to_codename = {}
-
-        # Collect data from Red Team
-        for entry in self.red_team_entries:
-            equipment_id = entry[0].get()  # Equipment ID entry
-            codename = entry[1].get()      # Codename entry
-            if equipment_id and codename != "Invalid ID":
-                red_team_players.append(codename)
-                equipment_id_to_codename[int(equipment_id)] = codename
-
-        # Collect data from Blue Team
-        for entry in self.blue_team_entries:
-            equipment_id = entry[0].get()  # Equipment ID entry
-            codename = entry[1].get()      # Codename entry
-            if equipment_id and codename != "Invalid ID":
-                blue_team_players.append(codename)
-                equipment_id_to_codename[int(equipment_id)] = codename
-
-        # Now start the game by passing the collected team data to the PlayActionScreen
-        if red_team_players and blue_team_players:
-            PlayActionScreen(self.parent, self.udp_comm, red_team_players, blue_team_players, equipment_id_to_codename)
-        else:
-            messagebox.showerror("Error", "Both teams must have at least one player to start the game.")
-
+        self.start_game_callback(self.red_team_players, self.blue_team_players)
