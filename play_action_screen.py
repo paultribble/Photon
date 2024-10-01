@@ -1,3 +1,4 @@
+# play_action_screen.py
 import tkinter as tk
 from tkinter import ttk, scrolledtext
 import threading
@@ -13,23 +14,29 @@ class UDPCommunication:
 
     def broadcast_message(self, message):
         self.server_socket.sendto(str.encode(message), ('<broadcast>', self.broadcast_port))
+        print(f"Broadcasted message: {message}")
 
     def start_listener(self, message_handler):
-        self.listener_thread = threading.Thread(target=self.listen_for_messages, args=(message_handler,))
+        self.listener_thread = threading.Thread(target=self.listen_for_messages, args=(message_handler,), daemon=True)
         self.listener_thread.start()
 
     def listen_for_messages(self, message_handler):
         while True:
-            data, addr = self.server_socket.recvfrom(1024)
-            message = data.decode('utf-8')
-            message_handler(message, addr)
+            try:
+                data, addr = self.server_socket.recvfrom(1024)
+                message = data.decode('utf-8')
+                message_handler(message, addr)
+            except Exception as e:
+                print(f"Error receiving UDP message: {e}")
+                break
 
 class PlayActionScreen:
-    def __init__(self, parent, udp_comm, red_team_players, blue_team_players):
+    def __init__(self, parent, udp_comm, red_team_players, blue_team_players, equipment_id_to_codename):
         self.parent = parent
         self.udp_comm = udp_comm
-        self.red_team_players = red_team_players
-        self.blue_team_players = blue_team_players
+        self.red_team_players = red_team_players  # List of codenames
+        self.blue_team_players = blue_team_players  # List of codenames
+        self.equipment_id_to_codename = equipment_id_to_codename  # Dict mapping equipment_id (int) to codename (str)
 
         # Initialize player scores
         self.red_team_scores = {codename: 0 for codename in self.red_team_players}
@@ -75,9 +82,11 @@ class PlayActionScreen:
 
     def handle_udp_message(self, message, addr):
         # Handle the received UDP message
-        if message.startswith("Score:"):
-            # Example: "Score: PlayerD scored a point"
-            self.process_score_message(message)
+        if message == "202":
+            self.log_event("Game Start!")
+        elif message == "221":
+            self.log_event("Game End!")
+            # Optionally, handle game end logic here
         elif message == "53":
             self.handle_base_score("green")
         elif message == "43":
@@ -85,45 +94,49 @@ class PlayActionScreen:
         else:
             self.process_hit_message(message)
 
-    def process_score_message(self, message):
-        try:
-            parts = message.split(":")
-            if len(parts) >= 2:
-                action = parts[1].strip()
-                codename = action.split()[0]  # Assuming format "PlayerD scored a point"
-                self.update_score(codename, increment=1)
-                self.log_event(f"{codename} scored a point!")
-        except Exception as e:
-            self.log_event(f"Error parsing score message: {message}")
-
-    def handle_base_score(self, team_color):
-        if team_color == "green":
-            for codename in self.blue_team_scores:
-                self.update_score(codename, increment=100)
-                self.log_event(f"{codename} scored 100 points! [Green Base Captured]")
-        elif team_color == "red":
-            for codename in self.red_team_scores:
-                self.update_score(codename, increment=100)
-                self.log_event(f"{codename} scored 100 points! [Red Base Captured]")
-
     def process_hit_message(self, message):
-        # Example message format: "equipment_id:equipment_id"
+        # Example message format: "transmitting_id:hit_id" (both integers)
         try:
             transmitting_id, hit_id = map(int, message.split(':'))
             transmitting_codename = self.get_codename_by_equipment_id(transmitting_id)
             hit_codename = self.get_codename_by_equipment_id(hit_id)
             if transmitting_codename and hit_codename:
                 self.log_event(f"{hit_codename} was hit by {transmitting_codename}.")
-                # Optionally, send back the equipment ID of the player that got hit
-                self.udp_comm.broadcast_message(str(hit_id))
+            else:
+                self.log_event(f"Received hit message with unknown equipment IDs: {transmitting_id}:{hit_id}")
         except ValueError:
             self.log_event(f"Invalid message format received: {message}")
 
     def get_codename_by_equipment_id(self, equipment_id):
-        # Assuming you have a mapping of equipment IDs to codenames
-        # You need to define how you map equipment IDs to player codenames
-        equipment_to_codename = {1: 'PlayerA', 2: 'PlayerB', 3: 'PlayerC', 4: 'PlayerD', 5: 'PlayerE'}  # Example mapping
-        return equipment_to_codename.get(equipment_id)
+        return self.equipment_id_to_codename.get(equipment_id, None)
+
+    def handle_base_score(self, team_color):
+        if team_color == "green":
+            # Green base scored, red team gets 100 points and "B" prefix
+            for codename in list(self.red_team_scores.keys()):
+                self.red_team_scores[codename] += 100
+                # Prepend "B " to the codename in the label if not already prefixed
+                if not codename.startswith("B "):
+                    new_codename = f"B {codename}"
+                    self.red_team_scores[new_codename] = self.red_team_scores.pop(codename)
+                    self.red_team_labels[new_codename] = self.red_team_labels.pop(codename)
+                    self.red_team_labels[new_codename].config(text=f"{new_codename}: {self.red_team_scores[new_codename]}")
+                else:
+                    new_codename = codename
+                self.log_event(f"{new_codename} scored 100 points! [Green Base Captured]")
+        elif team_color == "red":
+            # Red base scored, blue team gets 100 points and "B" prefix
+            for codename in list(self.blue_team_scores.keys()):
+                self.blue_team_scores[codename] += 100
+                # Prepend "B " to the codename in the label if not already prefixed
+                if not codename.startswith("B "):
+                    new_codename = f"B {codename}"
+                    self.blue_team_scores[new_codename] = self.blue_team_scores.pop(codename)
+                    self.blue_team_labels[new_codename] = self.blue_team_labels.pop(codename)
+                    self.blue_team_labels[new_codename].config(text=f"{new_codename}: {self.blue_team_scores[new_codename]}")
+                else:
+                    new_codename = codename
+                self.log_event(f"{new_codename} scored 100 points! [Red Base Captured]")
 
     def update_score(self, codename, increment=1):
         # Check if codename is in red team
@@ -145,6 +158,4 @@ class PlayActionScreen:
 
     def on_close(self):
         self.play_screen.destroy()
-        # Optionally, stop the UDP listener thread
-        if self.udp_comm.listener_thread is not None:
-            self.udp_comm.listener_thread.join()
+        # Optionally, stop the UDP listener thread if implemented

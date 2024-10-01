@@ -27,19 +27,18 @@ class UDPCommunication:
             raise e
         return sock
 
-    def start_listener(self, callback):
-        self.receive_callback = callback
-        self.listener_thread = threading.Thread(target=self.listen_for_data, daemon=True)
+    def start_listener(self, message_handler):
+        self.listener_thread = threading.Thread(target=self.listen_for_messages, args=(message_handler,), daemon=True)
         self.listener_thread.start()
 
-    def listen_for_data(self):
+    def listen_for_messages(self, message_handler):
         while True:
             try:
-                data, addr = self.sock_receive.recvfrom(1024)
-                if self.receive_callback:
-                    self.receive_callback(data.decode(), addr)
+                data, addr = self.server_socket.recvfrom(1024)
+                message = data.decode('utf-8')
+                message_handler(message, addr)
             except Exception as e:
-                print(f"Error receiving UDP data: {e}")
+                print(f"Error receiving UDP message: {e}")
                 break
 
     def send_broadcast(self, message):
