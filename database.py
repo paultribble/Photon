@@ -29,15 +29,19 @@ class Database:
         try:
             cursor = self.conn.cursor()
             while True:
-                new_id = random.randint(1, 99)
+                new_id = random.randint(1, 999999)  # Increase the range here
                 cursor.execute("SELECT * FROM players WHERE id = %s", (new_id,))
                 if cursor.fetchone() is None:
                     cursor.execute("INSERT INTO players (id, codename) VALUES (%s, %s)", (new_id, codename))
                     cursor.close()
                     return new_id
-        except Exception as e:
-            print(f"Database error: {e}")
+        except psycopg2.DatabaseError as e:
+            print(f"Database error during player insertion: {e}")
             return None
+        except Exception as e:
+            print(f"Unexpected error during player insertion: {e}")
+            return None
+
 
     def delete_player(self, player_id):
         try:
