@@ -177,6 +177,31 @@ class SetupScreen:
             else:
                 messagebox.showerror("Error", "Failed to clear the database.")
 
-    def start_game(self, red_team_players, blue_team_players, equipment_id_to_codename):
-        # This method should be defined to start the game
-        pass
+    def start_game(self):
+        # Gather Red and Blue team player data
+        red_team_players = []
+        blue_team_players = []
+        equipment_id_to_codename = {}
+
+        # Collect data from Red Team
+        for entry in self.red_team_entries:
+            equipment_id = entry[0].get()  # Equipment ID entry
+            codename = entry[1].get()      # Codename entry
+            if equipment_id and codename != "Invalid ID":
+                red_team_players.append(codename)
+                equipment_id_to_codename[int(equipment_id)] = codename
+
+        # Collect data from Blue Team
+        for entry in self.blue_team_entries:
+            equipment_id = entry[0].get()  # Equipment ID entry
+            codename = entry[1].get()      # Codename entry
+            if equipment_id and codename != "Invalid ID":
+                blue_team_players.append(codename)
+                equipment_id_to_codename[int(equipment_id)] = codename
+
+        # Now start the game by passing the collected team data to the PlayActionScreen
+        if red_team_players and blue_team_players:
+            PlayActionScreen(self.parent, self.udp_comm, red_team_players, blue_team_players, equipment_id_to_codename)
+        else:
+            messagebox.showerror("Error", "Both teams must have at least one player to start the game.")
+

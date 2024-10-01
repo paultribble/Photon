@@ -12,6 +12,7 @@ class PlayActionScreen:
         self.blue_team_players = blue_team_players  # List of codenames
         self.equipment_id_to_codename = equipment_id_to_codename  # Dict mapping equipment_id (int) to codename (str)
 
+
         # Initialize player scores
         self.red_team_scores = {codename: 0 for codename in self.red_team_players}
         self.blue_team_scores = {codename: 0 for codename in self.blue_team_players}
