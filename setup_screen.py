@@ -171,13 +171,43 @@ class SetupScreen:
             messagebox.showwarning("Warning", "Equipment ID cannot be empty.")
 
     def add_new_player(self):
-        codename = simpledialog.askstring("Input", "Enter New Codename:", parent=self.parent)
-        if codename:
-            new_id = self.database.add_player(codename)
+        # Create a new top-level window for entering player details
+        new_player_window = tk.Toplevel(self.parent)
+        new_player_window.title("Add New Player")
+
+        tk.Label(new_player_window, text="Enter Player ID (Leave blank for random):").pack(pady=5)
+        id_entry = tk.Entry(new_player_window, width=20)
+        id_entry.pack(pady=5)
+
+        tk.Label(new_player_window, text="Enter Codename:").pack(pady=5)
+        codename_entry = tk.Entry(new_player_window, width=20)
+        codename_entry.pack(pady=5)
+
+        def save_player():
+            player_id = id_entry.get().strip()
+            codename = codename_entry.get().strip()
+
+        # If ID is empty, generate a random ID
+            if player_id == "":
+                player_id = None  # Will be generated randomly
+            else:
+             # Validate player ID input
+                if not player_id.isdigit():
+                    messagebox.showerror("Error", "Player ID must be numeric.")
+                    return
+                player_id = int(player_id)
+
+            # Try to add the player to the database
+            new_id = self.database.add_player(codename, player_id)
             if new_id:
                 messagebox.showinfo("Success", f"New Player Added: ID={new_id}, Codename={codename}")
+                new_player_window.destroy()  # Close the window
             else:
                 messagebox.showerror("Error", "Failed to add new player.")
+
+        save_button = tk.Button(new_player_window, text="Save Player", command=save_player)
+        save_button.pack(pady=10)
+
 
     def view_player_database(self):
         from database_screen import DatabaseScreen

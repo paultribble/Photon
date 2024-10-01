@@ -25,21 +25,30 @@ class Database:
             print(f"Database error: {e}")
             return None
 
-    def add_player(self, codename):
+    def add_player(self, codename, player_id=None):
         try:
             cursor = self.conn.cursor()
-            while True:
-                new_id = random.randint(1, 999999)  # Increase the range here
-                cursor.execute("SELECT * FROM players WHERE id = %s", (new_id,))
-                if cursor.fetchone() is None:
-                    cursor.execute("INSERT INTO players (id, codename) VALUES (%s, %s)", (new_id, codename))
+            
+            if player_id is None or player_id == "":  # If ID is not provided, generate a random ID
+                while True:
+                    player_id = random.randint(1, 99)
+                    cursor.execute("SELECT * FROM players WHERE id = %s", (player_id,))
+                    if cursor.fetchone() is None:
+                        break
+            
+            else:  # If ID is provided, ensure it's unique
+                cursor.execute("SELECT * FROM players WHERE id = %s", (player_id,))
+                if cursor.fetchone() is not None:
+                    print(f"Error: Player ID {player_id} already exists.")
                     cursor.close()
-                    return new_id
-        except psycopg2.DatabaseError as e:
-            print(f"Database error during player insertion: {e}")
-            return None
+                    return None
+
+            cursor.execute("INSERT INTO players (id, codename) VALUES (%s, %s)", (player_id, codename))
+            cursor.close()
+            return player_id
+        
         except Exception as e:
-            print(f"Unexpected error during player insertion: {e}")
+            print(f"Database error: {e}")
             return None
 
 
