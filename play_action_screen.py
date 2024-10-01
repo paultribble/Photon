@@ -4,32 +4,6 @@ from tkinter import ttk, scrolledtext
 import threading
 import socket
 
-class UDPCommunication:
-    def __init__(self, broadcast_port, client_port):
-        self.broadcast_port = broadcast_port
-        self.client_port = client_port
-        self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.server_socket.bind(('', self.client_port))
-        self.listener_thread = None
-
-    def broadcast_message(self, message):
-        self.server_socket.sendto(str.encode(message), ('<broadcast>', self.broadcast_port))
-        print(f"Broadcasted message: {message}")
-
-    def start_listener(self, message_handler):
-        self.listener_thread = threading.Thread(target=self.listen_for_messages, args=(message_handler,), daemon=True)
-        self.listener_thread.start()
-
-    def listen_for_messages(self, message_handler):
-        while True:
-            try:
-                data, addr = self.server_socket.recvfrom(1024)
-                message = data.decode('utf-8')
-                message_handler(message, addr)
-            except Exception as e:
-                print(f"Error receiving UDP message: {e}")
-                break
-
 class PlayActionScreen:
     def __init__(self, parent, udp_comm, red_team_players, blue_team_players, equipment_id_to_codename):
         self.parent = parent
@@ -112,31 +86,19 @@ class PlayActionScreen:
 
     def handle_base_score(self, team_color):
         if team_color == "green":
-            # Green base scored, red team gets 100 points and "B" prefix
-            for codename in list(self.red_team_scores.keys()):
+            # Green base scored, red team gets points and "B" prefix
+            for codename in self.red_team_scores:
                 self.red_team_scores[codename] += 100
-                # Prepend "B " to the codename in the label if not already prefixed
-                if not codename.startswith("B "):
-                    new_codename = f"B {codename}"
-                    self.red_team_scores[new_codename] = self.red_team_scores.pop(codename)
-                    self.red_team_labels[new_codename] = self.red_team_labels.pop(codename)
-                    self.red_team_labels[new_codename].config(text=f"{new_codename}: {self.red_team_scores[new_codename]}")
-                else:
-                    new_codename = codename
-                self.log_event(f"{new_codename} scored 100 points! [Green Base Captured]")
+                # Prepend "B " to the codename in the label
+                self.red_team_labels[codename].config(text=f"B {codename}: {self.red_team_scores[codename]}")
+                self.log_event(f"{codename} scored 100 points! [Green Base Captured]")
         elif team_color == "red":
-            # Red base scored, blue team gets 100 points and "B" prefix
-            for codename in list(self.blue_team_scores.keys()):
+            # Red base scored, blue team gets points and "B" prefix
+            for codename in self.blue_team_scores:
                 self.blue_team_scores[codename] += 100
-                # Prepend "B " to the codename in the label if not already prefixed
-                if not codename.startswith("B "):
-                    new_codename = f"B {codename}"
-                    self.blue_team_scores[new_codename] = self.blue_team_scores.pop(codename)
-                    self.blue_team_labels[new_codename] = self.blue_team_labels.pop(codename)
-                    self.blue_team_labels[new_codename].config(text=f"{new_codename}: {self.blue_team_scores[new_codename]}")
-                else:
-                    new_codename = codename
-                self.log_event(f"{new_codename} scored 100 points! [Red Base Captured]")
+                # Prepend "B " to the codename in the label
+                self.blue_team_labels[codename].config(text=f"B {codename}: {self.blue_team_scores[codename]}")
+                self.log_event(f"{codename} scored 100 points! [Red Base Captured]")
 
     def update_score(self, codename, increment=1):
         # Check if codename is in red team
@@ -159,3 +121,4 @@ class PlayActionScreen:
     def on_close(self):
         self.play_screen.destroy()
         # Optionally, stop the UDP listener thread if implemented
+

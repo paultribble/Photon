@@ -1,35 +1,23 @@
 # database.py
 import psycopg2
 import sys
-import random
 
 class Database:
-    def __init__(self, dbname="photon", user="student", password=None, host="localhost", port="5432"):
+    def __init__(self, dbname="photon", user="student"):
         try:
             self.conn = psycopg2.connect(
                 dbname=dbname,
-                user=user
+                user=user,
             )
             self.conn.autocommit = True
         except Exception as e:
             print(f"Error connecting to PostgreSQL database: {e}")
             sys.exit(1)
 
-    def get_codename(self, equipment_id):
+    def get_codename(self, player_id):
         try:
             cursor = self.conn.cursor()
-            cursor.execute("SELECT codename FROM players WHERE equipment_id = %s", (equipment_id,))
-            result = cursor.fetchone()
-            cursor.close()
-            return result[0] if result else None
-        except Exception as e:
-            print(f"Database error: {e}")
-            return None
-
-    def get_equipment_id_by_codename(self, codename):
-        try:
-            cursor = self.conn.cursor()
-            cursor.execute("SELECT equipment_id FROM players WHERE codename = %s", (codename,))
+            cursor.execute("SELECT codename FROM players WHERE id = %s", (player_id,))
             result = cursor.fetchone()
             cursor.close()
             return result[0] if result else None
@@ -41,20 +29,20 @@ class Database:
         try:
             cursor = self.conn.cursor()
             while True:
-                new_id = random.randint(1, 9999)  # Adjust range as needed
-                cursor.execute("SELECT * FROM players WHERE equipment_id = %s", (new_id,))
+                new_id = random.randint(1, 99)
+                cursor.execute("SELECT * FROM players WHERE id = %s", (new_id,))
                 if cursor.fetchone() is None:
-                    cursor.execute("INSERT INTO players (equipment_id, codename) VALUES (%s, %s)", (new_id, codename))
+                    cursor.execute("INSERT INTO players (id, codename) VALUES (%s, %s)", (new_id, codename))
                     cursor.close()
                     return new_id
         except Exception as e:
             print(f"Database error: {e}")
             return None
 
-    def delete_player(self, equipment_id):
+    def delete_player(self, player_id):
         try:
             cursor = self.conn.cursor()
-            cursor.execute("DELETE FROM players WHERE equipment_id = %s", (equipment_id,))
+            cursor.execute("DELETE FROM players WHERE id = %s", (player_id,))
             cursor.close()
             return True
         except Exception as e:
@@ -64,7 +52,7 @@ class Database:
     def get_all_players(self):
         try:
             cursor = self.conn.cursor()
-            cursor.execute("SELECT equipment_id, codename FROM players ORDER BY codename ASC")
+            cursor.execute("SELECT id, codename FROM players ORDER BY codename ASC")
             players = cursor.fetchall()
             cursor.close()
             return players

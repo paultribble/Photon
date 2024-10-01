@@ -17,7 +17,7 @@ def main():
 
     # Initialize UDP Communication
     try:
-        udp_comm =  UDPCommunication(broadcast_port=7500, receive_port=7501)
+        udp_comm = UDPCommunication(broadcast_port=7500, receive_port=7501)
     except OSError:
         print("Failed to bind UDP ports. Make sure no other application is using these ports.")
         return
@@ -33,13 +33,9 @@ def main():
     root.after(3000, show_setup_screen)  # Schedule to show setup screen after splash
 
     # Function to start the game (open Play Action Screen)
-    def start_game(red_team_players, blue_team_players, equipment_id_to_codename):
-        # Broadcast message when the game starts
-        udp_comm.broadcast_message("202")  # Send the 202 broadcast message
-        print("Broadcasted message: 202")
-
-        # Initialize PlayActionScreen with the mapping
-        play_screen = PlayActionScreen(root, udp_comm, red_team_players, blue_team_players, equipment_id_to_codename)
+    def start_game(red_team_players, blue_team_players):
+        udp_comm.send_broadcast("202")  # Send the 202 broadcast message
+        play_screen = PlayActionScreen(root, udp_comm, red_team_players, blue_team_players)
 
     # Handle application exit to ensure sockets are closed
     def on_close():
@@ -57,4 +53,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

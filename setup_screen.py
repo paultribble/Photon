@@ -1,6 +1,7 @@
 # setup_screen.py
 import tkinter as tk
 from tkinter import ttk, messagebox, simpledialog
+import random
 
 class SetupScreen:
     def __init__(self, parent, database, udp_comm, start_game_callback):
@@ -15,9 +16,6 @@ class SetupScreen:
         # Lists to store team players as tuples of (equipment_id, codename)
         self.red_team_players = []
         self.blue_team_players = []
-
-        # Temporary mapping of equipment_id to codename
-        self.equipment_id_to_codename = {}
 
         self.create_widgets()
 
@@ -133,8 +131,6 @@ class SetupScreen:
             codename = self.database.get_codename(equipment_id)
             if codename:
                 codename_var.set(codename)  # Insert codename
-                # Update the temporary mapping
-                self.equipment_id_to_codename[int(equipment_id)] = codename
             else:
                 codename_var.set("Invalid ID")
         else:
@@ -165,8 +161,6 @@ class SetupScreen:
             new_id = self.database.add_player(codename)
             if new_id:
                 messagebox.showinfo("Success", f"New Player Added: ID={new_id}, Codename={codename}")
-                # Optionally, update the mapping
-                self.equipment_id_to_codename[new_id] = codename
             else:
                 messagebox.showerror("Error", "Failed to add new player.")
 
@@ -180,19 +174,9 @@ class SetupScreen:
             success = self.database.clear_players()
             if success:
                 messagebox.showinfo("Success", "Database has been cleared.")
-                # Clear the temporary mapping
-                self.equipment_id_to_codename.clear()
-                # Also clear the team players lists
-                self.red_team_players.clear()
-                self.blue_team_players.clear()
-                # Optionally, refresh the UI
             else:
                 messagebox.showerror("Error", "Failed to clear the database.")
 
-    def start_game(self, red_team_players, blue_team_players):
-        # Prepare the mapping to pass to PlayActionScreen
-        equipment_id_to_codename = self.equipment_id_to_codename.copy()
-
-        # Start the game via the callback
-        self.start_game_callback(red_team_players, blue_team_players, equipment_id_to_codename)
-
+    def start_game(self, red_team_players, blue_team_players, equipment_id_to_codename):
+        # This method should be defined to start the game
+        pass
