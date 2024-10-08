@@ -11,6 +11,9 @@ class DatabaseScreen:
         self.db_window.title("Player Database")
         self.db_window.geometry("400x600")
 
+        # Bind F12 to clear the database
+        self.db_window.bind("<F12>", self.clear_database)
+
         self.create_widgets()
 
     def create_widgets(self):
