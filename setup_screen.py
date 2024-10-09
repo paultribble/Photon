@@ -60,7 +60,7 @@ class SetupScreen:
 
         self.clear_db_button = tk.Button(
             self.button_frame,
-            text="Clear Database",
+            text="Clear Database (ESC)",
             command=self.clear_database,
             width=15
         )
