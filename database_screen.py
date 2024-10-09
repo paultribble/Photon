@@ -11,6 +11,9 @@ class DatabaseScreen:
         self.db_window.title("Player Database")
         self.db_window.geometry("400x600")
 
+        # Bind F12 to clear the database
+        self.db_window.bind("<Escape>", self.clear_database)
+
         self.create_widgets()
 
     def create_widgets(self):
@@ -35,3 +38,14 @@ class DatabaseScreen:
                 self.__init__(self.parent, self.database)  # Refresh the database screen
             else:
                 messagebox.showerror("Error", "Failed to delete the player.")
+    
+    def clear_database(self, event=None):
+        confirm = messagebox.askyesno("Confirm Clear", "Are you sure you want to clear all players from the database?")
+        if confirm:
+            success = self.database.clear_players()
+            if success:
+                messagebox.showinfo("Success", "All players have been cleared from the database.")
+                self.db_window.destroy()
+                self.__init__(self.parent, self.database)  # Refresh the database screen
+            else:
+                messagebox.showerror("Error", "Failed to clear the database.")
