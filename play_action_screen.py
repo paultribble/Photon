@@ -93,17 +93,23 @@ class PlayActionScreen:
                 self.log_event(f"{codename} scored 100 points! [Red Base Captured]")
 
     def process_hit_message(self, message):
-        # Example message format: "equipment_id:equipment_id"
         try:
             transmitting_id, hit_id = map(int, message.split(':'))
-            transmitting_codename = self.get_codename_by_equipment_id(transmitting_id)
-            hit_codename = self.get_codename_by_equipment_id(hit_id)
-            if transmitting_codename and hit_codename:
-                self.log_event(f"{hit_codename} was hit by {transmitting_codename}.")
-                # Optionally, send back the equipment ID of the player that got hit
-                self.udp_comm.broadcast_message(str(hit_id))
+        
+            transmitting_player = self.get_player_by_equipment(transmitting_id)
+            hit_player = self.get_player_by_equipment(hit_id)
+
+            if transmitting_player and hit_player:
+                self.log_event(f"{hit_player['codename']} was hit by {transmitting_player['codename']}.")
+                self.update_score(hit_player, increment=-1)  # Decrement hit player’s score
+
+                # Optionally broadcast back the hit equipment ID
+                #self.udp_comm.broadcast_message(str(hit_id))
+            else:
+                self.log_event("Hit or transmitting player not found.")
         except ValueError:
             self.log_event(f"Invalid message format received: {message}")
+
 
     def get_player_by_equipment(self, equipment_id):
         for team in [self.red_team, self.blue_team]:
@@ -115,6 +121,7 @@ class PlayActionScreen:
     def update_score(self, player, increment):
         player['score'] += increment
         player['label'].config(text=f"{player['codename']}: {player['score']}")
+        print(f"Updated {player['codename']}'s score to {player['score']}")  # Debugging log
 
     def log_event(self, event):
         self.game_action_text.config(state='normal')
