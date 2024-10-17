@@ -101,7 +101,7 @@ class PlayActionScreen:
 
             if transmitting_player and hit_player:
                 self.log_event(f"{hit_player['codename']} was hit by {transmitting_player['codename']}.")
-                self.update_score(hit_player, increment=-1)  # Decrement hit player’s score
+                self.update_score(transmitting_player, increment=100)  # Increment player score that tagged opposing player
 
                 # Optionally broadcast back the hit equipment ID
                 #self.udp_comm.broadcast_message(str(hit_id))
