@@ -3,7 +3,6 @@ from tkinter import ttk, scrolledtext
 import threading
 import socket
 import setup_screen
-import 
 
 class UDPCommunication:
     def __init__(self, broadcast_port, client_port):
@@ -150,3 +149,5 @@ class PlayActionScreen:
         # Optionally, stop the UDP listener thread
         if self.udp_comm.listener_thread is not None:
             self.udp_comm.listener_thread.join()
+
+    
