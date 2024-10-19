@@ -33,8 +33,18 @@ def main():
 
     # Function to start the game (open Play Action Screen)
     def start_game(red_team, blue_team):
-        udp_comm.send_broadcast("202")  # Send the 202 broadcast message
-        PlayActionScreen(root, udp_comm, red_team, blue_team)
+        countdown_time = 10  # 10 seconds countdown
+        timer_label = tk.Label(root, font=("Helvetica", 48))
+        timer_label.pack()  # Add the label to the window
+
+        def update_timer(remaining):
+            if remaining > 0:
+                timer_label.config(text=str(remaining))  # Update the label with remaining time
+                root.after(1000, update_timer, remaining - 1)  # Schedule the next update after 1 second
+            else:
+                udp_comm.send_broadcast("202")  # Send the 202 broadcast message
+                PlayActionScreen(root, udp_comm, red_team, blue_team)  # Start the game
+
 
     # Handle application exit to ensure sockets are closed
     def on_close():
