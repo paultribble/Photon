@@ -157,7 +157,7 @@ class PlayActionScreen:
             self.master.geometry("800x600")
 
             #Bind the F5 key to the startgame method
-            self.master.bind('<s>', self.startgame)
+            self.master.bind('<Key-s>', self.startgame)
 
         def startgame(self, event):
             broad_castport = 12345
