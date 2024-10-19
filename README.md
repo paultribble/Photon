@@ -40,6 +40,8 @@ This is for checking that the UDP messages are correctly sent.
 
 The splash screen will appear, followed by the main window where you can enter player data for two teams, view the player database, and press enter for each team member to submit ID, Codename, and Equipment ID Initialization over UDP broadcast.
 
+For the F5 key functionality, press 's' instead to accomplish the abilities because the F5 key does not work efficiently. Professor strother allows this as he allows the F12 key to be esc instead.
+
 
 | Real Name             | GitHub Username |
 |-----------------------|-----------------|
