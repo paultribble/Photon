@@ -3,6 +3,7 @@ from tkinter import ttk, scrolledtext
 import threading
 import socket
 import setup_screen
+import 
 
 class UDPCommunication:
     def __init__(self, broadcast_port, client_port):
@@ -156,7 +157,7 @@ class PlayActionScreen:
             self.master.title("Main Application")
             self.master.geometry("800x600")
 
-            #Bind the F5 key to the startgame method
+            #Bind the s key to the startgame method
             self.master.bind('<Key-s>', self.startgame)
 
         def startgame(self, event):
