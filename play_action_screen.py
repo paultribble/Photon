@@ -11,6 +11,8 @@ class UDPCommunication:
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.server_socket.bind(('', self.client_port))
         self.listener_thread = None
+        # NEW LGR
+        self.is_active = True
 
     def broadcast_message(self, message):
         self.server_socket.sendto(str.encode(message), ('<broadcast>', self.broadcast_port))
@@ -20,10 +22,14 @@ class UDPCommunication:
         self.listener_thread.start()
 
     def listen_for_messages(self, message_handler):
-        while True:
+        while self.is_active:
             data, addr = self.server_socket.recvfrom(1024)
             message = data.decode('utf-8')
             message_handler(message, addr)
+    
+    def stop_listener(self):
+        self.is_active = False
+        self.server_socket.close()
 
 class PlayActionScreen:
     def __init__(self, parent, udp_comm, red_team, blue_team):
@@ -35,6 +41,7 @@ class PlayActionScreen:
         self.play_screen = tk.Toplevel(parent)
         self.play_screen.title("Play Action Screen")
         self.play_screen.geometry("1000x800")
+        self.play_screen.protocol("WM_DELETE_WINDOW", self.on_close)
 
         self.frame_red_team = tk.LabelFrame(self.play_screen, text="Red Team", bg="red")
         self.frame_red_team.grid(row=0, column=0, padx=10, pady=10)
@@ -130,7 +137,38 @@ class PlayActionScreen:
         self.game_action_text.config(state='disabled')
 
     def on_close(self):
-        self.play_screen.destroy()
+        # OLD
+        # self.play_screen.destroy()
         # Optionally, stop the UDP listener thread
-        if self.udp_comm.listener_thread is not None:
+        # if self.udp_comm.listener_thread is not None:
+            # self.udp_comm.listener_thread.join()
+        
+        # NEW LGR
+        self.udp_comm.stop_listener()
+        # Optionally, stop the UDP listener thread
+        if self.udp_comm.listener_thread.is_alive():
             self.udp_comm.listener_thread.join()
+        self.play_screen.destroy()
+
+# NEW LGR
+class MainApplication:
+    def __init__(self, master):
+        self.master = master
+        self.master.title("Main Application")
+        self.master.geometry("800x600")
+
+        #Bind the F5 key to the start_game method
+        self.master.bind('<s>', self.start_game)
+
+    def start_game(self, event):
+        broadcast_port = 12345
+        client_port = 54321
+        udp_comm = UDPCommunication(broadcast_port, client_port)
+        red_team = [{'codename': 'Player1', 'score': 0, 'equipment_id': 1}, {'codename': 'Player2', 'score': 0, 'equipment_id': 2}]
+        blue_team = [{'codename': 'Player3', 'score': 0, 'equipment_id': 3}, {'codename': 'Player4', 'score': 0, 'equipment_id': 4}]
+        PlayActionScreen(self.master, udp_comm, red_team, blue_team)
+
+if __name__ == "__main__":
+        root = tk.Tk()
+        app = MainApplication(root)
+        root.mainloop()
