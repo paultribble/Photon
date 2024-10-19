@@ -150,26 +150,3 @@ class PlayActionScreen:
         # Optionally, stop the UDP listener thread
         if self.udp_comm.listener_thread is not None:
             self.udp_comm.listener_thread.join()
-
-    class MainApplication:
-        def __init__(self, master):
-            self.master = master
-            self.master.title("Main Application")
-            self.master.geometry("800x600")
-
-            #Bind the s key to the startgame method
-            self.master.bind('<Key-s>', self.startgame)
-
-        def startgame(self, event):
-            broad_castport = 12345
-            client_port = 54321
-            udp_comm = UDPCommunication(broad_castport, client_port)
-            red_team = [{'codename': 'Player1', 'score': 0, 'equipment_id': 1}, {'codename': 'Player2', 'score': 0, 'equipment_id': 2}]
-            blue_team = [{'codename': 'Player3', 'score': 0, 'equipment_id': 3}, {'codename': 'Player4', 'score': 0, 'equipment_id': 4}]
-            PlayActionScreen(self.master, udp_comm, red_team, blue_team)
-
-
-    if __name__ == "__main":
-            root = tk.Tk()
-            app = MainApplication(root)
-            root.mainloop()
