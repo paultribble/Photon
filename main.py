@@ -1,4 +1,3 @@
-# main.py
 import tkinter as tk
 from database import Database
 from udp_communication import UDPCommunication
@@ -28,14 +27,14 @@ def main():
     # After splash screen, show setup screen
     def show_setup_screen():
         root.deiconify()  # Show the main window
-        setup = SetupScreen(root, database, udp_comm, start_game)
+        SetupScreen(root, database, udp_comm, start_game)
 
     root.after(3000, show_setup_screen)  # Schedule to show setup screen after splash
 
     # Function to start the game (open Play Action Screen)
-    def start_game(red_team_players, blue_team_players):
+    def start_game(red_team, blue_team):
         udp_comm.send_broadcast("202")  # Send the 202 broadcast message
-        play_screen = PlayActionScreen(root, udp_comm, red_team_players, blue_team_players)
+        PlayActionScreen(root, udp_comm, red_team, blue_team)
 
     # Handle application exit to ensure sockets are closed
     def on_close():
@@ -53,3 +52,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

@@ -140,35 +140,34 @@ class SetupScreen:
 
         codename_entry.config(state='readonly')
 
-    def validate_and_broadcast(self, player_id_var, codename_entry, equipment_combobox, team_players_list):
+    def validate_and_broadcast(self, player_id_var, codename_entry, equipment_combobox, team):
         player_id = player_id_var.get()
         equipment_id = equipment_combobox.get()
 
-        if player_id:
+        if player_id and equipment_id:
             codename = self.database.get_codename(player_id)
             if codename:
+                player = {
+                    'id': int(player_id),
+                    'codename': codename,
+                    'equipment_id': int(equipment_id),
+                    'score': 0  # Initialize score to 0
+                }
+                # Add player to team if not already present
+                if player not in team:
+                    team.append(player)
+
                 codename_entry.config(state='normal')
                 codename_entry.delete(0, tk.END)
                 codename_entry.insert(0, codename)
-                codename_entry.config(fg='black')    # Reset color to black once validated
                 codename_entry.config(state='readonly')
-                # Add to team list if not already present
-                if codename not in team_players_list:
-                    team_players_list.append(codename)
+            
+                # Send equipment ID as confirmation broadcast
+                self.udp_comm.send_broadcast(f"{equipment_id}")
+                print(f"Added: {player}")
             else:
-                codename_entry.config(state='normal')
-                codename_entry.delete(0, tk.END)
                 codename_entry.insert(0, "Invalid ID")
-                codename_entry.config(fg='gray')  # Keep text gray if ID is invalid
-                codename_entry.config(state='readonly')
-                return
-
-        if equipment_id:
-            message = f"{equipment_id}"
-            self.udp_comm.send_broadcast(message)
-            print(f"Sent: {message}")
-        else:
-            messagebox.showwarning("Warning", "Equipment ID cannot be empty.")
+                codename_entry.config(fg='gray')
 
     def add_new_player(self):
         # Create a new top-level window for entering player details

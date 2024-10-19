@@ -26,53 +26,38 @@ class UDPCommunication:
             message_handler(message, addr)
 
 class PlayActionScreen:
-    def __init__(self, parent, udp_comm, red_team_players, blue_team_players):
+    def __init__(self, parent, udp_comm, red_team, blue_team):
         self.parent = parent
         self.udp_comm = udp_comm
-        self.red_team_players = red_team_players
-        self.blue_team_players = blue_team_players
-
-        # Initialize player scores
-        self.red_team_scores = {codename: 0 for codename in self.red_team_players}
-        self.blue_team_scores = {codename: 0 for codename in self.blue_team_players}
+        self.red_team = red_team
+        self.blue_team = blue_team
 
         self.play_screen = tk.Toplevel(parent)
         self.play_screen.title("Play Action Screen")
         self.play_screen.geometry("1000x800")
 
-        # Team Score Areas
-        self.frame_red_team = tk.LabelFrame(self.play_screen, text="Red Team Scores", bg="red", width=250, height=400)
-        self.frame_red_team.grid(row=0, column=0, padx=10, pady=10, sticky="n")
+        self.frame_red_team = tk.LabelFrame(self.play_screen, text="Red Team", bg="red")
+        self.frame_red_team.grid(row=0, column=0, padx=10, pady=10)
 
-        self.frame_blue_team = tk.LabelFrame(self.play_screen, text="Blue Team Scores", bg="cyan", width=250, height=400)
-        self.frame_blue_team.grid(row=0, column=2, padx=10, pady=10, sticky="n")
+        self.frame_blue_team = tk.LabelFrame(self.play_screen, text="Blue Team", bg="cyan")
+        self.frame_blue_team.grid(row=0, column=2, padx=10, pady=10)
 
-        # Initialize team score labels
-        self.red_team_labels = {}
-        self.blue_team_labels = {}
+        self.setup_team_scores(self.frame_red_team, self.red_team)
+        self.setup_team_scores(self.frame_blue_team, self.blue_team)
 
-        self.setup_team_scores(self.frame_red_team, self.red_team_labels, self.red_team_scores)
-        self.setup_team_scores(self.frame_blue_team, self.blue_team_labels, self.blue_team_scores)
-
-        # Game Action Area (Scrollable)
-        self.frame_action = tk.LabelFrame(self.play_screen, text="Game Action", bg="black", fg="white", width=500, height=600)
+        self.frame_action = tk.LabelFrame(self.play_screen, text="Game Action", bg="black", fg="white")
         self.frame_action.grid(row=0, column=1, padx=10, pady=10)
 
-        # Scrollable text widget for game action events
         self.game_action_text = scrolledtext.ScrolledText(self.frame_action, wrap=tk.WORD, width=60, height=30, state='disabled')
         self.game_action_text.pack(padx=10, pady=10)
 
-        # Start UDP listener
         self.udp_comm.start_listener(self.handle_udp_message)
 
-        # Handle window close
-        self.play_screen.protocol("WM_DELETE_WINDOW", self.on_close)
-
-    def setup_team_scores(self, frame, team_labels_dict, team_scores_dict):
-        for codename in team_scores_dict:
-            label = tk.Label(frame, text=f"{codename}: {team_scores_dict[codename]}", bg=frame.cget("bg"), fg="white", font=("Arial", 10))
-            label.pack(anchor='w', padx=5, pady=2)
-            team_labels_dict[codename] = label
+    def setup_team_scores(self, frame, team):
+        for player in team:
+            label = tk.Label(frame, text=f"{player['codename']}: {player['score']}", bg=frame.cget("bg"), fg="white")
+            label.pack(anchor='w')
+            player['label'] = label
 
     def handle_udp_message(self, message, addr):
         # Handle the received UDP message
@@ -108,35 +93,35 @@ class PlayActionScreen:
                 self.log_event(f"{codename} scored 100 points! [Red Base Captured]")
 
     def process_hit_message(self, message):
-        # Example message format: "equipment_id:equipment_id"
         try:
             transmitting_id, hit_id = map(int, message.split(':'))
-            transmitting_codename = self.get_codename_by_equipment_id(transmitting_id)
-            hit_codename = self.get_codename_by_equipment_id(hit_id)
-            if transmitting_codename and hit_codename:
-                self.log_event(f"{hit_codename} was hit by {transmitting_codename}.")
-                # Optionally, send back the equipment ID of the player that got hit
-                self.udp_comm.broadcast_message(str(hit_id))
+        
+            transmitting_player = self.get_player_by_equipment(transmitting_id)
+            hit_player = self.get_player_by_equipment(hit_id)
+
+            if transmitting_player and hit_player:
+                self.log_event(f"{hit_player['codename']} was hit by {transmitting_player['codename']}.")
+                self.update_score(transmitting_player, increment=100)  # Increment player score that tagged opposing player
+
+                # Optionally broadcast back the hit equipment ID
+                #self.udp_comm.broadcast_message(str(hit_id))
+            else:
+                self.log_event("Hit or transmitting player not found.")
         except ValueError:
             self.log_event(f"Invalid message format received: {message}")
 
-    def get_codename_by_equipment_id(self, equipment_id):
-        # Assuming you have a mapping of equipment IDs to codenames
-        # You need to define how you map equipment IDs to player codenames
-        equipment_to_codename = {1: 'PlayerA', 2: 'PlayerB', 3: 'PlayerC', 4: 'PlayerD', 5: 'PlayerE'}  # Example mapping
-        return equipment_to_codename.get(equipment_id)
 
-    def update_score(self, codename, increment=1):
-        # Check if codename is in red team
-        if codename in self.red_team_scores:
-            self.red_team_scores[codename] += increment
-            self.red_team_labels[codename].config(text=f"{codename}: {self.red_team_scores[codename]}")
-        # Check if codename is in blue team
-        elif codename in self.blue_team_scores:
-            self.blue_team_scores[codename] += increment
-            self.blue_team_labels[codename].config(text=f"{codename}: {self.blue_team_scores[codename]}")
-        else:
-            self.log_event(f"Unknown player: {codename}")
+    def get_player_by_equipment(self, equipment_id):
+        for team in [self.red_team, self.blue_team]:
+            for player in team:
+                if player['equipment_id'] == equipment_id:
+                    return player
+        return None
+
+    def update_score(self, player, increment):
+        player['score'] += increment
+        player['label'].config(text=f"{player['codename']}: {player['score']}")
+        print(f"Updated {player['codename']}'s score to {player['score']}")  # Debugging log
 
     def log_event(self, event):
         self.game_action_text.config(state='normal')
