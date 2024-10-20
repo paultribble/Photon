@@ -41,7 +41,7 @@ def main():
             udp_comm.send_broadcast("202")  # Send the 202 broadcast message
             PlayActionScreen(root, udp_comm, red_team, blue_team)  # Start the game
         
-        setup_screen = SetupScreen(parent=root)
+        setup_screen = SetupScreen(parent=root,database=database, udp_comm=udp_comm, start_game_callback=start_game)
         setup_screen.countdown(10, on_countdown_finish)
 
     root.after(10000, start_game)
