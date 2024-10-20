@@ -38,9 +38,8 @@ def main():
     # Function to start the game (open Play Action Screen)
     def start_game(red_team, blue_team):
         setup.countdown(10)
+        time.sleep(10) # wait for 10 seconds to sync the start game
         udp_comm.send_broadcast("202")  # Send the 202 broadcast message
-        time.sleep(10) # wait for 10 seconds to sync the start game with the timer
-        
         PlayActionScreen(root, udp_comm, red_team, blue_team)  # Start the game
 
     root.after(10000, start_game)
