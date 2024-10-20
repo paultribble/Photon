@@ -228,7 +228,7 @@ class SetupScreen:
         self.start_game_callback(self.red_team_players, self.blue_team_players)
         
     def countdown(self, remaining, callback=None):
-        if not hasattr(self, 'timer_window'):  # Check if the timer window exists
+        if not hasattr(self, 'timer_window') or not self.timer_window.winfo_exists():  # Check if the timer window exists
             # Create a top-level window for the timer
             self.timer_window = tk.Toplevel(self.parent)
             self.timer_window.title("Countdown Timer")
@@ -244,6 +244,7 @@ class SetupScreen:
             self.timer_window.after(1000, self.countdown, remaining - 1, callback)
         else:
             self.timer_window.destroy()  # Close the timer window when finished
+            self.timer_window = None
             messagebox.showinfo("Game will commence!")
             if callback:
                 callback()
