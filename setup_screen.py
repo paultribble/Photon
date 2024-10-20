@@ -75,6 +75,9 @@ class SetupScreen:
             fg='white'
         )
         self.start_game_button.grid(row=0, column=3, padx=10, pady=5)
+        
+        self.timer_label = tk.Label(self.frame, text="", font=("Helvetica", 24), bg='black', fg='white')
+        self.timer_label.place(relx=0.5, rely=0.3, anchor='center')  # Adjust position as needed
 
     def draw_background(self):
         self.canvas.delete("all")
