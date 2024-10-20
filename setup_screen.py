@@ -226,3 +226,20 @@ class SetupScreen:
 
     def start_game(self):
         self.start_game_callback(self.red_team_players, self.blue_team_players)
+        
+    def countdown(self, remaining):
+        if remaining >= 0:
+            # Create a top-level window for the timer
+            self.timer_window = tk.Toplevel(self.parent)
+            self.timer_window.title("Countdown Timer")
+            self.timer_window.geometry("200x100")
+            self.timer_window.attributes('-topmost', True)  # Keep the window on top
+            
+            timer_label = tk.Label(self.timer_window, text=str(remaining), font=("Helvetica", 48), fg='red')
+            timer_label.pack(expand=True)
+
+            # Update the label and continue the countdown every second
+            self.timer_window.after(1000, self.countdown, remaining - 1)
+        else:
+            self.timer_window.destroy()  # Close the timer window when finished
+            messagebox.showinfo("Game will commence!")
