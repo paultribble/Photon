@@ -43,6 +43,8 @@ def main():
                 udp_comm.send_broadcast("202")  # Send the 202 broadcast message
                 PlayActionScreen(root, udp_comm, red_team, blue_team)  # Start the game
 
+        update_timer(count)
+
 
     # Handle application exit to ensure sockets are closed
     def on_close():
