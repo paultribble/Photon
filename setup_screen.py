@@ -245,6 +245,6 @@ class SetupScreen:
         else:
             self.timer_window.destroy()  # Close the timer window when finished
             self.timer_window = None
-            messagebox.showinfo("Game will commence!")
+            #messagebox.showinfo("Game will commence!")
             if callback:
                 callback()
