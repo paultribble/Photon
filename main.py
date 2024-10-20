@@ -28,6 +28,7 @@ def main():
     
     # After splash screen, show setup screen
     def show_setup_screen():
+        nonlocal setup
         root.deiconify()  # Show the main window
         setup = SetupScreen(root, database, udp_comm, start_game)
 
