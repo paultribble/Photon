@@ -39,14 +39,14 @@ def main():
     # Function to handle key press for starting the game
     def on_key_press(event):
         if event.char.lower() == 's':  # Check if 'S' is pressed
-            # Fetch players from the database instead of using hardcoded teams
-            red_team = database.get_players_by_team('Red')  # Replace with actual database query
-            blue_team = database.get_players_by_team('Blue')  # Replace with actual database query
-            
-            if red_team and blue_team:
-                start_game(red_team, blue_team)
-            else:
-                print("Teams not found in the database.")
+        # Fetch players from the database
+            red_team = database.get_players_by_team('Red')
+            blue_team = database.get_players_by_team('Blue')
+        
+        if red_team and blue_team:
+            start_game(red_team, blue_team)
+        else:
+            print("Teams not found in the database.")
 
     # Bind the 'S' key to the on_key_press function
     root.bind('<KeyPress>', on_key_press)
