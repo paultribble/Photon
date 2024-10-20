@@ -241,7 +241,9 @@ class SetupScreen:
         if remaining >= 0:
             self.timer_label.config(text=str(remaining))  # Update the label text
             # Continue the countdown every second
-            self.timer_window.after(1000, self.countdown, remaining - 1)
+            self.timer_window.after(1000, self.countdown, remaining - 1, callback)
         else:
             self.timer_window.destroy()  # Close the timer window when finished
             messagebox.showinfo("Game will commence!")
+            if callback:
+                callback()
