@@ -1,17 +1,19 @@
+#main.py
 import tkinter as tk
-import time
 from database import Database
 from udp_communication import UDPCommunication
 from splash_screen import SplashScreen
 from setup_screen import SetupScreen
 from play_action_screen import PlayActionScreen
 import atexit
+from pynput import keyboard
 
 def main():
     # Initialize the main Tkinter window
     root = tk.Tk()
     root.withdraw()  # Hide the main window initially
 
+        
     # Initialize database connection
     database = Database()
 
@@ -21,43 +23,20 @@ def main():
     except OSError:
         print("Failed to bind UDP ports. Make sure no other application is using these ports.")
         return
-
     # Show splash screen
     splash = SplashScreen(root, "Images/logo.jpg", duration=3000)
 
-    setup = None
-    
     # After splash screen, show setup screen
     def show_setup_screen():
-        nonlocal setup
         root.deiconify()  # Show the main window
-        setup = SetupScreen(root, database, udp_comm, start_game)
+        SetupScreen(root, database, udp_comm)
 
     root.after(3000, show_setup_screen)  # Schedule to show setup screen after splash
 
     # Function to start the game (open Play Action Screen)
-    def start_game(red_team, blue_team):
-        def on_countdown_finish():
-            udp_comm.send_broadcast("202")  # Send the 202 broadcast message
-            PlayActionScreen(root, udp_comm, red_team, blue_team)  # Start the game
-        
-        setup.countdown(10, on_countdown_finish)
-
-
-    # Function to handle key press for starting the game
-    def on_key_press(event):
-        if event.char.lower() == 's':  # Check if 'S' is pressed
-        # Fetch players from the database
-            red_team = database.get_players_by_team('Red')
-            blue_team = database.get_players_by_team('Blue')
-        
-        if red_team and blue_team:
-            start_game(red_team, blue_team)
-        else:
-            print("Teams not found in the database.")
-
-    # Bind the 'S' key to the on_key_press function
-    root.bind('<KeyPress>', on_key_press)
+    #def start_game(red_team, blue_team):
+        #udp_comm.send_broadcast("202")  # Send the 202 broadcast message
+       # PlayActionScreen(root, udp_comm, red_team, blue_team)
 
     # Handle application exit to ensure sockets are closed
     def on_close():
@@ -66,6 +45,7 @@ def main():
         root.destroy()
 
     root.protocol("WM_DELETE_WINDOW", on_close)
+
 
     # Register cleanup in case of unexpected exits
     atexit.register(on_close)

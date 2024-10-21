@@ -2,23 +2,32 @@
 import tkinter as tk
 from tkinter import ttk, messagebox, simpledialog
 import random
-
+import os
+from PIL import Image, ImageTk
+from pynput import keyboard
+import play_action_screen as PlayActionScreen
 class SetupScreen:
-    def __init__(self, parent, database, udp_comm, start_game_callback):
+    def __init__(self, parent, database, udp_comm):
         self.parent = parent
         self.database = database
         self.udp_comm = udp_comm
-        self.start_game_callback = start_game_callback
 
         self.frame = tk.Frame(parent, bg='black')
         self.frame.pack(expand=True, fill='both')
 
+        # Countdown label (in Toplevel window)
+        self.countdown_window = None
+        self.countdown_label = None
+        
         # Lists to store team players
         self.red_team_players = []
         self.blue_team_players = []
 
         self.create_widgets()
-
+        self.start_key_listener()
+         
+        self.frame.update_idletasks()
+        
     def create_widgets(self):
         # Canvas for background animation
         self.canvas = tk.Canvas(self.frame, width=1000, height=800, bg='black')
@@ -26,6 +35,10 @@ class SetupScreen:
 
         # Start drawing the background
         self.draw_background()
+        
+        # Countdown label
+        self.countdown_label = tk.Label(self.frame, text="", bg='black', fg='white', font=("Arial", 48))
+        self.countdown_label.place(relx=0.5, rely=0.3, anchor='center')
 
         # Team Entry Forms
         self.team_frame = tk.Frame(self.frame, bg='black')
@@ -60,7 +73,7 @@ class SetupScreen:
 
         self.clear_db_button = tk.Button(
             self.button_frame,
-            text="Clear Database (ESC)",
+            text="Clear Database (F12)",
             command=self.clear_database,
             width=15
         )
@@ -68,16 +81,13 @@ class SetupScreen:
 
         self.start_game_button = tk.Button(
             self.button_frame,
-            text="Start Game",
-            command=self.start_game,
+            text="Start Game (F5)",
+            command=self.initiate_countdown,
             width=20,
             bg='green',
             fg='white'
         )
         self.start_game_button.grid(row=0, column=3, padx=10, pady=5)
-        
-        self.timer_label = tk.Label(self.frame, text="", font=("Helvetica", 24), bg='black', fg='white')
-        self.timer_label.place(relx=0.5, rely=0.3, anchor='center')  # Adjust position as needed
 
     def draw_background(self):
         self.canvas.delete("all")
@@ -164,6 +174,7 @@ class SetupScreen:
                 codename_entry.delete(0, tk.END)
                 codename_entry.insert(0, codename)
                 codename_entry.config(state='readonly')
+                codename_entry.config(fg='black')
             
                 # Send equipment ID as confirmation broadcast
                 self.udp_comm.send_broadcast(f"{equipment_id}")
@@ -224,27 +235,80 @@ class SetupScreen:
             else:
                 messagebox.showerror("Error", "Failed to clear the database.")
 
-    def start_game(self):
-        self.start_game_callback(self.red_team_players, self.blue_team_players)
-        
-    def countdown(self, remaining, callback=None):
-        if not hasattr(self, 'timer_window') or not self.timer_window.winfo_exists():  # Check if the timer window exists
-            # Create a top-level window for the timer
-            self.timer_window = tk.Toplevel(self.parent)
-            self.timer_window.title("Countdown Timer")
-            self.timer_window.geometry("200x100")
-            self.timer_window.attributes('-topmost', True)  # Keep the window on top
+    def initiate_countdown(self):
+        self.open_countdown_window()  # Create a new window for the countdown
+        self.countdown(10)  # Start countdown from 10
+ 
+ 
+    def open_countdown_window(self):
+        # Create a new top-level window for the countdown
+        self.countdown_window = tk.Toplevel(self.parent)
+        self.countdown_window.title("Countdown")
+        self.countdown_window.geometry("300x300")  # Set window size
+        self.countdown_window.configure(bg='black')  # Set background color
 
-            self.timer_label = tk.Label(self.timer_window, text=str(remaining), font=("Helvetica", 48), fg='red')
-            self.timer_label.pack(expand=True)
+        self.countdown_label = tk.Label(self.countdown_window, text="", bg='black', fg='white', font=("Arial", 48))
+        self.countdown_label.pack(expand=True)  # Center label in the window
 
-        if remaining >= 0:
-            self.timer_label.config(text=str(remaining))  # Update the label text
-            # Continue the countdown every second
-            self.timer_window.after(1000, self.countdown, remaining - 1, callback)
+    def countdown(self, count):
+        if count >= 0:  # Start countdown from 1
+            # Update label to show current count
+            self.countdown_label.config(text=str(count))
+
+            # Load and display the corresponding image
+            image_path = os.path.join("Images", f"{count}.tif")  # Construct the image path
+            if os.path.isfile(image_path):  # Check if the image file exists
+                image = Image.open(image_path)
+                image = image.resize((200, 200), Image.LANCZOS)  # Resize for better visibility
+                self.current_image = ImageTk.PhotoImage(image)  # Create PhotoImage
+                self.countdown_label.config(image=self.current_image)  # Set the label to show the image
+                self.countdown_label.image = self.current_image  # Keep a reference to avoid garbage collection
+            else:
+                print(f"Image not found: {image_path}")
+                self.countdown_label.config(image='')  # Clear the image if file not found
+
+            # Schedule the next countdown call
+            self.countdown_window.after(1000, self.countdown, count - 1)  # Call countdown every second
         else:
-            self.timer_window.destroy()  # Close the timer window when finished
-            self.timer_window = None
-            #messagebox.showinfo("Game will commence!")
-            if callback:
-                callback()
+            self.countdown_window.destroy()
+            self.countdown_window.after(1000, self.start_game)  # Delay before starting the game
+            
+    
+    
+    def start_game(self):
+        # Check if both teams have a minimum number of players (e.g., 2)
+        min_players = 1  # Define the minimum number of players required per team
+
+        if len(self.red_team_players) < min_players:
+            messagebox.showerror("Error", "Red team must have at least {} players.".format(min_players))
+            return
+        if len(self.blue_team_players) < min_players:
+            messagebox.showerror("Error", "Blue team must have at least {} players.".format(min_players))
+            return
+
+        # If both teams have enough players, start the game
+        self.udp_comm.send_broadcast("202")  # Send the 202 broadcast message
+        PlayActionScreen.PlayActionScreen(self.parent, self.udp_comm, self.red_team_players, self.blue_team_players)
+        
+        
+    def start_key_listener(self):
+        # Key press event handler
+        def on_press(key):
+            try:
+                if key == keyboard.Key.f5:  # Check for F5 key
+                    print("F5 Keybind activated!")
+                    self.initiate_countdown()  # Call the start_game method
+                elif key == keyboard.Key.f12:  # Check for F12 key
+                    print("F12 Keybind activated!")
+                    self.clear_database()  # Call the clear_database method
+            except Exception as e:
+                print(f"Error: {e}")
+
+        # Start the keyboard listener
+        self.listener = keyboard.Listener(on_press=on_press)
+        self.listener.start()  # Start listening for key presses
+
+    def stop_key_listener(self):
+        # Stop the keyboard listener when exiting or switching screens
+        if self.listener:
+            self.listener.stop()

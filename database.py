@@ -72,21 +72,6 @@ class Database:
         except Exception as e:
             print(f"Database error: {e}")
             return []
-   
-    def get_players_by_team(self, team_name):
-        try:
-            cursor = self.conn.cursor()
-            cursor.execute("SELECT id, codename, score, equipment_id FROM players WHERE team = %s", (team_name,))
-            players = cursor.fetchall()
-            cursor.close()
-            
-            # Convert the result into a list of dictionaries
-            team_players = [{'id': player[0], 'codename': player[1], 'score': player[2], 'equipment_id': player[3]} for player in players]
-            return team_players
-
-        except Exception as e:
-            print(f"Database error: {e}")
-            return []
 
     def clear_players(self):
         try:
