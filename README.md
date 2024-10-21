@@ -15,7 +15,8 @@ psycopg2
 sys
 tkinter
 Pillow
-
+pynput
+atexit
 
 File Structure
 
@@ -40,7 +41,7 @@ This is for checking that the UDP messages are correctly sent.
 
 The splash screen will appear, followed by the main window where you can enter player data for two teams, view the player database, and press enter for each team member to submit ID, Codename, and Equipment ID Initialization over UDP broadcast.
 
-For the F5 key functionality, press 's' instead to accomplish the abilities because the F5 key does not work efficiently. Professor strother allows this as he allows the F12 key to be esc instead.
+Either press the on-screen buttons that are labeled or their corresponding hotkey that is in parentheses on the buttons. For start game it is F5 and for clear database it is F12.
 
 
 | Real Name             | GitHub Username |
