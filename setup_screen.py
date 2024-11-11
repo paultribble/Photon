@@ -73,8 +73,8 @@ class SetupScreen:
 
         self.clear_db_button = tk.Button(
             self.button_frame,
-            text="Clear Database (F12)",
-            command=self.clear_database,
+            text="Clear Players (F12)",
+            command=self.clear_current_players,  # Updated to clear current players
             width=15
         )
         self.clear_db_button.grid(row=0, column=2, padx=10, pady=5)
@@ -235,6 +235,30 @@ class SetupScreen:
             else:
                 messagebox.showerror("Error", "Failed to clear the database.")
 
+    def clear_current_players(self):
+    # Confirm the action to clear players
+        confirm = messagebox.askyesno("Confirm", "Are you sure you want to clear the current players?")
+        if confirm:
+        # Clear both red and blue team players
+            self.red_team_players.clear()
+            self.blue_team_players.clear()
+
+        # Clear the input fields for both teams
+            self.clear_player_entries(self.red_team_entries)
+            self.clear_player_entries(self.blue_team_entries)
+
+            messagebox.showinfo("Success", "Current players have been cleared.")
+
+    def clear_player_entries(self, team_entries):
+        for entry_id, entry_codename, equipment_combobox in team_entries:
+            entry_id.delete(0, tk.END)  # Clear the player ID field
+            entry_codename.config(state='normal')
+            entry_codename.delete(0, tk.END)  # Clear the codename field
+            entry_codename.config(state='readonly')
+            equipment_combobox.set("")  # Clear the equipment combo box
+
+    
+    
     def initiate_countdown(self):
         self.open_countdown_window()  # Create a new window for the countdown
         self.countdown(10)  # Start countdown from 10
