@@ -4,7 +4,7 @@ from tkinter import ttk, messagebox, simpledialog
 import random
 import os
 from PIL import Image, ImageTk
-from pynput import keyboard
+# from pynput import keyboard
 import play_action_screen as PlayActionScreen
 class SetupScreen:
     def __init__(self, parent, database, udp_comm):
