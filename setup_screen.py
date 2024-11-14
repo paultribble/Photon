@@ -7,7 +7,11 @@ from PIL import Image, ImageTk
 import pygame
 # from pynput import keyboard
 import play_action_screen as PlayActionScreen
+
 class SetupScreen:
+    # Class attribute to store the single instance of the SetupScreen (used for music)
+    instance = None
+
     def __init__(self, parent, database, udp_comm):
         self.parent = parent
         self.database = database
@@ -15,6 +19,8 @@ class SetupScreen:
 
         # Initialize Pygame mixer for sound effects
         pygame.mixer.init()
+
+        SetupScreen.instance = self  # Store the instance for music control
 
         self.frame = tk.Frame(parent, bg='black')
         self.frame.pack(expand=True, fill='both')
@@ -308,7 +314,6 @@ class SetupScreen:
             # Schedule the next countdown call
             self.countdown_window.after(1000, self.countdown, count - 1)  # Call countdown every second
         else:
-            pygame.mixer.music.stop()  # Stop the background music
             self.countdown_window.destroy()
             self.countdown_window.after(1000, self.start_game)  # Delay before starting the game
             
@@ -351,3 +356,6 @@ class SetupScreen:
         # Stop the keyboard listener when exiting or switching screens
         if self.listener:
             self.listener.stop()
+
+    def stop_music(self):
+        pygame.mixer.music.stop() # Stop the background music
