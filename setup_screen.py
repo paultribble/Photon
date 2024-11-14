@@ -5,7 +5,7 @@ import random
 import os
 from PIL import Image, ImageTk
 import pygame
-# from pynput import keyboard
+from pynput import keyboard
 import play_action_screen as PlayActionScreen
 
 class SetupScreen:
@@ -276,8 +276,6 @@ class SetupScreen:
     
     def initiate_countdown(self):
         self.play_music()  # Play background music
-        #REMOVE
-        #self.open_countdown_window()  # Create a new window for the countdown
         self.parent.after(5000, self.open_and_start_countdown)  # Start countdown from 10
 
     def open_and_start_countdown(self):
