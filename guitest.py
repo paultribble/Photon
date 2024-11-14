@@ -9,6 +9,7 @@ from tkinter import messagebox, simpledialog
 from PIL import Image, ImageTk
 import atexit
 import time
+import pygame
 
 # Global variables for sockets to allow cleanup
 sock_broadcast = None
@@ -442,6 +443,8 @@ def show_play_action_screen():
 
 # Function to start game countdown
 def start_game_countdown(play_action_screen):
+    pygame.mixer.init()
+    pygame.mixer.music.load("Track07.mp3")
     countdown_window = tk.Toplevel(root)
     countdown_window.title("Game Starting")
     countdown_window.geometry("300x200")
@@ -463,6 +466,13 @@ def start_game_countdown(play_action_screen):
             sock_broadcast.sendto('202'.encode(), ('<broadcast>', 7500))
             play_action_screen.log_event("Game Started!")
 
+    # Start playing the music 5 seconds before the countdown starts
+    def start_music():
+        pygame.mixer.music.play(-1) # Loop the music
+    
+    # Schedule the music to start 5 seconds before the countdown
+    countdown_window.after(5000, start_music)
+    
     countdown(5)
 
 # Function to end the game
@@ -472,6 +482,7 @@ def end_game(play_action_screen):
         print("Sent: 221")
         play_action_screen.log_event("Game Ended!")
         time.sleep(1)  # Brief pause between sends
+    pygame.mixer.music.stop()  # Stop the music
 
 # Function to listen for incoming UDP data and update the game action area
 def listen_for_data(sock_receive, play_action_screen):
@@ -751,6 +762,13 @@ def start_game_countdown(play_action_screen):
             # Send code 202 to start the game
             sock_broadcast.sendto('202'.encode(), ('<broadcast>', 7500))
             play_action_screen.log_event("Game Started!")
+    
+    # Start playing the music 5 seconds before the countdown starts
+    def start_music():
+        pygame.mixer.music.play(-1) # Loop the music
+    
+    # Schedule the music to start 5 seconds before the countdown
+    countdown_window.after(5000, start_music)
 
     countdown(5)
 
@@ -761,6 +779,7 @@ def end_game(play_action_screen):
         print("Sent: 221")
         play_action_screen.log_event("Game Ended!")
         time.sleep(1)  # Brief pause between sends
+    pygame.mixer.music.stop()  # Stop the music
 
 # Function to handle base scoring
 def handle_base_scored(base_color):
