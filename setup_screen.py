@@ -270,9 +270,13 @@ class SetupScreen:
     
     def initiate_countdown(self):
         self.play_music()  # Play background music
-        self.open_countdown_window()  # Create a new window for the countdown
-        self.countdown(5, self.countdown, 10)  # Start countdown from 10
- 
+        #REMOVE
+        #self.open_countdown_window()  # Create a new window for the countdown
+        self.countdown(5000, self.open_and_start_countdown)  # Start countdown from 10
+
+    def open_and_start_countdown(self):
+        self.open_countdown_window()  # Open the countdown window
+        self.countdown(10)  # Start countdown from 10
  
     def open_countdown_window(self):
         # Create a new top-level window for the countdown
