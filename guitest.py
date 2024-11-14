@@ -742,6 +742,8 @@ def show_play_action_screen():
 
 # Function to start game countdown
 def start_game_countdown(play_action_screen):
+    pygame.mixer.init()
+    pygame.mixer.music.load("Track07.mp3")
     countdown_window = tk.Toplevel(root)
     countdown_window.title("Game Starting")
     countdown_window.geometry("300x200")
