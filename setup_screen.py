@@ -4,6 +4,7 @@ from tkinter import ttk, messagebox, simpledialog
 import random
 import os
 from PIL import Image, ImageTk
+import pygame
 # from pynput import keyboard
 import play_action_screen as PlayActionScreen
 class SetupScreen:
@@ -11,6 +12,9 @@ class SetupScreen:
         self.parent = parent
         self.database = database
         self.udp_comm = udp_comm
+
+        # Initialize Pygame mixer for sound effects
+        pygame.mixer.init()
 
         self.frame = tk.Frame(parent, bg='black')
         self.frame.pack(expand=True, fill='both')
@@ -88,6 +92,11 @@ class SetupScreen:
             fg='white'
         )
         self.start_game_button.grid(row=0, column=3, padx=10, pady=5)
+
+    def play_music(self):
+        # Load and play background music
+        pygame.mixer.music.load("Track07.mp3")
+        pygame.mixer.music.play(-1)
 
     def draw_background(self):
         self.canvas.delete("all")
@@ -260,8 +269,9 @@ class SetupScreen:
     
     
     def initiate_countdown(self):
+        self.play_music()  # Play background music
         self.open_countdown_window()  # Create a new window for the countdown
-        self.countdown(10)  # Start countdown from 10
+        self.countdown(5, self.countdown, 10)  # Start countdown from 10
  
  
     def open_countdown_window(self):
@@ -294,6 +304,7 @@ class SetupScreen:
             # Schedule the next countdown call
             self.countdown_window.after(1000, self.countdown, count - 1)  # Call countdown every second
         else:
+            pygame.mixer.music.stop()  # Stop the background music
             self.countdown_window.destroy()
             self.countdown_window.after(1000, self.start_game)  # Delay before starting the game
             
