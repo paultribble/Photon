@@ -7,7 +7,7 @@ from splash_screen import SplashScreen
 from setup_screen import SetupScreen
 from play_action_screen import PlayActionScreen
 import atexit
-from pynput import keyboard
+# from pynput import keyboard
 
 def main():
     # Initialize the main Tkinter window
