@@ -41,6 +41,7 @@ def main():
 
     # Handle application exit to ensure sockets are closed
     def on_close():
+        # Only calling the instance of setup screen class to stop the music when the program ends
         if SetupScreen.instance:
             SetupScreen.instance.stop_music()
         udp_comm.close_sockets()
