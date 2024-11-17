@@ -19,6 +19,9 @@ def main():
     # Initialize database connection
     database = Database()
 
+    #Initialize setup_screen 
+    setup_screen = setup_screen()
+
     # Initialize UDP Communication
     try:
         udp_comm = UDPCommunication(broadcast_port=7500, receive_port=7501)
@@ -44,7 +47,7 @@ def main():
     def on_close():
        #if SetupScreen.instance: 
             #SetupScreen.instance.stop_music()
-        stop_music()
+        setup_screen.stop_music()
         udp_comm.close_sockets()
         database.close()
         root.destroy()
