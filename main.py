@@ -8,7 +8,6 @@ from setup_screen import SetupScreen
 from play_action_screen import PlayActionScreen
 import atexit
 from pynput import keyboard
-from setup_screen import stop_music
 
 def main():
     # Initialize the main Tkinter window
@@ -45,9 +44,7 @@ def main():
 
     # Handle application exit to ensure sockets are closed
     def on_close():
-       #if SetupScreen.instance: 
-            #SetupScreen.instance.stop_music()
-        setup_screen.stop_music()
+        SetupScreen.stop_music()
         udp_comm.close_sockets()
         database.close()
         root.destroy()
