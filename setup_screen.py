@@ -100,9 +100,24 @@ class SetupScreen:
         self.start_game_button.grid(row=0, column=3, padx=10, pady=5)
 
     def play_music(self):
-        # Load and play background music
-        pygame.mixer.music.load("Track07.mp3")
-        pygame.mixer.music.play(-1)
+
+        tracks = [
+            "Track01.mp3",
+            "Track02.mp3",
+            "Track03.mp3",
+            "Track04.mp3",
+            "Track05.mp3",
+            "Track06.mp3",
+            "Track07.mp3"
+        ]
+
+        # Randomly select a track
+        selected_track = random.choice(tracks)
+
+        # Load and play the selected track
+        pygame.mixer.music.load(selected_track)
+        pygame.mixer.music.play()  #Play the track once
+        print(f"Playing: {selected_track}")
 
     def draw_background(self):
         self.canvas.delete("all")

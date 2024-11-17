@@ -41,7 +41,7 @@ def main():
 
     # Handle application exit to ensure sockets are closed
     def on_close():
-        if SetupScreen.instance:
+        if SetupScreen.instance: 
             SetupScreen.instance.stop_music()
         udp_comm.close_sockets()
         database.close()
