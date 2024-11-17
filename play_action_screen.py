@@ -1,6 +1,8 @@
 #play_action_screen.py
 import tkinter as tk
 from tkinter import ttk, scrolledtext
+from PIL import Image, ImageTk
+import os
 import threading
 import socket
 import setup_screen
@@ -42,6 +44,13 @@ class PlayActionScreen:
 
         self.frame_blue_team = tk.LabelFrame(self.play_screen, text="Blue Team", bg="cyan")
         self.frame_blue_team.grid(row=0, column=2, padx=10, pady=10)
+        
+        # Countdown label (in Toplevel window)
+        self.countdown_window = None
+        self.countdown_label = None
+
+        self.countdown_label = tk.Label(self.frame, text="", bg='black', fg='white', font=("Arial", 48))
+        self.countdown_label.place(relx=0.5, rely=0.3, anchor='center')
 
         self.setup_team_scores(self.frame_red_team, self.red_team)
         self.setup_team_scores(self.frame_blue_team, self.blue_team)
@@ -135,3 +144,45 @@ class PlayActionScreen:
         # Optionally, stop the UDP listener thread
         if self.udp_comm.listener_thread is not None:
             self.udp_comm.listener_thread.join()
+            
+    def countdown(self, count):
+        if count >= 0:  # Start countdown from 1
+            # Update label to show current count
+            self.countdown_label.config(text=str(count))
+
+            # Load and display the corresponding image
+            image_path = os.path.join("Images", f"{count}.tif")  # Construct the image path
+            if os.path.isfile(image_path):  # Check if the image file exists
+                image = Image.open(image_path)
+                image = image.resize((200, 200), Image.LANCZOS)  # Resize for better visibility
+                self.current_image = ImageTk.PhotoImage(image)  # Create PhotoImage
+                self.countdown_label.config(image=self.current_image)  # Set the label to show the image
+                self.countdown_label.image = self.current_image  # Keep a reference to avoid garbage collection
+            else:
+                print(f"Image not found: {image_path}")
+                self.countdown_label.config(image='')  # Clear the image if file not found
+
+            # Schedule the next countdown call
+            self.countdown_window.after(1000, self.countdown, count - 1)  # Call countdown every second
+        else:
+            self.countdown_window.destroy()
+            self.countdown_window.after(1000, self.start_game)  # Delay before starting the game
+            
+            
+    def initiate_countdown(self):
+        self.play_music()  # Play background music
+        self.parent.after(360000, self.open_and_start_countdown)  # Start countdown from 6 minutes
+
+    def open_and_start_countdown(self):
+        self.open_countdown_window()  # Open the countdown window
+        self.countdown(30)  # Start countdown from 10
+ 
+    def open_countdown_window(self):
+        # Create a new top-level window for the countdown
+        self.countdown_window = tk.Toplevel(self.parent)
+        self.countdown_window.title("Countdown")
+        self.countdown_window.geometry("300x300")  # Set window size
+        self.countdown_window.configure(bg='black')  # Set background color
+
+        self.countdown_label = tk.Label(self.countdown_window, text="", bg='black', fg='white', font=("Arial", 48))
+        self.countdown_label.pack(expand=True)  # Center label in the window
