@@ -18,8 +18,6 @@ def main():
     # Initialize database connection
     database = Database()
 
-    #Initialize setup_screen 
-    setup_screen = setup_screen()
 
     # Initialize UDP Communication
     try:
