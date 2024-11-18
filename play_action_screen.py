@@ -210,33 +210,12 @@ class PlayActionScreen:
 
 
     def setup_team_scores(self, frame, team, team_color):
-        # Create a label for the team's total score
-        if team_color == "red":
-            team_score_label = tk.Label(frame, text=f"Total Score: {self.red_team_score}", bg="red", fg="white", font=("Arial", 14))
-            team_score_label.pack(anchor='w')
-            self.red_team_score_label = team_score_label
-        else:
-            team_score_label = tk.Label(frame, text=f"Total Score: {self.blue_team_score}", bg="cyan", fg="white", font=("Arial", 14))
-            team_score_label.pack(anchor='w')
-            self.blue_team_score_label = team_score_label
-
-        # Create labels for individual players
         for player in team:
+            # Create label with player codename and score
             label = tk.Label(frame, text=f"{player['codename']} {player['score']}", bg=frame.cget("bg"), fg="white")
             label.pack(anchor='w')
             player['label'] = label
             player['base_hit'] = False  # Flag to track if player has hit the base
-            
-            
-    def update_team_score(self, team_color, increment):
-        """Update the total score for the team"""
-        if team_color == "red":
-            self.red_team_score += increment
-            self.red_team_score_label.config(text=f"Total Score: {self.red_team_score}")
-        else:
-            self.blue_team_score += increment
-            self.blue_team_score_label.config(text=f"Total Score: {self.blue_team_score}")
-    
 
     def handle_udp_message(self, message, addr):
         # Handle the received UDP message
@@ -339,13 +318,6 @@ class PlayActionScreen:
     def update_score(self, player, increment):
         player['score'] += increment
         player['label'].config(text=f"{player['codename']}: {player['score']}")
-    
-        # Update the total score for the respective team
-        if player in self.red_team:
-            self.update_team_score("red", increment)
-        else:
-            self.update_team_score("blue", increment)
-    
         print(f"Updated {player['codename']}'s score to {player['score']}")  # Debugging log
 
     def log_event(self, event):
