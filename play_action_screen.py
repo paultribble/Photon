@@ -161,8 +161,8 @@ class PlayActionScreen:
         self.frame_blue_team = tk.LabelFrame(self.play_screen, text="Blue Team", bg="cyan")
         self.frame_blue_team.grid(row=1, column=2, padx=10, pady=10)
 
-        self.setup_team_scores(self.frame_red_team, self.red_team)
-        self.setup_team_scores(self.frame_blue_team, self.blue_team)
+        self.setup_team_scores(self.frame_red_team, self.red_team, "red")
+        self.setup_team_scores(self.frame_blue_team, self.blue_team, "blue")
 
         self.frame_action = tk.LabelFrame(self.play_screen, text="Game Action", bg="black", fg="white")
         self.frame_action.grid(row=0, column=1, padx=10, pady=10)
