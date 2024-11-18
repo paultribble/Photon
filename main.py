@@ -42,9 +42,9 @@ def main():
 
     # Handle application exit to ensure sockets are closed
     def on_close():
-        SetupScreen.stop_music()
         udp_comm.close_sockets()
         database.close()
+        SetupScreen.stop_music()
         root.destroy()
 
     root.protocol("WM_DELETE_WINDOW", on_close)
