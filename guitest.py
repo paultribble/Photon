@@ -7,6 +7,7 @@ import tkinter as tk
 from tkinter import ttk, scrolledtext
 from tkinter import messagebox, simpledialog
 from PIL import Image, ImageTk
+from setup_screen import play_music
 import atexit
 import time
 import pygame
@@ -426,6 +427,7 @@ class PlayActionScreen:
 
     def on_close(self):
         self.is_open = False
+        self.stop_music()
         self.play_screen.destroy()
 
 # Function to show the Play Action Screen
@@ -443,8 +445,9 @@ def show_play_action_screen():
 
 # Function to start game countdown
 def start_game_countdown(play_action_screen):
-    pygame.mixer.init()
-    pygame.mixer.music.load("Track07.mp3")
+    #pygame.mixer.init()
+    #pygame.mixer.music.load("Track07.mp3")
+    play_music()
     countdown_window = tk.Toplevel(root)
     countdown_window.title("Game Starting")
     countdown_window.geometry("300x200")
@@ -466,7 +469,7 @@ def start_game_countdown(play_action_screen):
             sock_broadcast.sendto('202'.encode(), ('<broadcast>', 7500))
             play_action_screen.log_event("Game Started!")
 
-    # Start playing the music 5 seconds before the countdown starts
+    # Start playing the music 5 seconds before the countdown starts *****************************************************************
     def start_music():
         pygame.mixer.music.play(-1) # Loop the music
     
@@ -724,6 +727,7 @@ class PlayActionScreen:
         self.play_screen.after(1000, self.update_scores)
 
     def on_close(self):
+        self.stop_music()
         self.is_open = False
         self.play_screen.destroy()
 
@@ -743,7 +747,7 @@ def show_play_action_screen():
 # Function to start game countdown
 def start_game_countdown(play_action_screen):
     pygame.mixer.init()
-    pygame.mixer.music.load("Track07.mp3")
+    pygame.mixer.music.load("Track07.mp3") #THIS IS HARDCODED 
     countdown_window = tk.Toplevel(root)
     countdown_window.title("Game Starting")
     countdown_window.geometry("300x200")
@@ -814,6 +818,7 @@ def handle_base_scored(base_color):
                 new_codename = f"B {codename}"
                 cursor.execute("UPDATE players SET codename = %s WHERE id = %s", (new_codename, player_id))
         conn.commit()
+
         if play_action_screen_instance and play_action_screen_instance.is_open:
             play_action_screen_instance.log_event("Red base scored by Green team!")
 

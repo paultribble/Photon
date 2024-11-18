@@ -8,6 +8,7 @@ import pygame
 from pynput import keyboard
 import play_action_screen as PlayActionScreen
 
+music_on = True
 class SetupScreen:
     # Class attribute to store the single instance of the SetupScreen (used for music)
     instance = None
@@ -99,10 +100,30 @@ class SetupScreen:
         )
         self.start_game_button.grid(row=0, column=3, padx=10, pady=5)
 
+    
     def play_music(self):
-        # Load and play background music
-        pygame.mixer.music.load("Track07.mp3")
-        pygame.mixer.music.play(-1)
+
+        tracks = [
+            "Track01.mp3",
+            "Track02.mp3",
+            "Track03.mp3",
+            "Track04.mp3",
+            "Track05.mp3",
+            "Track06.mp3",
+            "Track07.mp3"
+        ]
+
+        # Randomly select a track
+        selected_track = random.choice(tracks)
+
+        # Load and play the selected track
+        pygame.mixer.music.load(selected_track)
+        if music_on:
+            pygame.mixer.music.play()  #Play the track once
+            print(f"Playing: {selected_track}")
+        else:
+            print("Stopping music...")
+            pygame.mixer.music.stop() # Stop the background music
 
     def draw_background(self):
         self.canvas.delete("all")
@@ -356,4 +377,9 @@ class SetupScreen:
             self.listener.stop()
 
     def stop_music(self):
+        music_on = False
+        self.play_music()
+        print("Stopping music...")
         pygame.mixer.music.stop() # Stop the background music
+        #set music bool to false, make bool accessible in function where
+        #play music is declared
