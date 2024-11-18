@@ -283,7 +283,7 @@ class SetupScreen:
                     self.initiate_countdown()  # Call the start_game method
                 elif key == keyboard.Key.f12:  # Check for F12 key
                     print("F12 Keybind activated!")
-                    self.clear_database()  # Call the clear_database method
+                    self.clear_current_players()  # Call the clear_database method
             except Exception as e:
                 print(f"Error: {e}")
 
