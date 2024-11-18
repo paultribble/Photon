@@ -301,7 +301,7 @@ class SetupScreen:
 
     def open_and_start_countdown(self):
         self.open_countdown_window()  # Open the countdown window
-        self.countdown(10)  # Start countdown from 10
+        self.countdown(30)  # Start countdown from 10
  
     def open_countdown_window(self):
         # Create a new top-level window for the countdown
