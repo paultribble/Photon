@@ -133,7 +133,7 @@ class PlayActionScreen:
     def on_close(self):
         self.play_screen.destroy()
         from setup_screen import stop_music 
-        stop_music()
+        self.stop_music()
         # Optionally, stop the UDP listener thread
         if self.udp_comm.listener_thread is not None:
             self.udp_comm.listener_thread.join()
