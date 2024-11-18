@@ -346,7 +346,7 @@ class PlayActionScreen:
         else:
             self.update_team_score("blue", increment)
     
-    print(f"Updated {player['codename']}'s score to {player['score']}")  # Debugging log
+        print(f"Updated {player['codename']}'s score to {player['score']}")  # Debugging log
 
     def log_event(self, event):
         self.game_action_text.config(state='normal')
