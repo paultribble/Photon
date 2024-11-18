@@ -378,6 +378,7 @@ class SetupScreen:
 
     def stop_music(self):
         music_on = False
+        self.play_music()
         print("Stopping music...")
         pygame.mixer.music.stop() # Stop the background music
         #set music bool to false, make bool accessible in function where
