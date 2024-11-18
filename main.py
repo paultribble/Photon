@@ -35,7 +35,7 @@ def main():
     # After splash screen, show setup screen
     def show_setup_screen():
         root.deiconify()  # Show the main window
-        SetupScreen(root, database, udp_comm)
+        setup_screen = SetupScreen(root, database, udp_comm)
 
     root.after(3000, show_setup_screen)  # Schedule to show setup screen after splash
 
