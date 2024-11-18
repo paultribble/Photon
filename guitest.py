@@ -727,8 +727,8 @@ class PlayActionScreen:
         self.play_screen.after(1000, self.update_scores)
 
     def on_close(self):
-        self.is_open = False
         self.stop_music()
+        self.is_open = False
         self.play_screen.destroy()
 
 # Function to show the Play Action Screen
