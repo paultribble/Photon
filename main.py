@@ -46,6 +46,7 @@ def main():
 
     # Handle application exit to ensure sockets are closed
     def on_close():
+        print("on_close triggered")
         nonlocal setup_screen  # Access the outer scope variable
         if setup_screen:  # Check if setup_screen has been initialized
             setup_screen.stop_music() 
