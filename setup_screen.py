@@ -2,28 +2,19 @@
 import tkinter as tk
 from tkinter import ttk, messagebox, simpledialog
 import random
-import os
-from PIL import Image, ImageTk
-import pygame
 from pynput import keyboard
 import play_action_screen as PlayActionScreen
 
-music_on = True
 class SetupScreen:
-    # Class attribute to store the single instance of the SetupScreen (used for music)
-    instance = None
+    
 
     def __init__(self, parent, database, udp_comm):
         self.parent = parent
         self.database = database
         self.udp_comm = udp_comm
 
-        # Initialize Pygame mixer for sound effects
-        pygame.mixer.init()
-
-        SetupScreen.instance = self  # Store the instance for music control
-
         self.frame = tk.Frame(parent, bg='black')
+        
         self.frame.pack(expand=True, fill='both')
 
         # Countdown label (in Toplevel window)
@@ -93,7 +84,7 @@ class SetupScreen:
         self.start_game_button = tk.Button(
             self.button_frame,
             text="Start Game (F5)",
-            command=self.initiate_countdown,
+            command=self.start_game,
             width=20,
             bg='green',
             fg='white'
@@ -101,29 +92,6 @@ class SetupScreen:
         self.start_game_button.grid(row=0, column=3, padx=10, pady=5)
 
     
-    def play_music(self):
-
-        tracks = [
-            "Track01.mp3",
-            "Track02.mp3",
-            "Track03.mp3",
-            "Track04.mp3",
-            "Track05.mp3",
-            "Track06.mp3",
-            "Track07.mp3"
-        ]
-
-        # Randomly select a track
-        selected_track = random.choice(tracks)
-
-        # Load and play the selected track
-        pygame.mixer.music.load(selected_track)
-        if music_on:
-            pygame.mixer.music.play()  #Play the track once
-            print(f"Playing: {selected_track}")
-        else:
-            print("Stopping music...")
-            pygame.mixer.music.stop() # Stop the background music
 
     def draw_background(self):
         self.canvas.delete("all")
@@ -292,66 +260,18 @@ class SetupScreen:
             entry_codename.delete(0, tk.END)  # Clear the codename field
             entry_codename.config(state='readonly')
             equipment_combobox.set("")  # Clear the equipment combo box
-
-    
-    
-    def initiate_countdown(self):
-        self.play_music()  # Play background music
-        self.parent.after(5000, self.open_and_start_countdown)  # Start countdown from 10
-
-    def open_and_start_countdown(self):
-        self.open_countdown_window()  # Open the countdown window
-        self.countdown(30)  # Start countdown from 10
- 
-    def open_countdown_window(self):
-        # Create a new top-level window for the countdown
-        self.countdown_window = tk.Toplevel(self.parent)
-        self.countdown_window.title("Countdown")
-        self.countdown_window.geometry("300x300")  # Set window size
-        self.countdown_window.configure(bg='black')  # Set background color
-
-        self.countdown_label = tk.Label(self.countdown_window, text="", bg='black', fg='white', font=("Arial", 48))
-        self.countdown_label.pack(expand=True)  # Center label in the window
-
-    def countdown(self, count):
-        if count >= 0:  # Start countdown from 1
-            # Update label to show current count
-            self.countdown_label.config(text=str(count))
-
-            # Load and display the corresponding image
-            image_path = os.path.join("Images", f"{count}.tif")  # Construct the image path
-            if os.path.isfile(image_path):  # Check if the image file exists
-                image = Image.open(image_path)
-                image = image.resize((200, 200), Image.LANCZOS)  # Resize for better visibility
-                self.current_image = ImageTk.PhotoImage(image)  # Create PhotoImage
-                self.countdown_label.config(image=self.current_image)  # Set the label to show the image
-                self.countdown_label.image = self.current_image  # Keep a reference to avoid garbage collection
-            else:
-                print(f"Image not found: {image_path}")
-                self.countdown_label.config(image='')  # Clear the image if file not found
-
-            # Schedule the next countdown call
-            self.countdown_window.after(1000, self.countdown, count - 1)  # Call countdown every second
-        else:
-            self.countdown_window.destroy()
-            self.countdown_window.after(1000, self.start_game)  # Delay before starting the game
-            
     
     
     def start_game(self):
-        # Check if both teams have a minimum number of players (e.g., 2)
-        min_players = 1  # Define the minimum number of players required per team
-
-        if len(self.red_team_players) < min_players:
-            messagebox.showerror("Error", "Red team must have at least {} players.".format(min_players))
-            return
-        if len(self.blue_team_players) < min_players:
-            messagebox.showerror("Error", "Blue team must have at least {} players.".format(min_players))
+        # Check if both teams have a minimum number of players
+        if len(self.red_team_players) < 1 or len(self.blue_team_players) < 1:
+            messagebox.showerror("Error", "Both teams must have at least one player!")
             return
 
-        # If both teams have enough players, start the game
-        self.udp_comm.send_broadcast("202")  # Send the 202 broadcast message
+        # Start the game by opening the PlayActionScreen and passing players and udp_comm
         PlayActionScreen.PlayActionScreen(self.parent, self.udp_comm, self.red_team_players, self.blue_team_players)
+
+
         
         
     def start_key_listener(self):
@@ -375,11 +295,3 @@ class SetupScreen:
         # Stop the keyboard listener when exiting or switching screens
         if self.listener:
             self.listener.stop()
-
-    def stop_music(self):
-        music_on = False
-        self.play_music()
-        print("Stopping music...")
-        pygame.mixer.music.stop() # Stop the background music
-        #set music bool to false, make bool accessible in function where
-        #play music is declared
