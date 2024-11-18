@@ -37,13 +37,14 @@ def main():
     # Handle application exit to ensure sockets are closed
     def on_close():
         print("on_close triggered")
+        setup_screen.stop_music()
         udp_comm.close_sockets()
         database.close()
         root.destroy()
         #nonlocal setup_screen  # Access the outer scope variable
         #if setup_screen:  # Check if setup_screen has been initialized
             #print("Stopping music...")
-        setup_screen.stop_music()
+        #setup_screen.stop_music()
 
     root.protocol("WM_DELETE_WINDOW", on_close)
 
