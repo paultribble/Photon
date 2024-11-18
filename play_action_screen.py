@@ -131,8 +131,8 @@ class PlayActionScreen:
         self.game_action_text.config(state='disabled')
 
     def on_close(self):
-        self.play_screen.destroy()
         self.stop_music()
+        self.play_screen.destroy()
         # Optionally, stop the UDP listener thread
         if self.udp_comm.listener_thread is not None:
             self.udp_comm.listener_thread.join()
