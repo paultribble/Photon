@@ -8,15 +8,13 @@ Step-by-Step Installation
 Install Python 3.x: Download and install Python from the official website: https://www.python.org/downloads/
 
 Install Required Python Packages:
-socket
-threading
-random
-psycopg2
-sys
-tkinter
-Pillow
-pynput
-atexit
+sudo apt update
+sudo apt install python3-tk -y
+sudo apt install pip
+pip install psycopg2-binary
+pip install Pillow
+pip install pygame
+pip install pynput
 
 File Structure
 
