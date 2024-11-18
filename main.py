@@ -25,8 +25,12 @@ def main():
     except OSError:
         print("Failed to bind UDP ports. Make sure no other application is using these ports.")
         return
+    
     # Show splash screen
     splash = SplashScreen(root, "Images/logo.jpg", duration=3000)
+
+    # Declare setup_screen so it is accessible in on_close
+    setup_screen = None  # Initial value is None
 
     # After splash screen, show setup screen
     def show_setup_screen():
@@ -42,9 +46,11 @@ def main():
 
     # Handle application exit to ensure sockets are closed
     def on_close():
+        nonlocal setup_screen  # Access the outer scope variable
+        if setup_screen:  # Check if setup_screen has been initialized
+            setup_screen.stop_music() 
         udp_comm.close_sockets()
         database.close()
-        SetupScreen.stop_music()
         root.destroy()
 
     root.protocol("WM_DELETE_WINDOW", on_close)
