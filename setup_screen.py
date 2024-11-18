@@ -370,6 +370,6 @@ class SetupScreen:
         if self.listener:
             self.listener.stop()
 
-    def stop_music(self):
+    def stop_music():
         print("Stopping music...")
         pygame.mixer.music.stop() # Stop the background music
