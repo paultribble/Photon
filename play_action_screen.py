@@ -51,7 +51,7 @@ class PlayActionScreen:
     def initiate_countdown(self):
         """Initiate the countdown in a separate window"""
         self.open_countdown_window()  # Open the countdown window
-        self.countdown(5)  # Start countdown from 30
+        self.countdown(30)  # Start countdown from 30
 
     def open_countdown_window(self):
         """Creates a new window for the countdown"""
