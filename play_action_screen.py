@@ -47,11 +47,11 @@ class PlayActionScreen:
 
         # Start the countdown immediately when the screen is initialized
         self.initiate_countdown()
-
+        
     def initiate_countdown(self):
         """Initiate the countdown in a separate window"""
         self.open_countdown_window()  # Open the countdown window
-        self.countdown(30)  # Start countdown from 30
+        self.countdown(5)  # Start countdown from 30
 
     def open_countdown_window(self):
         """Creates a new window for the countdown"""
@@ -150,16 +150,28 @@ class PlayActionScreen:
         self.play_screen = tk.Toplevel(self.parent)
         self.play_screen.title("Play Action Screen")
         self.play_screen.geometry("1000x800")
+        self.play_screen.configure(bg="black")
+        
+        
+        # Create a canvas for background lines
+        self.canvas = tk.Canvas(self.play_screen, bg="black", width=1000, height=800, highlightthickness=0)
+        self.canvas.place(relx=0, rely=0, relwidth=1, relheight=1)
 
+        # Start drawing background lines
+        self.draw_background()
+        
+        # Frame for the gameplay timer with a white background
+        self.timer_frame = tk.Frame(self.play_screen, bg="white")
+        self.timer_frame.grid(row=0, column=0, padx=10, pady=10)
         # Gameplay timer label (6 minutes countdown)
-        self.gameplay_timer_label = tk.Label(self.play_screen, text="Gameplay Timer: 6:00", font=("Helvetica", 14))
-        self.gameplay_timer_label.grid(row=0, column=0, padx=10, pady=10)
+        self.gameplay_timer_label = tk.Label(self.play_screen, text="Gameplay Timer: 6:00", font=("Helvetica", 14), bg="green")
+        self.gameplay_timer_label.grid(row=1, column=0, padx=10, pady=10)
 
-        self.frame_red_team = tk.LabelFrame(self.play_screen, text="Red Team", bg="red")
-        self.frame_red_team.grid(row=1, column=0, padx=10, pady=10)
+        self.frame_red_team = tk.LabelFrame(self.play_screen, bg="red")
+        self.frame_red_team.grid(row=0, column=0, padx=10, pady=10)
 
-        self.frame_blue_team = tk.LabelFrame(self.play_screen, text="Blue Team", bg="cyan")
-        self.frame_blue_team.grid(row=1, column=2, padx=10, pady=10)
+        self.frame_blue_team = tk.LabelFrame(self.play_screen, bg="blue")
+        self.frame_blue_team.grid(row=0, column=2, padx=10, pady=10)
 
         self.setup_team_scores(self.frame_red_team, self.red_team, "red")
         self.setup_team_scores(self.frame_blue_team, self.blue_team, "blue")
@@ -173,7 +185,23 @@ class PlayActionScreen:
         self.udp_comm.send_broadcast("202")
         # Start the gameplay timer immediately
         self.start_gameplay_timer()
-            
+         
+    def draw_background(self):
+        
+        """Clear the canvas and draw new random lines with a 50/50 chance of being red or blue."""
+        # Clear all previous drawings
+        self.canvas.delete("all")
+        """Draw random lines on the canvas with a 50/50 chance of being red or blue"""
+        for _ in range(30):
+            start_pos = (random.randint(0, 1000), random.randint(0, 800))
+            end_pos = (random.randint(0, 1000), random.randint(0, 800))
+            line_color = "red" if random.random() < 0.5 else "blue"  # 50/50 chance for red or blue
+            self.canvas.create_line(start_pos, end_pos, fill=line_color, width=2)
+
+        # Schedule the next background update
+        self.canvas.after(800, self.draw_background)     
+         
+       
             
     def start_gameplay_timer(self):
         # After the countdown finishes, start the 6-minute gameplay timer
@@ -210,12 +238,20 @@ class PlayActionScreen:
 
 
     def setup_team_scores(self, frame, team, team_color):
+        """Sets up team scores and player labels in the UI."""
+        # Add a team score label at the top of the frame
+        team_score_label = tk.Label(frame, text=f"{team_color.capitalize()} Team Score: 0", bg=frame.cget("bg"), fg="white", font=("Helvetica", 12))
+        team_score_label.pack(anchor='n')  # Pack at the top of the frame
+        frame.team_score_label = team_score_label  # Attach to the frame for later updates
+
+        # Add labels for individual players
         for player in team:
-            # Create label with player codename and score
             label = tk.Label(frame, text=f"{player['codename']} {player['score']}", bg=frame.cget("bg"), fg="white")
             label.pack(anchor='w')
             player['label'] = label
             player['base_hit'] = False  # Flag to track if player has hit the base
+
+
 
     def handle_udp_message(self, message, addr):
         # Handle the received UDP message
@@ -316,9 +352,24 @@ class PlayActionScreen:
                 player['label'].config(text=f"{player['codename']} {player['score']}")
     
     def update_score(self, player, increment):
+        """Update the score of a player and the team's total score."""
         player['score'] += increment
-        player['label'].config(text=f"{player['codename']}: {player['score']}")
-        print(f"Updated {player['codename']}'s score to {player['score']}")  # Debugging log
+        player['label'].config(text=f"{player['codename']} {player['score']}")
+
+        # Calculate the team's total score
+        team = self.red_team if player in self.red_team else self.blue_team
+        total_team_score = sum(p['score'] for p in team)
+
+        # Update the team's score label
+        team_color = "Red" if team == self.red_team else "Blue"
+        team_frame = self.frame_red_team if team == self.red_team else self.frame_blue_team
+        team_frame.team_score_label.config(text=f"{team_color} Team Score: {total_team_score}")
+
+        print(f"Updated {player['codename']}'s score to {player['score']} and {team_color} Team Score to {total_team_score}")
+
+
+        
+
 
     def log_event(self, event):
         self.game_action_text.config(state='normal')

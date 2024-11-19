@@ -50,7 +50,7 @@ class SetupScreen:
             self.team_frame, "Red Team", "red", 0, 0, self.red_team_players
         )
         self.blue_team_entries = self.create_input_form(
-            self.team_frame, "Blue Team", "cyan", 0, 4, self.blue_team_players
+            self.team_frame, "Blue Team", "blue", 0, 4, self.blue_team_players
         )
 
         # Buttons Frame
@@ -280,7 +280,7 @@ class SetupScreen:
             try:
                 if key == keyboard.Key.f5:  # Check for F5 key
                     print("F5 Keybind activated!")
-                    self.initiate_countdown()  # Call the start_game method
+                    self.start_game  # Call the start_game method
                 elif key == keyboard.Key.f12:  # Check for F12 key
                     print("F12 Keybind activated!")
                     self.clear_current_players()  # Call the clear_database method
