@@ -20,7 +20,7 @@ class UDPCommunication:
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:
-            sock.bind(('', self.receive_port))
+            sock.bind(('127.0.0.1', self.receive_port))
         except OSError as e:
             print(f"Error binding to port {self.receive_port}: {e}")
             sock.close()
