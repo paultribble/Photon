@@ -7,7 +7,6 @@ import play_action_screen as PlayActionScreen
 
 class SetupScreen:
     
-
     def __init__(self, parent, database, udp_comm):
         self.parent = parent
         self.database = database
@@ -90,8 +89,6 @@ class SetupScreen:
             fg='white'
         )
         self.start_game_button.grid(row=0, column=3, padx=10, pady=5)
-
-    
 
     def draw_background(self):
         self.canvas.delete("all")
@@ -225,19 +222,9 @@ class SetupScreen:
         save_button = tk.Button(new_player_window, text="Save Player", command=save_player)
         save_button.pack(pady=10)
 
-
     def view_player_database(self):
         from database_screen import DatabaseScreen
         DatabaseScreen(self.parent, self.database)
-
-    def clear_database(self):
-        confirm = messagebox.askyesno("Confirm", "Are you sure you want to clear the database?")
-        if confirm:
-            success = self.database.clear_players()
-            if success:
-                messagebox.showinfo("Success", "Database has been cleared.")
-            else:
-                messagebox.showerror("Error", "Failed to clear the database.")
 
     def clear_current_players(self):
     # Confirm the action to clear players
@@ -260,8 +247,7 @@ class SetupScreen:
             entry_codename.delete(0, tk.END)  # Clear the codename field
             entry_codename.config(state='readonly')
             equipment_combobox.set("")  # Clear the equipment combo box
-    
-    
+       
     def start_game(self):
         # Check if both teams have a minimum number of players
         if len(self.red_team_players) < 1 or len(self.blue_team_players) < 1:
@@ -270,17 +256,14 @@ class SetupScreen:
 
         # Start the game by opening the PlayActionScreen and passing players and udp_comm
         PlayActionScreen.PlayActionScreen(self.parent, self.udp_comm, self.red_team_players, self.blue_team_players)
-
-
-        
-        
+ 
     def start_key_listener(self):
         # Key press event handler
         def on_press(key):
             try:
                 if key == keyboard.Key.f5:  # Check for F5 key
                     print("F5 Keybind activated!")
-                    self.start_game  # Call the start_game method
+                    self.start_game()  # Call the start_game method
                 elif key == keyboard.Key.f12:  # Check for F12 key
                     print("F12 Keybind activated!")
                     self.clear_current_players()  # Call the clear_database method

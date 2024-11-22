@@ -17,7 +17,6 @@ class UDPCommunication:
         self.server_socket.bind(('', self.client_port))
         self.listener_thread = None
         
-
     def broadcast_message(self, message):
         self.server_socket.sendto(str.encode(message), ('<broadcast>', self.broadcast_port))
 
@@ -37,6 +36,8 @@ class PlayActionScreen:
         self.udp_comm = udp_comm
         self.red_team = red_team
         self.blue_team = blue_team
+        self.total_tags = {'red': 0, 'blue': 0}
+        self.friendly_fire_counts = {'red': 0, 'blue': 0}
 
         self.play_screen = None  # We'll create this after the countdown
         self.countdown_window = None
@@ -152,6 +153,8 @@ class PlayActionScreen:
         self.play_screen.geometry("1000x800")
         self.play_screen.configure(bg="black")
         
+    
+        
         
         # Create a canvas for background lines
         self.canvas = tk.Canvas(self.play_screen, bg="black", width=1000, height=800, highlightthickness=0)
@@ -181,11 +184,80 @@ class PlayActionScreen:
 
         self.game_action_text = scrolledtext.ScrolledText(self.frame_action, wrap=tk.WORD, width=60, height=30, state='disabled')
         self.game_action_text.pack(padx=10, pady=10)
+        
+        # Statistics frame (placed directly in the grid at row=0, column=3)
+        self.stats_frame = tk.Frame(self.play_screen, bg="black", relief=tk.RAISED, bd=2)
+        self.stats_frame.grid(row=1, column=2, padx=10, pady=10, sticky="n")
 
+        # Labels for statistics
+        self.winning_team_label = tk.Label(self.stats_frame, text="Winning Team: N/A", bg="black", fg="white", font=("Helvetica", 12))
+        self.winning_team_label.pack(pady=5)
+
+        self.top_scorer_label = tk.Label(self.stats_frame, text="Top Scorer: N/A", bg="black", fg="white", font=("Helvetica", 12))
+        self.top_scorer_label.pack(pady=5)
+
+        self.red_tags_label = tk.Label(self.stats_frame, text="Red Team Total Tags: 0", bg="black", fg="red", font=("Helvetica", 12))
+        self.red_tags_label.pack(pady=5)
+        
+        self.red_friendly_fire_label = tk.Label(self.stats_frame, text="Red Friendly Fire: 0", bg="black", fg="red", font=("Helvetica", 12))
+        self.red_friendly_fire_label.pack(pady=5)
+        
+        self.blue_tags_label = tk.Label(self.stats_frame, text="Blue Team Total Tags: 0", bg="black", fg="blue", font=("Helvetica", 12))
+        self.blue_tags_label.pack(pady=5)
+        
+        self.blue_friendly_fire_label = tk.Label(self.stats_frame, text="Blue Friendly Fire: 0", bg="black", fg="blue", font=("Helvetica", 12))
+        self.blue_friendly_fire_label.pack(pady=5)
+        
         self.udp_comm.send_broadcast("202")
         # Start the gameplay timer immediately
         self.start_gameplay_timer()
-         
+
+    def update_statistics(self):
+        """Update all displayed statistics dynamically."""
+        # Calculate the scores for each team
+        red_score = sum(player['score'] for player in self.red_team)
+        blue_score = sum(player['score'] for player in self.blue_team)
+
+        # Determine the winning team based on score
+        if red_score > blue_score:
+            winning_team = "Red Team"
+        elif blue_score > red_score:
+            winning_team = "Blue Team"
+        else:
+            winning_team = "Tie"
+
+        self.winning_team_label.config(text=f"Winning Team: {winning_team}")
+
+        # Find the top scoring player by combining red and blue teams
+        all_players = self.red_team + self.blue_team
+        top_scorer = max(all_players, key=lambda p: p['score'], default=None)
+
+        # Get the top scorer's team
+        if top_scorer in self.red_team:
+            top_scorer_team = "red"
+        elif top_scorer in self.blue_team:
+            top_scorer_team = "blue"
+        else:
+            top_scorer_team = "none"
+
+        # Format the top scorer's text (ensure score includes base hit points)
+        top_scorer_text = f"{top_scorer['codename']} ({top_scorer['score']})" if top_scorer else "N/A"
+        self.top_scorer_label.config(text=f"Top Scorer: {top_scorer_text}")
+
+        # Update the top scorer label color based on their team
+        if top_scorer_team == "red":
+            self.top_scorer_label.config(fg="red")
+        elif top_scorer_team == "blue":
+            self.top_scorer_label.config(fg="blue")
+        else:
+            self.top_scorer_label.config(fg="white")
+
+        # Update tags and friendly fire counts
+        self.red_tags_label.config(text=f"Red Team Tags: {self.total_tags['red']}")
+        self.blue_tags_label.config(text=f"Blue Team Tags: {self.total_tags['blue']}")
+        self.red_friendly_fire_label.config(text=f"Red Friendly Fire: {self.friendly_fire_counts['red']}")
+        self.blue_friendly_fire_label.config(text=f"Blue Friendly Fire: {self.friendly_fire_counts['blue']}")
+        
     def draw_background(self):
         
         """Clear the canvas and draw new random lines with a 50/50 chance of being red or blue."""
@@ -200,9 +272,7 @@ class PlayActionScreen:
 
         # Schedule the next background update
         self.canvas.after(800, self.draw_background)     
-         
-       
-            
+                   
     def start_gameplay_timer(self):
         # After the countdown finishes, start the 6-minute gameplay timer
         self.gameplay_time = 360  # Reset timer to 6 minutes
@@ -231,11 +301,9 @@ class PlayActionScreen:
     def game_over(self):
         # This function gets called when the gameplay timer reaches zero
         pygame.mixer.music.stop()
+        self.udp_comm.send_broadcast("221")
         self.log_event("Game Over! Time's up.")
         print("Game Over! Time's up.")
-
-
-
 
     def setup_team_scores(self, frame, team, team_color):
         """Sets up team scores and player labels in the UI."""
@@ -251,19 +319,8 @@ class PlayActionScreen:
             player['label'] = label
             player['base_hit'] = False  # Flag to track if player has hit the base
 
-
-
     def handle_udp_message(self, message, addr):
-        # Handle the received UDP message
-        if message.startswith("Score:"):
-            
-            self.process_score_message(message)
-        elif message == "53":
-            self.handle_base_score("blue")
-        elif message == "43":
-            self.handle_base_score("red")
-        else:
-            self.process_hit_message(message)
+        self.process_hit_message(message)
 
     def process_score_message(self, message):
         try:
@@ -304,38 +361,47 @@ class PlayActionScreen:
         # Update the label with the [B] next to their codename
         self.update_player_label(player)
 
-
     def process_hit_message(self, message):
         try:
-            # Check if the message indicates a base hit
             if ':' in message:
                 transmitting_id, target = message.split(':')
                 transmitting_id = int(transmitting_id)
-            
-            # Check if target is a base hit (43 or 53)
+                hit_id = int(target)
+
+                 # Check if target is a base hit (43 or 53)
                 if target == "43":
                     self.handle_base_score(transmitting_id, "red")
                 elif target == "53":
                     self.handle_base_score(transmitting_id, "blue")
                 else:
-                # Otherwise, treat it as a player hit
-                    hit_id = int(target)
                     transmitting_player = self.get_player_by_equipment(transmitting_id)
                     hit_player = self.get_player_by_equipment(hit_id)
-
                     if transmitting_player and hit_player:
-                        self.log_event(f"{hit_player['codename']} was hit by {transmitting_player['codename']}.")
-                        self.update_score(transmitting_player, increment=100)  # Increment score for the player
-                        
-                        self.udp_comm.send_broadcast(str(hit_id))
-                    else:
-                        self.log_event("Hit or transmitting player not found.")
-            else:
-                self.log_event(f"Invalid message format received: {message}")
+                        same_team = transmitting_player in self.red_team and hit_player in self.red_team or \
+                                    transmitting_player in self.blue_team and hit_player in self.blue_team
+                        if same_team:
+                            # Friendly fire logic
+                            self.update_score(transmitting_player, increment=-10)
+                            team_color = "red" if transmitting_player in self.red_team else "blue"
+                            self.friendly_fire_counts[team_color] += 1
+
+                            # Broadcast the ID of the player getting disabled
+                            self.udp_comm.send_broadcast(str(transmitting_id))
+
+                            self.log_event(f"{transmitting_player['codename']} tagged teammate {hit_player['codename']}. Penalty applied!")
+                        else:
+                            # Normal hit logic
+                            self.update_score(transmitting_player, increment=10)
+                            team_color = "red" if transmitting_player in self.red_team else "blue"
+                            self.total_tags[team_color] += 1
+
+                            self.udp_comm.send_broadcast(str(hit_id))
+                            self.log_event(f"{hit_player['codename']} was hit by {transmitting_player['codename']}.")
+
+                        # Update statistics after each hit
+            self.update_statistics()
         except ValueError:
             self.log_event(f"Error parsing hit message: {message}")
-
-
 
     def get_player_by_equipment(self, equipment_id):
         for team in [self.red_team, self.blue_team]:
@@ -350,26 +416,36 @@ class PlayActionScreen:
                 player['label'].config(text=f"[𝑩] {player['codename']} {player['score']}")
             else:
                 player['label'].config(text=f"{player['codename']} {player['score']}")
-    
+     
     def update_score(self, player, increment):
-        """Update the score of a player and the team's total score."""
+        """Update the score of a player and dynamically reorder the team based on scores."""
+        # Update player's score
         player['score'] += increment
+
+        # Update player's label text
         player['label'].config(text=f"{player['codename']} {player['score']}")
 
-        # Calculate the team's total score
+        # Identify the player's team
         team = self.red_team if player in self.red_team else self.blue_team
-        total_team_score = sum(p['score'] for p in team)
-
-        # Update the team's score label
         team_color = "Red" if team == self.red_team else "Blue"
         team_frame = self.frame_red_team if team == self.red_team else self.frame_blue_team
+
+        #   Calculate and update the team's total score
+        total_team_score = sum(p['score'] for p in team)
         team_frame.team_score_label.config(text=f"{team_color} Team Score: {total_team_score}")
 
-        print(f"Updated {player['codename']}'s score to {player['score']} and {team_color} Team Score to {total_team_score}")
+        # Sort players by their scores in descending order
+        team.sort(key=lambda p: p['score'], reverse=True)
 
+        #    Remove and re-pack player labels based on the new order
+        for widget in team_frame.winfo_children():
+            if widget != team_frame.team_score_label:
+                widget.pack_forget()  # Remove all labels except the team score label
 
-        
+        for sorted_player in team:
+            sorted_player['label'].pack(anchor='w')  # Re-pack labels in sorted order
 
+        print(f"Updated {player['codename']}'s score to {player['score']} and reordered {team_color} Team.")
 
     def log_event(self, event):
         self.game_action_text.config(state='normal')
@@ -383,4 +459,3 @@ class PlayActionScreen:
         # Optionally, stop the UDP listener thread
         if self.udp_comm.listener_thread is not None:
             self.udp_comm.listener_thread.join()
-            
